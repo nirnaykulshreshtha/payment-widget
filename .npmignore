@@ -1,0 +1,29 @@
+# Build output
+dist/
+
+# TypeScript artifacts
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files (if any)
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Development files
+.env
+.env.local
+.env.*.local
+

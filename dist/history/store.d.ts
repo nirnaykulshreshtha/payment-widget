@@ -1,0 +1,61 @@
+import type { Address, Hex } from 'viem';
+import type { PaymentHistoryEntry, ResolvedPaymentWidgetConfig, TokenConfig } from '../types';
+type HistoryEnvironment = {
+    config: ResolvedPaymentWidgetConfig;
+};
+type Snapshot = {
+    account?: Address;
+    entries: PaymentHistoryEntry[];
+};
+export declare function usePaymentHistoryStore(): Snapshot;
+export declare function initializePaymentHistory(account: Address | null | undefined, env: HistoryEnvironment): void;
+export declare function clearPaymentHistory(account?: Address): void;
+export declare function refreshPendingHistory(): void;
+export declare function recordBridgeInit(params: {
+    depositor: Address;
+    recipient: Address;
+    inputToken: TokenConfig;
+    outputToken: TokenConfig;
+    originChainId: number;
+    destinationChainId: number;
+    inputAmount: bigint;
+    outputAmount: bigint;
+    requiresWrap: boolean;
+    originSpokePoolAddress: Address;
+    destinationSpokePoolAddress: Address;
+    depositMessage?: Hex;
+}): string;
+export declare function updateBridgeAfterWrap(id: string, wrapTxHash: Hex): void;
+export declare function updateBridgeAfterDeposit(id: string, depositId: bigint, depositTxHash: Hex, outputAmount: bigint): void;
+export declare function updateBridgeFilled(id: string, fillTxHash?: Hex): void;
+export declare function updateBridgeDepositTxHash(id: string, depositTxHash: Hex): void;
+export declare function failBridge(id: string, errorMessage: string): void;
+export declare function recordSwapInit(params: {
+    depositor: Address;
+    recipient: Address;
+    inputToken: TokenConfig;
+    outputToken: TokenConfig;
+    originChainId: number;
+    destinationChainId: number;
+    inputAmount: bigint;
+    outputAmount: bigint;
+    approvalCount: number;
+}): string;
+export declare function updateSwapApprovalSubmitted(id: string, approvalTxHash: Hex): void;
+export declare function updateSwapApprovalConfirmed(id: string, approvalTxHash: Hex): void;
+export declare function updateSwapTxPending(id: string, swapTxHash: Hex): void;
+export declare function updateSwapTxConfirmed(id: string, swapTxHash: Hex, depositId: bigint | null, outputAmount: bigint): void;
+export declare function updateSwapFilled(id: string, fillTxHash?: Hex): void;
+export declare function failSwap(id: string, errorMessage: string): void;
+export declare function recordDirectInit(params: {
+    depositor: Address;
+    inputToken: TokenConfig;
+    outputToken: TokenConfig;
+    chainId: number;
+    amountIn: bigint;
+    amountOut: bigint;
+}): string;
+export declare function updateDirectTxPending(id: string, paymentTxHash: Hex): void;
+export declare function completeDirect(id: string, paymentTxHash: Hex): void;
+export declare function failDirect(id: string, errorMessage: string): void;
+export {};

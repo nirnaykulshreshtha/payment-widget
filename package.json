@@ -1,0 +1,59 @@
+{
+  "name": "@matching-platform/payment-widget",
+  "version": "0.1.0",
+  "description": "Cross-chain payment widget for matching platform - Accept any input asset and deliver fixed target amount",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "SETUP.md",
+    "extract-to-separate-repo.sh"
+  ],
+  "keywords": [
+    "payment-widget",
+    "cross-chain",
+    "react",
+    "blockchain",
+    "bridge",
+    "swap"
+  ],
+  "author": "Matching Platform",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.bucle.dev/atlanzyphora/frontend.git",
+    "directory": "ui/packages/payment-widget"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@across-protocol/app-sdk": "^0.4.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.456.0",
+    "sonner": "^1.4.2",
+    "tailwind-merge": "^2.6.0",
+    "viem": "^2.38.0"
+  }
+}
