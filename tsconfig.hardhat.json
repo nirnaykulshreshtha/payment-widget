@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "types": ["node", "mocha"],
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["hardhat.config.ts", "scripts", "test", "contracts"]
+}

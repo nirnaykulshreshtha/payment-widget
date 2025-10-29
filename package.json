@@ -41,16 +41,30 @@
     "react-dom": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.10.1",
     "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "chai": "^4.5.0",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   },
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "compile-contracts": "hardhat compile",
+    "test-contracts": "hardhat test"
   },
   "dependencies": {
     "@across-protocol/app-sdk": "^0.4.2",
+    "@openzeppelin/contracts": "^5.1.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.456.0",
     "sonner": "^1.4.2",
