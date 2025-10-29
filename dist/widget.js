@@ -16,6 +16,7 @@ import { getOptionKey } from './widget/utils/options';
 import { formatTokenAmount } from './utils/amount-format';
 import { renderPaymentView } from './widget/view-renderers';
 import { WidgetHeader } from './widget/components/WidgetHeader';
+import {ZERO_INTEGRATOR_ID} from "../src/config.js";
 const LOG_PREFIX = '[payment-widget]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
@@ -662,7 +663,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 }
             }
             const result = await client.executeQuote({
-                integratorId: config.integratorId ?? ZERO_ADDRESS,
+                integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
                 deposit: option.quote.raw.deposit,
                 walletClient: walletClientWithChain,
                 originClient,
@@ -801,7 +802,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             }
             const collectedApprovalHashes = [];
             const result = await client.executeSwapQuote({
-                integratorId: config.integratorId ?? ZERO_ADDRESS,
+                integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
                 swapQuote: swapQuote.raw,
                 walletClient: walletClientWithChain,
                 originClient,

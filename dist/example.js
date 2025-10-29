@@ -20,7 +20,7 @@ function buildExampleConfigs(isTestnet, walletClient) {
         supportedChains: networkConfig.chains,
         walletClient,
         integratorId: process.env.NEXT_PUBLIC_ACROSS_INTEGRATOR_ID ??
-            '0x0000000000000000000000000000000000000000',
+            '0x0001',
         useTestnet: isTestnet,
         quoteRefreshMs: 45_000,
         wrappedTokenMap: DEFAULT_WRAPPED_TOKEN_MAP,

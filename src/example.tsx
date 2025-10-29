@@ -11,7 +11,7 @@ import type { Address } from 'viem';
 
 import PaymentWidget, { PaymentWidgetProvider, createSetupConfig, getNetworkConfig } from './index';
 import type { PaymentConfig, SetupConfig } from './types';
-import { DEFAULT_WRAPPED_TOKEN_MAP } from './config';
+import {DEFAULT_WRAPPED_TOKEN_MAP, ZERO_INTEGRATOR_ID} from './config';
 
 const DEFAULT_AMOUNT = BigInt(11 * 1_000_000);
 
@@ -27,7 +27,7 @@ function buildExampleConfigs(isTestnet: boolean, walletClient?: SetupConfig['wal
     walletClient,
     integratorId:
       (process.env.NEXT_PUBLIC_ACROSS_INTEGRATOR_ID as `0x${string}`) ??
-      ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+      ZERO_INTEGRATOR_ID,
     useTestnet: isTestnet,
     quoteRefreshMs: 45_000,
     wrappedTokenMap: DEFAULT_WRAPPED_TOKEN_MAP,

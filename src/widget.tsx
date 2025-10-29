@@ -8,7 +8,7 @@ import type { ConfiguredPublicClient, ConfiguredWalletClient } from '@across-pro
 import { cn, summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
 
-import { ZERO_ADDRESS } from './config';
+import {ZERO_ADDRESS, ZERO_INTEGRATOR_ID} from './config';
 import type { PaymentHistoryEntry, PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig, TokenConfig } from './types';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
@@ -34,7 +34,7 @@ import {
   usePaymentHistoryStore,
   failSwap,
   refreshPendingHistory,
-} from './history/store';
+} from './history';
 import { computeThemeVars } from './utils/theme';
 import { clonePaymentOption } from './widget/utils/clone-option';
 import { computeTargetWithSlippage } from './widget/utils/slippage';
@@ -42,7 +42,7 @@ import { describeAmount, describeRawAmount } from './widget/utils/formatting';
 import { getOptionKey } from './widget/utils/options';
 import { formatTokenAmount } from './utils/amount-format';
 import { renderPaymentView } from './widget/view-renderers';
-import { WidgetHeader } from './widget/components/WidgetHeader';
+import { WidgetHeader } from './widget/components';
 import type { PaymentView, PaymentResultSummary } from './widget/types';
 
 const LOG_PREFIX = '[payment-widget]';
@@ -781,7 +781,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
 
         const result = await client.executeQuote({
-          integratorId: config.integratorId ?? ZERO_ADDRESS,
+          integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
           deposit: option.quote.raw.deposit,
           walletClient: walletClientWithChain as ConfiguredWalletClient,
           originClient,
@@ -947,7 +947,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         const collectedApprovalHashes: Hex[] = [];
 
         const result = await client.executeSwapQuote({
-          integratorId: config.integratorId ?? ZERO_ADDRESS,
+          integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
           swapQuote: swapQuote.raw,
           walletClient: walletClientWithChain as ConfiguredWalletClient,
           originClient,

@@ -10,6 +10,7 @@ import type { Address, Chain, PublicClient } from 'viem';
 import type { ChainConfig, NetworkConfig, ResolvedSetupConfig, SetupConfig, TokenConfig } from './types';
 
 export const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
+export const ZERO_INTEGRATOR_ID: Address = '0x0001';
 
 const defaultNative = (symbol: string): { name: string; symbol: string; decimals: number } => ({
   name: symbol,
