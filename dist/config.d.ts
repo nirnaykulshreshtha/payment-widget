@@ -1,6 +1,7 @@
 import type { Address, Chain, PublicClient } from 'viem';
 import type { ChainConfig, NetworkConfig, ResolvedSetupConfig, SetupConfig, TokenConfig } from './types';
 export declare const ZERO_ADDRESS: Address;
+export declare const ZERO_INTEGRATOR_ID: Address;
 export declare const NETWORK_CONFIG: NetworkConfig;
 export declare const DEFAULT_WRAPPED_TOKEN_MAP: Record<number, Record<string, {
     wrapped: TokenConfig;

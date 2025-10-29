@@ -8,7 +8,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PaymentWidget, { PaymentWidgetProvider, createSetupConfig, getNetworkConfig } from './index';
-import { DEFAULT_WRAPPED_TOKEN_MAP } from './config';
+import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_INTEGRATOR_ID } from './config';
 const DEFAULT_AMOUNT = BigInt(11 * 1_000_000);
 function buildExampleConfigs(isTestnet, walletClient) {
     const networkConfig = getNetworkConfig(isTestnet);
@@ -20,7 +20,7 @@ function buildExampleConfigs(isTestnet, walletClient) {
         supportedChains: networkConfig.chains,
         walletClient,
         integratorId: process.env.NEXT_PUBLIC_ACROSS_INTEGRATOR_ID ??
-            '0x0001',
+            ZERO_INTEGRATOR_ID,
         useTestnet: isTestnet,
         quoteRefreshMs: 45_000,
         wrappedTokenMap: DEFAULT_WRAPPED_TOKEN_MAP,
