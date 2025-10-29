@@ -7,3 +7,4 @@ export { useDepositPlanner } from './hooks/useDepositPlanner';
 export { PaymentWidgetProvider } from './providers/payment-widget-provider';
 export { usePaymentSetup } from './hooks/usePaymentSetup';
 export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example';
+export { callForwarderAbi, encodeForwarderCall, encodeForwarderCalls, buildCallForwarderExecuteCalldata, buildCallForwarderTargetCall, } from './utils/call-forwarder';
