@@ -59,7 +59,7 @@
     "prepack": "npm run build",
     "compile-contracts": "hardhat compile",
     "test-contracts": "hardhat test",
-    "deploy-call-forwarder": "hardhat run scripts/deployCallForwarder.ts"
+    "deploy-call-forwarder": "hardhat run scripts/deployCallForwarder.cjs"
   },
   "dependencies": {
     "@across-protocol/app-sdk": "^0.4.2",

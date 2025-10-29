@@ -761,7 +761,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           const inputAmount = BigInt(quote.inputAmount ?? quote.steps?.bridge?.inputAmount ?? '0');
           const expectedOutput = BigInt(quote.expectedOutputAmount ?? quote.steps?.bridge?.outputAmount ?? '0');
           const minOutput = BigInt(quote.minOutputAmount ?? quote.expectedOutputAmount ?? '0');
-          const approvalTxns = (quote.approvalTxns ?? []).map((txn) => ({
+          const approvalTxns = (quote.approvalTxns ?? []).map((txn: { chainId: any; to: string; data: any; }) => ({
             chainId: txn.chainId,
             to: txn.to as Address,
             data: txn.data,
