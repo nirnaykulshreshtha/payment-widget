@@ -1,5 +1,5 @@
-# Build output
-dist/
+# Source files (not needed in published package)
+src/
 
 # TypeScript artifacts
 *.tsbuildinfo

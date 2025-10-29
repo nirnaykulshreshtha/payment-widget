@@ -1,0 +1,93 @@
+.payment-widget {
+  font-family: var(--payment-font-family, inherit);
+  color: var(--payment-text, inherit);
+}
+
+.payment-widget .payment-card {
+  border-radius: var(--payment-radius, 1rem);
+  background: var(--payment-card-bg, hsl(var(--card, 0 0% 100%)));
+  color: var(--payment-card-text, inherit);
+  border-color: var(--payment-card-border, hsl(var(--border, 0 0% 90%)));
+  box-shadow: 8px 8px 0 color-mix(in srgb, var(--payment-accent, hsl(var(--accent, 4 96% 63%))) 22%, transparent);
+}
+
+.payment-widget .payment-panel {
+  border-radius: var(--payment-radius, 1rem);
+  background: color-mix(in srgb, var(--payment-card-bg, hsl(var(--card, 0 0% 100%))) 92%, transparent 8%);
+  border-color: color-mix(in srgb, var(--payment-card-border, hsl(var(--border, 0 0% 90%))) 80%, transparent 20%);
+}
+
+.payment-widget .payment-primary {
+  border-radius: var(--payment-radius, 1rem);
+  background: var(--payment-brand, hsl(var(--primary, 259 92% 61%)));
+  color: var(--payment-text-contrast, hsl(var(--primary-foreground, 0 0% 98%)));
+  border: 1px solid color-mix(in srgb, var(--payment-brand, hsl(var(--primary, 259 92% 61%))) 60%, transparent);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--payment-accent, hsl(var(--accent, 4 96% 63%))) 48%, transparent);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.payment-widget .payment-primary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 color-mix(in srgb, var(--payment-accent, hsl(var(--accent, 4 96% 63%))) 55%, transparent);
+}
+
+.payment-widget .payment-primary:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--payment-accent, hsl(var(--accent, 4 96% 63%))) 40%, transparent);
+}
+
+.payment-widget .payment-secondary {
+  border-radius: var(--payment-radius, 0.75rem);
+}
+
+.payment-widget .payment-option {
+  width: 100%;
+  border-radius: var(--payment-radius, 1rem);
+  border: 1px solid color-mix(in srgb, var(--payment-card-border, hsl(var(--border, 0 0% 90%))) 65%, transparent);
+  background: color-mix(in srgb, var(--payment-card-bg, hsl(var(--card, 0 0% 100%))) 96%, transparent 4%);
+  padding: 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.payment-widget .payment-option:hover {
+  border-color: color-mix(in srgb, var(--payment-brand, hsl(var(--primary, 259 92% 61%))) 35%, transparent);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--payment-accent, hsl(var(--accent, 4 96% 63%))) 45%, transparent);
+}
+
+.payment-widget .payment-option--active {
+  border-color: var(--payment-brand, hsl(var(--primary, 259 92% 61%)));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--payment-brand, hsl(var(--primary, 259 92% 61%))) 35%, transparent);
+}
+
+.payment-widget .payment-option:disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.payment-widget .payment-secondary {
+  background: color-mix(in srgb, var(--payment-card-bg, hsl(var(--card, 0 0% 100%))) 80%, transparent 20%);
+}
+
+.payment-widget-toaster {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.payment-widget-toaster .sonner-toaster {
+  pointer-events: none;
+}
+
+.payment-widget-toaster .sonner-toast.payment-widget-toast {
+  pointer-events: auto;
+}
+
+.sonner-toast.payment-widget-toast {
+  display: none !important;
+}
+
+.payment-widget-toaster .sonner-toast.payment-widget-toast {
+  display: flex !important;
+}

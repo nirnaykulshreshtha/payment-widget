@@ -5,6 +5,7 @@
  */
 import { defineChain, http, webSocket, createPublicClient } from 'viem';
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+export const ZERO_INTEGRATOR_ID = '0x0001';
 const defaultNative = (symbol) => ({
     name: symbol,
     symbol,

@@ -12,11 +12,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./dist/styles.css"
   },
   "files": [
     "dist",
-    "src",
     "README.md",
     "SETUP.md",
     "extract-to-separate-repo.sh"
@@ -45,7 +44,7 @@
     "typescript": "^5.5.4"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/styles.css dist/styles.css",
     "type-check": "tsc --noEmit",
     "prepack": "npm run build"
   },
