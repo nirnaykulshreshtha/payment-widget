@@ -59,7 +59,8 @@
     "type-check": "tsc --noEmit",
     "prepack": "npm run build",
     "compile-contracts": "hardhat compile",
-    "test-contracts": "hardhat test"
+    "test-contracts": "hardhat test",
+    "deploy-call-forwarder": "hardhat run scripts/deployCallForwarder.ts"
   },
   "dependencies": {
     "@across-protocol/app-sdk": "^0.4.2",
@@ -69,6 +70,7 @@
     "lucide-react": "^0.456.0",
     "sonner": "^1.4.2",
     "tailwind-merge": "^2.6.0",
-    "viem": "^2.38.0"
+    "viem": "^2.38.0",
+    "dotenv": "^16.4.5"
   }
 }

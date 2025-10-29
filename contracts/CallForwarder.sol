@@ -115,4 +115,6 @@ contract CallForwarder is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     receive() external payable {}
 
     fallback() external payable {}
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
