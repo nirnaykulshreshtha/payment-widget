@@ -1,6 +1,6 @@
-export { default as PaymentWidget, PaymentWidget as CrossChainDeposit } from './widget';
-export { default } from './widget';
-export type * from './types';
+export { default as PaymentWidget, PaymentWidget as CrossChainDeposit } from './widget.js';
+export { default } from './widget.js';
+export type * from './types.js';
 export {
   getNetworkConfig,
   buildViemChain,
@@ -11,22 +11,22 @@ export {
   findChainConfig,
   deriveNativeToken,
   DEFAULT_WRAPPED_TOKEN_MAP,
-} from './config';
-export * from './history';
-export { useAcrossClient } from './hooks/useAcrossClient';
-export { useDepositPlanner } from './hooks/useDepositPlanner';
-export { PaymentWidgetProvider } from './providers/payment-widget-provider';
-export { usePaymentSetup } from './hooks/usePaymentSetup';
-export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example';
+} from './config.js';
+export * from './history/index.js';
+export { useAcrossClient } from './hooks/useAcrossClient.js';
+export { useDepositPlanner } from './hooks/useDepositPlanner.js';
+export { PaymentWidgetProvider } from './providers/payment-widget-provider.js';
+export { usePaymentSetup } from './hooks/usePaymentSetup.js';
+export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example.js';
 export {
   callForwarderAbi,
   encodeForwarderCall,
   encodeForwarderCalls,
   buildCallForwarderExecuteCalldata,
   buildCallForwarderTargetCall,
-} from './utils/call-forwarder';
+} from './utils/call-forwarder.js';
 export type {
   ForwarderCallInput,
   EncodedForwarderCall,
   BuildCallForwarderTargetCallParams,
-} from './utils/call-forwarder';
+} from './utils/call-forwarder.js';
