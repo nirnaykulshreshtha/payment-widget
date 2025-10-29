@@ -19,6 +19,5 @@ Thumbs.db
 # Do NOT ignore dist/ - it should be committed for npm install to work
 # dist/
 .env
-dist/
 cache/
 artifacts/
