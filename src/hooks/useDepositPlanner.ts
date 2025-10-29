@@ -606,17 +606,11 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
             route: baseRoute,
             inputAmount: boundedAmount,
             apiUrl: config.apiUrl,
-            recipient: config.targetContractCall?.target ?? config.walletClient?.account?.address ?? ZERO_HEX,
-            crossChainMessage: config.targetContractCall
+            recipient: config.targetRecipient ?? config.walletClient?.account?.address ?? ZERO_HEX,
+            crossChainMessage: config.targetContractCalls
               ? {
-                  actions: [
-                    {
-                      target: config.targetContractCall.target,
-                      callData: config.targetContractCall.callData,
-                      value: config.targetContractCall.value ?? 0n,
-                    },
-                  ],
-                  fallbackRecipient: config.targetContractCall.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_HEX,
+                  actions: config.targetContractCalls,
+                  fallbackRecipient: config.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_HEX,
                 }
               : undefined,
           });
@@ -672,7 +666,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       });
       return map;
     },
-    [client, config.apiUrl, config.targetContractCall, config.targetAmount],
+    [client, config.apiUrl, config.targetContractCalls, config.targetAmount],
   );
 
   const fetchSwapQuotes = useCallback(
@@ -744,7 +738,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
 
       const quoteTasks = limitedCandidates.map(async (candidate) => {
         try {
-          const recipient = config.targetContractCall?.target ?? config.targetRecipient;
+          const recipient = config.targetRecipient ?? config.walletClient?.account?.address;
           const quote = await client.getSwapQuote({
             logger: console,
             route: candidate.swapRoute!,
@@ -824,7 +818,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       });
       return map;
     },
-    [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCall, config.targetRecipient],
+    [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient],
   );
 
   const refresh = useCallback(async () => {

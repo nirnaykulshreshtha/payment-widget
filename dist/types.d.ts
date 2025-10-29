@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Address, Hex } from 'viem';
 import type { Chain, PublicClient, WalletClient } from 'viem';
-import type { AcrossClient, ConfiguredPublicClient, ConfiguredWalletClient, Quote as AcrossQuote, Route } from '@across-protocol/app-sdk';
+import type { AcrossClient, Amount, ConfiguredPublicClient, ConfiguredWalletClient, Quote as AcrossQuote, Route } from '@across-protocol/app-sdk';
 /**
  * Core type definitions for the payment widget provider pattern.
  * `SetupConfig` captures shared infrastructure while `PaymentConfig`
@@ -57,12 +57,14 @@ export interface PaymentConfig {
     targetChainId: number;
     targetAmount: bigint;
     targetRecipient?: Address;
-    targetContractCall?: {
-        target: Address;
-        callData: Hex;
-        value?: bigint;
-        fallbackRecipient?: Address;
-    };
+    targetContractCalls?: [
+        {
+            target: Address;
+            callData: Hex;
+            value: Amount;
+        }
+    ];
+    fallbackRecipient?: Address;
     maxSlippageBps?: number;
 }
 export interface NetworkConfig {

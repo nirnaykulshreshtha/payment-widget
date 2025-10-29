@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Address, Hex } from 'viem';
 import type { Chain, PublicClient, WalletClient } from 'viem';
 import type {
-  AcrossClient,
+  AcrossClient, Amount,
   ConfiguredPublicClient,
   ConfiguredWalletClient,
   Quote as AcrossQuote,
@@ -67,12 +67,12 @@ export interface PaymentConfig {
   targetChainId: number;
   targetAmount: bigint;
   targetRecipient?: Address;
-  targetContractCall?: {
+  targetContractCalls?: [{
     target: Address;
     callData: Hex;
-    value?: bigint;
-    fallbackRecipient?: Address;
-  };
+    value: Amount;
+  }];
+  fallbackRecipient?: Address;
   maxSlippageBps?: number;
 }
 

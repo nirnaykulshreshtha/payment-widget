@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Address, Hex } from 'viem';
-import { erc20Abi, formatUnits } from 'viem';
+import { erc20Abi } from 'viem';
 import type { ConfiguredPublicClient, ConfiguredWalletClient } from '@across-protocol/app-sdk';
 
 import { cn, summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
 
 import {ZERO_ADDRESS, ZERO_INTEGRATOR_ID} from './config';
-import type { PaymentHistoryEntry, PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig, TokenConfig } from './types';
+import type { PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig } from './types';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import {
@@ -31,7 +31,6 @@ import {
   updateSwapFilled,
   updateSwapTxConfirmed,
   updateSwapTxPending,
-  usePaymentHistoryStore,
   failSwap,
   refreshPendingHistory,
 } from './history';
@@ -338,8 +337,8 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
       try {
         const targetWithBuffer = computeTargetWithSlippage(config.targetAmount, config.maxSlippageBps);
-        const fallbackRecipient = config.targetContractCall?.fallbackRecipient ?? config.targetRecipient ?? ZERO_ADDRESS;
-        const depositRecipient = config.targetContractCall?.target ?? fallbackRecipient;
+        const fallbackRecipient = config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
+        const depositRecipient = config?.targetRecipient ?? fallbackRecipient;
         if (!config.walletClient?.account?.address) {
           log('refine quote running without wallet connection', { optionId: option.id });
         }
@@ -398,15 +397,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
               inputAmount: nextInput,
               apiUrl: config.apiUrl,
               recipient: depositRecipient,
-              crossChainMessage: config.targetContractCall
+              crossChainMessage: config.targetContractCalls
                 ? {
-                    actions: [
-                      {
-                        target: config.targetContractCall.target,
-                        callData: config.targetContractCall.callData,
-                        value: config.targetContractCall.value ?? 0n,
-                      },
-                    ],
+                    actions: config.targetContractCalls,
                     fallbackRecipient,
                   }
                 : undefined,
@@ -486,7 +479,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         setQuoteLoading(false);
       }
     },
-    [client, config.walletClient, config.apiUrl, config.maxSlippageBps, config.targetAmount, config.targetChainId, config.targetContractCall, config.targetTokenAddress, targetToken?.decimals, targetToken?.symbol],
+    [client, config.walletClient, config.apiUrl, config.maxSlippageBps, config.targetAmount, config.targetChainId, config.targetContractCalls, config.targetTokenAddress, targetToken?.decimals, targetToken?.symbol],
   );
 
   const handleSelect = useCallback(
@@ -541,7 +534,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           token: option.displayToken.symbol,
           amount: config.targetAmount.toString(),
           recipient: config.targetRecipient,
-          hasContractCall: Boolean(config.targetContractCall),
+          hasContractCall: Boolean(config.targetContractCalls),
         });
 
         const account = config.walletClient!.account!.address;
@@ -587,16 +580,19 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           setActiveHistoryId(historyIdRef);
         }
 
-        let hash: Hex;
+        let hash: Hex = "0x";
 
-        if (config.targetContractCall) {
-          hash = await walletClient.sendTransaction({
-            account,
-            to: config.targetContractCall.target,
-            data: config.targetContractCall.callData,
-            value: config.targetContractCall.value ?? 0n,
-            chain: targetViemChain,
-          }) as Hex;
+        if (config.targetContractCalls) {
+          for (let i = 0; i < config.targetContractCalls.length; i++) {
+            const targetContractCall = config.targetContractCalls[i];
+            hash = await walletClient.sendTransaction({
+              account,
+              to: targetContractCall.target,
+              data: targetContractCall.callData,
+              value: BigInt(targetContractCall.value ?? 0),
+              chain: targetViemChain,
+            }) as Hex;
+          }
         } else if (config.targetRecipient) {
           if (option.displayToken.address === ZERO_ADDRESS) {
             hash = await walletClient.sendTransaction({
@@ -704,7 +700,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
 
         const account = config.walletClient?.account?.address as Address | undefined;
-        const recipient = (config.targetContractCall?.target || config.targetRecipient || account) as Address | undefined;
+        const recipient = (config.targetRecipient || account) as Address | undefined;
         if (!account) {
           throw new Error('Wallet not connected');
         }
@@ -909,7 +905,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
 
         const account = config.walletClient?.account?.address as Address | undefined;
-        const recipient = (config.targetContractCall?.target || config.targetRecipient || account) as Address | undefined;
+        const recipient = (config.targetRecipient || account) as Address | undefined;
         if (!account) {
           throw new Error('Wallet not connected');
         }

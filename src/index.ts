@@ -19,14 +19,10 @@ export { PaymentWidgetProvider } from './providers/payment-widget-provider.js';
 export { usePaymentSetup } from './hooks/usePaymentSetup.js';
 export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example.js';
 export {
-  callForwarderAbi,
   encodeForwarderCall,
-  encodeForwarderCalls,
-  buildCallForwarderExecuteCalldata,
-  buildCallForwarderTargetCall,
-} from './utils/call-forwarder.js';
+  encodeCalls,
+} from './utils/call-encoder.js';
 export type {
-  ForwarderCallInput,
-  EncodedForwarderCall,
-  BuildCallForwarderTargetCallParams,
-} from './utils/call-forwarder.js';
+  EncodedCall,
+  CallInput,
+} from './utils/call-encoder.js';

@@ -267,8 +267,8 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         setQuoteError(null);
         try {
             const targetWithBuffer = computeTargetWithSlippage(config.targetAmount, config.maxSlippageBps);
-            const fallbackRecipient = config.targetContractCall?.fallbackRecipient ?? config.targetRecipient ?? ZERO_ADDRESS;
-            const depositRecipient = config.targetContractCall?.target ?? fallbackRecipient;
+            const fallbackRecipient = config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
+            const depositRecipient = config?.targetRecipient ?? fallbackRecipient;
             if (!config.walletClient?.account?.address) {
                 log('refine quote running without wallet connection', { optionId: option.id });
             }
@@ -322,15 +322,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                         inputAmount: nextInput,
                         apiUrl: config.apiUrl,
                         recipient: depositRecipient,
-                        crossChainMessage: config.targetContractCall
+                        crossChainMessage: config.targetContractCalls
                             ? {
-                                actions: [
-                                    {
-                                        target: config.targetContractCall.target,
-                                        callData: config.targetContractCall.callData,
-                                        value: config.targetContractCall.value ?? 0n,
-                                    },
-                                ],
+                                actions: config.targetContractCalls,
                                 fallbackRecipient,
                             }
                             : undefined,
@@ -398,7 +392,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         finally {
             setQuoteLoading(false);
         }
-    }, [client, config.walletClient, config.apiUrl, config.maxSlippageBps, config.targetAmount, config.targetChainId, config.targetContractCall, config.targetTokenAddress, targetToken?.decimals, targetToken?.symbol]);
+    }, [client, config.walletClient, config.apiUrl, config.maxSlippageBps, config.targetAmount, config.targetChainId, config.targetContractCalls, config.targetTokenAddress, targetToken?.decimals, targetToken?.symbol]);
     const handleSelect = useCallback((option) => {
         const clonedOption = clonePaymentOption(option);
         log('option selected', {
@@ -443,7 +437,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 token: option.displayToken.symbol,
                 amount: config.targetAmount.toString(),
                 recipient: config.targetRecipient,
-                hasContractCall: Boolean(config.targetContractCall),
+                hasContractCall: Boolean(config.targetContractCalls),
             });
             const account = config.walletClient.account.address;
             if (!account) {
@@ -483,15 +477,18 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 });
                 setActiveHistoryId(historyIdRef);
             }
-            let hash;
-            if (config.targetContractCall) {
-                hash = await walletClient.sendTransaction({
-                    account,
-                    to: config.targetContractCall.target,
-                    data: config.targetContractCall.callData,
-                    value: config.targetContractCall.value ?? 0n,
-                    chain: targetViemChain,
-                });
+            let hash = "0x";
+            if (config.targetContractCalls) {
+                for (let i = 0; i < config.targetContractCalls.length; i++) {
+                    const targetContractCall = config.targetContractCalls[i];
+                    hash = await walletClient.sendTransaction({
+                        account,
+                        to: targetContractCall.target,
+                        data: targetContractCall.callData,
+                        value: BigInt(targetContractCall.value ?? 0),
+                        chain: targetViemChain,
+                    });
+                }
             }
             else if (config.targetRecipient) {
                 if (option.displayToken.address === ZERO_ADDRESS) {
@@ -594,7 +591,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 return;
             }
             const account = config.walletClient?.account?.address;
-            const recipient = (config.targetContractCall?.target || config.targetRecipient || account);
+            const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Wallet not connected');
             }
@@ -769,7 +766,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 return;
             }
             const account = config.walletClient?.account?.address;
-            const recipient = (config.targetContractCall?.target || config.targetRecipient || account);
+            const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Wallet not connected');
             }

@@ -8,5 +8,5 @@ export { useDepositPlanner } from './hooks/useDepositPlanner.js';
 export { PaymentWidgetProvider } from './providers/payment-widget-provider.js';
 export { usePaymentSetup } from './hooks/usePaymentSetup.js';
 export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example.js';
-export { callForwarderAbi, encodeForwarderCall, encodeForwarderCalls, buildCallForwarderExecuteCalldata, buildCallForwarderTargetCall, } from './utils/call-forwarder.js';
-export type { ForwarderCallInput, EncodedForwarderCall, BuildCallForwarderTargetCallParams, } from './utils/call-forwarder.js';
+export { encodeForwarderCall, encodeCalls, } from './utils/call-encoder.js';
+export type { EncodedCall, CallInput, } from './utils/call-encoder.js';
