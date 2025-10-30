@@ -36,8 +36,8 @@
     "directory": "ui/packages/payment-widget"
   },
   "peerDependencies": {
-    "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",
@@ -56,12 +56,17 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@across-protocol/app-sdk": "^0.4.2",
+    "@across-protocol/app-sdk": "^0.4.3",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
     "lucide-react": "^0.456.0",
     "sonner": "^1.4.2",
     "tailwind-merge": "^2.6.0",
-    "viem": "^2.38.0",
-    "dotenv": "^16.4.5"
+    "viem": "^2.38.5",
+    "wagmi": "^2.19.1"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "example"
   }
 }

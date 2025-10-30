@@ -5,6 +5,7 @@ export {
   getNetworkConfig,
   buildViemChain,
   ZERO_ADDRESS,
+  ZERO_INTEGRATOR_ID,
   createDefaultPublicClients,
   createPublicClientFor,
   createSetupConfig,

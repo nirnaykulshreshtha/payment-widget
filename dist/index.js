@@ -1,6 +1,6 @@
 export { default as PaymentWidget, PaymentWidget as CrossChainDeposit } from './widget.js';
 export { default } from './widget.js';
-export { getNetworkConfig, buildViemChain, ZERO_ADDRESS, createDefaultPublicClients, createPublicClientFor, createSetupConfig, findChainConfig, deriveNativeToken, DEFAULT_WRAPPED_TOKEN_MAP, } from './config.js';
+export { getNetworkConfig, buildViemChain, ZERO_ADDRESS, ZERO_INTEGRATOR_ID, createDefaultPublicClients, createPublicClientFor, createSetupConfig, findChainConfig, deriveNativeToken, DEFAULT_WRAPPED_TOKEN_MAP, } from './config.js';
 export * from './history/index.js';
 export { useAcrossClient } from './hooks/useAcrossClient.js';
 export { useDepositPlanner } from './hooks/useDepositPlanner.js';
