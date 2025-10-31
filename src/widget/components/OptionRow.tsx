@@ -37,22 +37,22 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
   const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Insufficient balance';
   const unavailableMessage = (() => {
     if (!option.unavailabilityReason) {
-      return `Top up your ${option.displayToken.symbol} on ${chainLabel} to enable this route.`;
+      return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
     }
 
     switch (option.unavailabilityReason.kind) {
       case 'minDepositShortfall':
         return `Minimum deposit is ${formatTokenAmount(option.unavailabilityReason.requiredAmount, option.displayToken.decimals)} ${option.displayToken.symbol}.`;
       case 'quoteFetchFailed':
-        return 'Unable to fetch a bridge quote right now. Try refreshing.';
+        return "We couldn't check pricing for this option. Try refreshing.";
       case 'insufficientBalance':
         return `Requires ${formatTokenAmount(option.unavailabilityReason.requiredAmount, option.displayToken.decimals)} ${option.displayToken.symbol}.`;
       case 'usdShortfall':
         return option.unavailabilityReason.availableUsd != null
-          ? `Requires approximately $${option.unavailabilityReason.requiredUsd.toFixed(2)} liquidity (you have $${option.unavailabilityReason.availableUsd.toFixed(2)}).`
-          : 'Requires additional liquidity to meet the minimum USD threshold.';
+          ? `You'll need about $${option.unavailabilityReason.requiredUsd.toFixed(2)} available (currently $${option.unavailabilityReason.availableUsd.toFixed(2)}).`
+          : "You'll need more funds in USD terms to use this option.";
       default:
-        return `Top up your ${option.displayToken.symbol} on ${chainLabel} to enable this route.`;
+        return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
     }
   })();
 

@@ -15,9 +15,9 @@ export function categorizePlannerError(error: string | null): {
   if (!error) {
     return {
       type: 'unknown',
-      title: 'No payment routes available',
-      description: 'Unable to find routes for this amount. Try a smaller amount or different token.',
-      actions: ['Lower the amount', 'Switch tokens', 'Refresh to check for updated liquidity']
+      title: 'No payment options found',
+      description: "We couldn't find a way to send this amount. Try a smaller amount or pick another token.",
+      actions: ['Try a smaller amount', 'Choose a different token', 'Refresh to check for new availability']
     };
   }
 
@@ -47,9 +47,9 @@ export function categorizePlannerError(error: string | null): {
   if (errorLower.includes('invalid') || errorLower.includes('unsupported') || errorLower.includes('chain') || errorLower.includes('token')) {
     return {
       type: 'configuration',
-      title: 'Configuration error',
-      description: 'The target token or chain is not supported. Please check your configuration.',
-      actions: ['Verify target token address', 'Check supported chains', 'Contact support if issue persists']
+      title: 'Option not supported',
+      description: "This token or network isn't supported yet. Double-check your setup or pick another option.",
+      actions: ['Review your token details', 'Check supported networks', 'Contact support if issue persists']
     };
   }
 
@@ -57,9 +57,9 @@ export function categorizePlannerError(error: string | null): {
   if (errorLower.includes('liquidity') || errorLower.includes('insufficient') || errorLower.includes('amount') || errorLower.includes('balance')) {
     return {
       type: 'liquidity',
-      title: 'Insufficient liquidity',
-      description: 'Not enough liquidity for this amount. Try a smaller amount or different token.',
-      actions: ['Try a smaller amount', 'Switch to a different token', 'Check back later for more liquidity']
+      title: 'Not enough capacity',
+      description: "We couldn't reserve enough funds for this amount. Try a smaller amount or pick another token.",
+      actions: ['Try a smaller amount', 'Choose a different token', "Check back later to see if it's available"]
     };
   }
 
@@ -86,9 +86,9 @@ export function categorizePlannerError(error: string | null): {
   // Default fallback
   return {
     type: 'unknown',
-    title: 'Payment planning failed',
-    description: `Unable to discover payment routes: ${error}`,
-    actions: ['Refresh to try again', 'Check your configuration', 'Contact support if issue persists']
+    title: 'Something went wrong',
+    description: 'We hit an unexpected error while preparing your payment. Try again, and contact support if it keeps happening.',
+    actions: ['Refresh and try again', 'Review your setup', 'Contact support if it continues']
   };
 }
 
