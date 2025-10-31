@@ -3,12 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcRequestError, erc20Abi, formatUnits } from 'viem';
 import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_ADDRESS, deriveNativeToken } from '../config';
 const PLANNER_STAGE_DEFINITIONS = [
-    { id: 'initializing', label: 'Preparing payment planner' },
-    { id: 'discoveringRoutes', label: 'Fetching routes from Across' },
-    { id: 'resolvingTokens', label: 'Resolving token metadata' },
-    { id: 'fetchingBalances', label: 'Checking wallet balances' },
-    { id: 'quotingRoutes', label: 'Constructing bridge quotes' },
-    { id: 'finalizing', label: 'Finalising payment options' },
+    { id: 'initializing', label: 'Getting things ready' },
+    { id: 'discoveringRoutes', label: 'Finding ways to send your payment' },
+    { id: 'resolvingTokens', label: 'Loading token details' },
+    { id: 'fetchingBalances', label: 'Checking your wallet balance' },
+    { id: 'quotingRoutes', label: 'Working out pricing' },
+    { id: 'finalizing', label: 'Wrapping up payment options' },
 ];
 const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11';
 const LOG_PREFIX = '[payment-planner]';
@@ -660,12 +660,12 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         const depositor = walletAddress?.toLowerCase();
         if (!depositor) {
             logError('swap quote requires connected wallet');
-            setError('Connect a wallet to evaluate swap routes');
+            setError('Connect your wallet to get swap prices');
             swapCandidates.forEach((candidate) => {
                 if (!unavailability.has(candidate.id)) {
                     unavailability.set(candidate.id, {
                         kind: 'quoteFetchFailed',
-                        message: 'Wallet not connected for swap quote evaluation',
+                        message: 'Wallet not connected to fetch swap price',
                     });
                 }
             });
@@ -748,7 +748,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
     }, [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient]);
     const refresh = useCallback(async () => {
         if (!client) {
-            const message = 'Across client not ready';
+            const message = 'Payment service is still starting up';
             logError(message);
             setError(message);
             setLoadingStage('ready');
@@ -756,7 +756,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
             return;
         }
         if (!config.walletClient?.account?.address) {
-            const message = 'Connect a wallet to discover available payment options';
+            const message = 'Connect your wallet to see available payment options';
             logError(message);
             setError(message);
             setLoadingStage('ready');
@@ -1167,7 +1167,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         }
         catch (err) {
             logError('failed to refresh payment planner', err);
-            setError(err instanceof Error ? err.message : 'Failed to load payment options');
+            setError(err instanceof Error ? err.message : "We couldn't load payment options");
             setOptions([]);
             setLoadingStage('ready');
         }

@@ -25,7 +25,7 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
     return (
       <EmptyStateView
         title="Payment not found"
-        description="We couldn’t find that payment in your history. Try refreshing your history view."
+        description="We couldn't find that payment in your history. Try refreshing your history view."
       />
     );
   }
@@ -53,14 +53,14 @@ function AmountSection({ inputLabel, outputLabel }: { inputLabel: string; output
       <div className="space-y-2">
         <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3">
           <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Input Amount</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">You sent</div>
             <div className="font-mono text-sm font-bold">{inputLabel}</div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3">
           <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Expected Output</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Estimated receive</div>
             <div className="font-mono text-sm font-bold">{outputLabel}</div>
           </div>
           <div className="text-[10px] text-muted-foreground">Est.</div>
@@ -80,7 +80,7 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
       <div className="grid grid-cols-1 gap-2">
         {entry.approvalTxHashes?.length ? (
           <TransactionGroup
-            title="Approval"
+            title="Wallet approval"
             colorClass="bg-yellow-500"
             hashes={entry.approvalTxHashes}
             chainId={entry.originChainId}
@@ -89,7 +89,7 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
         ) : null}
         {entry.depositTxHash ? (
           <TransactionGroup
-            title="Deposit"
+            title="Deposit sent"
             colorClass="bg-blue-500"
             hashes={[entry.depositTxHash]}
             chainId={entry.originChainId}
@@ -98,7 +98,7 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
         ) : null}
         {entry.swapTxHash ? (
           <TransactionGroup
-            title="Swap"
+            title="Swap sent"
             colorClass="bg-green-500"
             hashes={[entry.swapTxHash]}
             chainId={entry.originChainId}
@@ -107,7 +107,7 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
         ) : null}
         {entry.fillTxHash ? (
           <TransactionGroup
-            title="Fill"
+            title="Funds delivered"
             colorClass="bg-purple-500"
             hashes={[entry.fillTxHash]}
             chainId={entry.destinationChainId}
@@ -116,7 +116,7 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
         ) : null}
         {entry.wrapTxHash ? (
           <TransactionGroup
-            title="Wrap"
+            title="Wrap step"
             colorClass="bg-orange-500"
             hashes={[entry.wrapTxHash]}
             chainId={entry.originChainId}
@@ -135,7 +135,7 @@ function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
     <div className="flex items-center justify-between border-t border-border/30 pt-3">
       <div className="flex items-center gap-2 text-muted-foreground">
         <ClockIcon className="h-3 w-3" />
-        <span className="text-[10px] uppercase tracking-wide">Updated</span>
+        <span className="text-[10px] uppercase tracking-wide">Last updated</span>
       </div>
       <time className="text-[10px] text-muted-foreground/80">
         {new Date(updatedAt).toLocaleString()}

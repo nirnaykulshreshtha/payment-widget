@@ -34,7 +34,7 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
       : option.mode === 'direct'
         ? `${formatTokenAmount(option.quote?.outputAmount ?? targetAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
         : '—';
-  const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Insufficient balance';
+  const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Not enough balance';
   const unavailableMessage = (() => {
     if (!option.unavailabilityReason) {
       return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
@@ -91,7 +91,7 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
             : null}
         </p>
         <Badge variant="outline" className="text-[10px] uppercase tracking-[0.2em]">
-          {option.mode}
+          {option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct'}
         </Badge>
       </div>
       {!option.canMeetTarget && (

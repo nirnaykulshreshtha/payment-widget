@@ -41,7 +41,7 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
   const steps = buildSteps(timeline);
 
   if (!steps.length) {
-    return <p className="text-xs text-muted-foreground">Waiting for updates…</p>;
+    return <p className="text-xs text-muted-foreground">Waiting for updates...</p>;
   }
 
   const flow = entry ? HISTORY_TIMELINE_STAGE_FLOW[entry.mode] ?? [] : [];
@@ -264,6 +264,5 @@ function renderHashLink(hash: string | undefined, chainId?: number) {
     </a>
   );
 }
-
 
 

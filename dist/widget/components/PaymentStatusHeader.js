@@ -28,7 +28,11 @@ export function PaymentStatusHeader({ entry, chainLookup, chainLogos }) {
     const originChainName = chainLookup.get(entry.originChainId) ?? entry.originChainId;
     const destinationChainName = chainLookup.get(entry.destinationChainId) ?? entry.destinationChainId;
     // Determine payment type display
-    const paymentType = entry.mode === 'bridge' ? 'Bridge payment' : 'Direct payment';
+    const paymentType = entry.mode === 'bridge'
+        ? 'Cross-network payment'
+        : entry.mode === 'swap'
+            ? 'Swap and send'
+            : 'Direct payment';
     console.log('PaymentStatusHeader: Rendering header for entry:', {
         id: entry.id,
         mode: entry.mode,

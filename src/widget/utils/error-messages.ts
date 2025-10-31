@@ -68,8 +68,8 @@ export function categorizePlannerError(error: string | null): {
     return {
       type: 'network',
       title: 'Service temporarily unavailable',
-      description: 'Across Protocol service is temporarily down. Please try again in a few moments.',
-      actions: ['Wait a few moments', 'Refresh the page', 'Check Across Protocol status']
+      description: 'The payment service is temporarily down. Please try again in a few moments.',
+      actions: ['Wait a few moments', 'Refresh the page', 'Check service status']
     };
   }
 

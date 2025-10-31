@@ -46,10 +46,10 @@ function HistoryListCard({ entry, onSelect }) {
     const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
     const outputLabel = formatAmountWithSymbol(entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol);
     const title = entry.mode === 'direct'
-        ? 'Direct Payment'
+        ? 'Direct payment'
         : entry.mode === 'swap'
-            ? 'Swap & Bridge'
-            : 'Bridge Payment';
+            ? 'Swap and send'
+            : 'Cross-network payment';
     const handleClick = useCallback((event) => {
         if (!onSelect)
             return;
@@ -77,7 +77,7 @@ function HistoryListTokenFlowColumn({ tokenSymbol, chainLabel }) {
  * Displays the amount section for a history card.
  */
 function HistoryListAmountDetails({ inputLabel, outputLabel }) {
-    return (_jsx("div", { className: "space-y-3", children: _jsxs("div", { className: "space-y-2", children: [_jsx(HistoryListAmountRow, { label: "Input Amount", value: inputLabel, indicator: _jsx(ArrowRight, { className: "h-4 w-4 text-muted-foreground" }) }), _jsx(HistoryListAmountRow, { label: "Expected Output", value: outputLabel, indicator: _jsx("span", { className: "text-[10px] text-muted-foreground", children: "Est." }) })] }) }));
+    return (_jsx("div", { className: "space-y-3", children: _jsxs("div", { className: "space-y-2", children: [_jsx(HistoryListAmountRow, { label: "You sent", value: inputLabel, indicator: _jsx(ArrowRight, { className: "h-4 w-4 text-muted-foreground" }) }), _jsx(HistoryListAmountRow, { label: "Estimated receive", value: outputLabel, indicator: _jsx("span", { className: "text-[10px] text-muted-foreground", children: "Est." }) })] }) }));
 }
 /**
  * Displays a single amount row.
@@ -92,13 +92,13 @@ function HistoryListTransactionHashes({ entry }) {
     if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
         return null;
     }
-    return (_jsx("div", { className: "space-y-3", children: _jsxs("div", { className: "grid grid-cols-1 gap-2", children: [entry.approvalTxHashes?.length ? (_jsx(TransactionGroup, { title: "Approval", colorClass: "bg-yellow-500", hashes: entry.approvalTxHashes, chainId: entry.originChainId })) : null, entry.depositTxHash ? (_jsx(TransactionGroup, { title: "Deposit", colorClass: "bg-blue-500", hashes: [entry.depositTxHash], chainId: entry.originChainId })) : null, entry.swapTxHash ? (_jsx(TransactionGroup, { title: "Swap", colorClass: "bg-green-500", hashes: [entry.swapTxHash], chainId: entry.originChainId })) : null, entry.fillTxHash ? (_jsx(TransactionGroup, { title: "Fill", colorClass: "bg-purple-500", hashes: [entry.fillTxHash], chainId: entry.destinationChainId })) : null, entry.wrapTxHash ? (_jsx(TransactionGroup, { title: "Wrap", colorClass: "bg-orange-500", hashes: [entry.wrapTxHash], chainId: entry.originChainId })) : null] }) }));
+    return (_jsx("div", { className: "space-y-3", children: _jsxs("div", { className: "grid grid-cols-1 gap-2", children: [entry.approvalTxHashes?.length ? (_jsx(TransactionGroup, { title: "Wallet approval", colorClass: "bg-yellow-500", hashes: entry.approvalTxHashes, chainId: entry.originChainId })) : null, entry.depositTxHash ? (_jsx(TransactionGroup, { title: "Deposit sent", colorClass: "bg-blue-500", hashes: [entry.depositTxHash], chainId: entry.originChainId })) : null, entry.swapTxHash ? (_jsx(TransactionGroup, { title: "Swap sent", colorClass: "bg-green-500", hashes: [entry.swapTxHash], chainId: entry.originChainId })) : null, entry.fillTxHash ? (_jsx(TransactionGroup, { title: "Funds delivered", colorClass: "bg-purple-500", hashes: [entry.fillTxHash], chainId: entry.destinationChainId })) : null, entry.wrapTxHash ? (_jsx(TransactionGroup, { title: "Wrap step", colorClass: "bg-orange-500", hashes: [entry.wrapTxHash], chainId: entry.originChainId })) : null] }) }));
 }
 /**
  * Displays the updated timestamp footer for a history card.
  */
 function HistoryListUpdatedTimestamp({ updatedAt }) {
-    return (_jsxs("div", { className: "flex items-center justify-between border-t border-border/30 pt-3", children: [_jsxs("div", { className: "flex items-center gap-2 text-muted-foreground", children: [_jsx(Clock, { className: "h-3 w-3" }), _jsx("span", { className: "text-[10px] uppercase tracking-wide", children: "Updated" })] }), _jsx("time", { className: "text-[10px] text-muted-foreground/80", children: new Date(updatedAt).toLocaleString() })] }));
+    return (_jsxs("div", { className: "flex items-center justify-between border-t border-border/30 pt-3", children: [_jsxs("div", { className: "flex items-center gap-2 text-muted-foreground", children: [_jsx(Clock, { className: "h-3 w-3" }), _jsx("span", { className: "text-[10px] uppercase tracking-wide", children: "Last updated" })] }), _jsx("time", { className: "text-[10px] text-muted-foreground/80", children: new Date(updatedAt).toLocaleString() })] }));
 }
 /**
  * Renders an explorer link for the provided transaction hash when available.

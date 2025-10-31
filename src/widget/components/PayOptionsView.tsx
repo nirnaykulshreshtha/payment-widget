@@ -108,7 +108,7 @@ export function PayOptionsView({
         <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
           <h3 className="text-sm font-semibold">No matches found</h3>
           <p className="mt-2 text-xs text-muted-foreground">
-            Try a different asset symbol or chain name.
+            Try another token symbol or network name.
           </p>
         </div>
       );
@@ -251,11 +251,10 @@ function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount }: S
         type="search"
         value={searchTerm}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Search token, chain, or mode"
+        placeholder="Search by token or network"
         className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <div className="mt-2 text-[11px] text-muted-foreground">Showing {visibleCount} of {totalCount} options</div>
     </div>
   );
 }
-

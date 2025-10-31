@@ -167,7 +167,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         const walletClient = config.walletClient;
         if (!walletClient || !walletClient.account?.address) {
             logError('wallet client missing when switching chain', { targetChainId, context });
-            setExecutionError('Wallet client unavailable');
+            setExecutionError('Wallet connection not available');
             return null;
         }
         let currentId = walletClient.chain?.id;
@@ -187,7 +187,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         const targetChainConfig = config.supportedChains.find((chain) => chain.chainId === targetChainId);
         if (!targetChainConfig) {
             logError('target chain not found in configuration', { targetChainId, context });
-            setExecutionError(`Chain ID ${targetChainId} is not supported`);
+            setExecutionError(`That network is not supported here (ID ${targetChainId}).`);
             return null;
         }
         const chainHex = `0x${targetChainId.toString(16)}`;
@@ -285,7 +285,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             }
             const maxAllowed = option.balance < limits.maxDeposit ? option.balance : limits.maxDeposit;
             if (maxAllowed < limits.minDeposit) {
-                const message = 'Balance below minimum deposit requirement';
+                const message = 'Balance below the minimum required for this option';
                 logError(message, {
                     balance: describeAmount(option.balance, option.displayToken, option.displayToken.decimals, option.displayToken.symbol),
                     minDeposit: describeAmount(limits.minDeposit, option.displayToken, option.displayToken.decimals, option.displayToken.symbol),
@@ -441,7 +441,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             });
             const account = config.walletClient.account.address;
             if (!account) {
-                throw new Error('Wallet not connected');
+                throw new Error('Connect your wallet to continue');
             }
             const activeWalletClient = await ensureWalletChain(config.targetChainId, 'direct');
             if (!activeWalletClient) {
@@ -562,7 +562,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     }, [activeHistoryId, config, ensureWalletChain, onPaymentComplete, onPaymentFailed, showFailureView, showSuccessView, targetToken]);
     const executeBridge = useCallback(async (option) => {
         if (!client || !option.route || !option.quote) {
-            setExecutionError('Quote missing for bridge execution');
+            setExecutionError('Missing quote for this bridge payment');
             return;
         }
         let historyIdRef = activeHistoryId;
@@ -593,7 +593,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             const account = config.walletClient?.account?.address;
             const recipient = (config.targetRecipient || account);
             if (!account) {
-                throw new Error('Wallet not connected');
+                throw new Error('Connect your wallet to continue');
             }
             if (!recipient) {
                 throw new Error('Missing recipient configuration');
@@ -735,7 +735,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     }, [activeHistoryId, client, config, ensureWalletChain, onPaymentComplete, onPaymentFailed, openTrackingView, showFailureView, showSuccessView, targetToken, wrapTxHash]);
     const executeSwap = useCallback(async (option) => {
         if (!client || !option.swapRoute || !option.swapQuote) {
-            setExecutionError('Swap quote missing for execution');
+            setExecutionError('Missing swap quote for this payment');
             return;
         }
         let historyIdRef = activeHistoryId;
@@ -768,7 +768,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             const account = config.walletClient?.account?.address;
             const recipient = (config.targetRecipient || account);
             if (!account) {
-                throw new Error('Wallet not connected');
+                throw new Error('Connect your wallet to continue');
             }
             if (!recipient) {
                 throw new Error('Missing recipient configuration');
@@ -914,37 +914,37 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         if (!selectedOption)
             return;
         if (!config.walletClient) {
-            const message = 'Wallet client not available';
+            const message = 'Wallet connection not available';
             logError(message);
             setExecutionError(message);
             return;
         }
         if (!config.walletClient.account?.address) {
-            const message = 'Wallet not connected';
+            const message = 'Connect your wallet to continue';
             logError(message);
             setExecutionError(message);
             return;
         }
         if (selectedOption.mode === 'bridge' && quoteLoading) {
-            const message = 'Quote is still refreshing. Please wait.';
+            const message = 'Quote is still updating. Please wait.';
             log(message);
             setExecutionError(message);
             return;
         }
         if (selectedOption.mode === 'bridge' && !selectedOption.quote) {
-            const message = 'Quote unavailable. Please retry.';
+            const message = 'Quote unavailable. Please try again.';
             logError(message);
             setExecutionError(message);
             return;
         }
         if (selectedOption.mode === 'swap' && !selectedOption.swapQuote) {
-            const message = 'Swap quote unavailable. Please retry.';
+            const message = 'Swap quote unavailable. Please try again.';
             logError(message);
             setExecutionError(message);
             return;
         }
         if (!selectedOption.canMeetTarget) {
-            const message = 'Insufficient balance for this option.';
+            const message = 'Not enough balance for this option.';
             logError(message);
             setExecutionError(message);
             return;
@@ -1012,38 +1012,38 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         switch (currentView.name) {
             case 'loading':
                 return {
-                    title: 'Discovering Routes',
-                    subtitle: "We're fetching viable payments across your configured chains.",
+                    title: 'Preparing options',
+                    subtitle: 'Fetching the best ways to complete your payment.',
                 };
             case 'options':
                 return {
-                    title: 'Pay with Any Asset',
-                    subtitle: `Need ${formattedTargetAmount} ${targetSymbol} on ${targetChainLabel}`,
+                    title: 'Choose how to pay',
+                    subtitle: `Goal: ${formattedTargetAmount} ${targetSymbol} on ${targetChainLabel}`,
                 };
             case 'details':
                 return {
-                    title: 'Payment Details',
-                    subtitle: selectedOption ? `${selectedOption.displayToken.symbol} → ${targetSymbol}` : undefined,
+                    title: 'Option details',
+                    subtitle: selectedOption ? `${selectedOption.displayToken.symbol} -> ${targetSymbol}` : undefined,
                 };
             case 'history':
                 return {
-                    title: 'Recent Activity',
-                    subtitle: 'Review previous payments and their progression.',
+                    title: 'Recent activity',
+                    subtitle: 'Review your previous payments.',
                 };
             case 'tracking':
                 return {
-                    title: 'Payment Tracking',
-                    subtitle: 'Monitor deposits, relays, and settlement in real time.',
+                    title: 'Payment tracking',
+                    subtitle: 'Follow each step in real time.',
                 };
             case 'success':
                 return {
-                    title: 'Payment Successful',
-                    subtitle: 'Funds have settled on the destination chain.',
+                    title: 'Payment complete',
+                    subtitle: 'Funds are on the receiving network.',
                 };
             case 'failure':
                 return {
-                    title: 'Payment Failed',
-                    subtitle: 'Review the error and try again when ready.',
+                    title: 'Payment failed',
+                    subtitle: 'Review the error and try again.',
                 };
             default:
                 return { title: 'Payment', subtitle: undefined };

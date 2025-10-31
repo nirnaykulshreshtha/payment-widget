@@ -35,11 +35,11 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
       >
         {isSuccess ? <CheckCircle2 className="mt-0.5 h-5 w-5" /> : <XCircle className="mt-0.5 h-5 w-5" />}
         <div className="space-y-1">
-          <p className="text-sm font-semibold">{isSuccess ? 'Payment settled successfully' : 'Payment failed'}</p>
+          <p className="text-sm font-semibold">{isSuccess ? 'Payment completed' : "Payment didn't go through"}</p>
           <p className="text-xs">
             {isSuccess
-              ? 'Your funds have been delivered to the destination chain. You can open tracking for a full receipt.'
-              : reason ?? 'Something went wrong during the payment attempt.'}
+              ? 'Your funds are now on the receiving network. Open tracking to see the full receipt.'
+              : reason ?? "We couldn't finish this payment."}
           </p>
         </div>
       </div>
@@ -47,29 +47,29 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
       {summary && (
         <div className="space-y-2 rounded-2xl border border-border/60 bg-card/40 p-4 text-sm">
           <DetailRow
-            label="Paid"
+            label="You sent"
             value={`${formatTokenAmount(summary.input.amount, summary.input.token.decimals)} ${summary.input.token.symbol}`}
           />
           {summary.output && (
             <DetailRow
-              label="Received"
+              label="You received"
               value={`${formatTokenAmount(summary.output.amount, summary.output.token?.decimals ?? summary.input.token.decimals)} ${summary.output.token?.symbol ?? summary.input.token.symbol}`}
             />
           )}
           {summary.approvalTxHashes && summary.approvalTxHashes.length > 0 && (
             <DetailRow
-              label="Approval txs"
+              label="Approval transactions"
               value={renderHashWithOverflow(summary.approvalTxHashes, summary.originChainId ?? summary.input.token.chainId)}
             />
           )}
           {summary.swapTxHash && (
-            <DetailRow label="Swap tx" value={renderHashLink(summary.swapTxHash as string, summary.originChainId ?? summary.input.token.chainId)} />
+            <DetailRow label="Swap transaction" value={renderHashLink(summary.swapTxHash as string, summary.originChainId ?? summary.input.token.chainId)} />
           )}
           {summary.depositTxHash && summary.mode !== 'swap' && (
-            <DetailRow label={summary.mode === 'bridge' ? 'Deposit tx' : 'Payment tx'} value={renderHashLink(summary.depositTxHash as string, summary.originChainId ?? summary.input.token.chainId)} />
+            <DetailRow label={summary.mode === 'bridge' ? 'Deposit transaction' : 'Payment transaction'} value={renderHashLink(summary.depositTxHash as string, summary.originChainId ?? summary.input.token.chainId)} />
           )}
           {summary.fillTxHash && (
-            <DetailRow label="Fill tx" value={renderHashLink(summary.fillTxHash as string, summary.destinationChainId ?? summary.input.token.chainId)} />
+            <DetailRow label="Delivery transaction" value={renderHashLink(summary.fillTxHash as string, summary.destinationChainId ?? summary.input.token.chainId)} />
           )}
         </div>
       )}

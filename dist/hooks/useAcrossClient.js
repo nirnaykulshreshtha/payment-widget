@@ -4,7 +4,7 @@ import { createAcrossClient, getAcrossClient } from '@across-protocol/app-sdk';
 export function useAcrossClient({ integratorId, chains, useTestnet, apiUrl, indexerUrl, pollingInterval }) {
     return useMemo(() => {
         if (!chains || chains.length === 0) {
-            return { client: null, error: 'No chains configured for Across client' };
+            return { client: null, error: 'No networks configured for the payment service' };
         }
         try {
             const options = {
@@ -28,7 +28,7 @@ export function useAcrossClient({ integratorId, chains, useTestnet, apiUrl, inde
                 return { client: existing, error: null };
             }
             catch (fallbackError) {
-                const message = err instanceof Error ? err.message : 'Failed to initialise Across client';
+                const message = err instanceof Error ? err.message : 'Failed to start the payment service';
                 const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : undefined;
                 return { client: null, error: fallbackMessage ? `${message}. ${fallbackMessage}` : message };
             }

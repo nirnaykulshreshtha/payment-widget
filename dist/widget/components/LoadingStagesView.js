@@ -7,7 +7,7 @@ import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib';
 export function LoadingStagesView({ stages, currentStage, completedStages }) {
     const activeStage = currentStage === 'ready' ? stages[stages.length - 1]?.id : currentStage;
-    return (_jsxs("div", { className: "space-y-6", children: [_jsx("p", { className: "text-sm text-muted-foreground", children: "Hang tight while we gather quotes, filter preferred chains, and check your balances." }), _jsx("ol", { className: "space-y-3", children: stages.map((stage) => {
+    return (_jsxs("div", { className: "space-y-6", children: [_jsx("p", { className: "text-sm text-muted-foreground", children: "Hang tight while we check prices and your balances so we can show the best options." }), _jsx("ol", { className: "space-y-3", children: stages.map((stage) => {
                     const state = completedStages.includes(stage.id) || currentStage === 'ready'
                         ? 'done'
                         : stage.id === activeStage

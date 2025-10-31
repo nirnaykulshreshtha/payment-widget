@@ -63,27 +63,27 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
           className="ml-auto text-xs text-primary underline-offset-4 hover:underline"
           onClick={onChangeAsset}
         >
-          Change asset
+          Choose another asset
         </button>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-border/60 bg-card/40 p-4 text-sm">
         <DetailRow
-          label="Paying"
+          label="You send"
           value={`${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol}`}
         />
         <DetailRow
-          label="Receiving"
+          label="You receive"
           value={`${formatTokenAmount(receivingAmount, targetDecimals)} ${targetSymbol}`}
         />
         {option.mode === 'bridge' && option.quote && (
           <>
             <DetailRow
-              label="Relay fees"
+              label="Service fee"
               value={`${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}`}
             />
             <DetailRow
-              label="Min expected"
+              label="Guaranteed minimum"
               value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
             />
           </>
@@ -91,27 +91,27 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         {option.mode === 'swap' && option.swapQuote && (
           <>
             <DetailRow
-              label="Approvals required"
+              label="Wallet approvals"
               value={approvalsRequired > 0 ? `${approvalsRequired}` : 'None'}
             />
             <DetailRow
-              label="Min expected"
+              label="Guaranteed minimum"
               value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
             />
             {approvalTxHashes.length > 0 && (
               <DetailRow
-                label="Approval txs"
+                label="Approval transactions"
                 value={renderMultipleHashes(approvalTxHashes, originChainId)}
               />
             )}
           </>
         )}
-        {wrapTxHash && <DetailRow label="Wrap tx" value={renderHashLink(wrapTxHash, originChainId)} />}
+        {wrapTxHash && <DetailRow label="Wrap transaction" value={renderHashLink(wrapTxHash, originChainId)} />}
         {option.mode !== 'swap' && depositTxHash && (
-          <DetailRow label={option.mode === 'bridge' ? 'Deposit tx' : 'Payment tx'} value={renderHashLink(depositTxHash as string, originChainId)} />
+          <DetailRow label={option.mode === 'bridge' ? 'Deposit transaction' : 'Payment transaction'} value={renderHashLink(depositTxHash as string, originChainId)} />
         )}
         {option.mode === 'swap' && swapTxHash && (
-          <DetailRow label="Swap tx" value={renderHashLink(swapTxHash as string, option.swapRoute?.originChainId ?? originChainId)} />
+          <DetailRow label="Swap transaction" value={renderHashLink(swapTxHash as string, option.swapRoute?.originChainId ?? originChainId)} />
         )}
       </div>
 
@@ -126,7 +126,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         }
       >
         {isExecuting
-          ? 'Processing…'
+          ? 'Processing...'
           : option.mode === 'bridge'
             ? 'Pay Now'
             : option.mode === 'swap'
@@ -188,4 +188,3 @@ function deriveAmounts(option: PaymentOption, targetAmount: bigint, targetToken:
   const minExpectedAmount = computeTargetWithSlippage(targetAmount, maxSlippageBps);
   return { payingAmount, receivingAmount, minExpectedAmount, approvalsRequired: 0 };
 }
-

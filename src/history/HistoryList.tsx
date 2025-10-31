@@ -72,10 +72,10 @@ function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSe
   const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
   const outputLabel = formatAmountWithSymbol(entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol);
   const title = entry.mode === 'direct'
-    ? 'Direct Payment'
+    ? 'Direct payment'
     : entry.mode === 'swap'
-      ? 'Swap & Bridge'
-      : 'Bridge Payment';
+      ? 'Swap and send'
+      : 'Cross-network payment';
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -169,8 +169,8 @@ function HistoryListAmountDetails({ inputLabel, outputLabel }: { inputLabel: str
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <HistoryListAmountRow label="Input Amount" value={inputLabel} indicator={<ArrowRight className="h-4 w-4 text-muted-foreground" />} />
-        <HistoryListAmountRow label="Expected Output" value={outputLabel} indicator={<span className="text-[10px] text-muted-foreground">Est.</span>} />
+        <HistoryListAmountRow label="You sent" value={inputLabel} indicator={<ArrowRight className="h-4 w-4 text-muted-foreground" />} />
+        <HistoryListAmountRow label="Estimated receive" value={outputLabel} indicator={<span className="text-[10px] text-muted-foreground">Est.</span>} />
       </div>
     </div>
   );
@@ -204,7 +204,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
       <div className="grid grid-cols-1 gap-2">
         {entry.approvalTxHashes?.length ? (
           <TransactionGroup
-            title="Approval"
+            title="Wallet approval"
             colorClass="bg-yellow-500"
             hashes={entry.approvalTxHashes}
             chainId={entry.originChainId}
@@ -212,7 +212,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
         ) : null}
         {entry.depositTxHash ? (
           <TransactionGroup
-            title="Deposit"
+            title="Deposit sent"
             colorClass="bg-blue-500"
             hashes={[entry.depositTxHash]}
             chainId={entry.originChainId}
@@ -220,7 +220,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
         ) : null}
         {entry.swapTxHash ? (
           <TransactionGroup
-            title="Swap"
+            title="Swap sent"
             colorClass="bg-green-500"
             hashes={[entry.swapTxHash]}
             chainId={entry.originChainId}
@@ -228,7 +228,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
         ) : null}
         {entry.fillTxHash ? (
           <TransactionGroup
-            title="Fill"
+            title="Funds delivered"
             colorClass="bg-purple-500"
             hashes={[entry.fillTxHash]}
             chainId={entry.destinationChainId}
@@ -236,7 +236,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
         ) : null}
         {entry.wrapTxHash ? (
           <TransactionGroup
-            title="Wrap"
+            title="Wrap step"
             colorClass="bg-orange-500"
             hashes={[entry.wrapTxHash]}
             chainId={entry.originChainId}
@@ -256,7 +256,7 @@ function HistoryListUpdatedTimestamp({ updatedAt }: { updatedAt: number }) {
     <div className="flex items-center justify-between border-t border-border/30 pt-3">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Clock className="h-3 w-3" />
-        <span className="text-[10px] uppercase tracking-wide">Updated</span>
+        <span className="text-[10px] uppercase tracking-wide">Last updated</span>
       </div>
       <time className="text-[10px] text-muted-foreground/80">{new Date(updatedAt).toLocaleString()}</time>
     </div>

@@ -79,9 +79,9 @@ export function renderPaymentView(config: WidgetViewRenderConfig): React.ReactNo
       if (!selectedOption) {
         return (
           <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
-            <h3 className="text-sm font-semibold">No payment selected</h3>
+            <h3 className="text-sm font-semibold">Pick a payment option</h3>
             <p className="mt-2 text-xs text-muted-foreground">
-              Choose a payment option to review the details.
+              Select an option to review the details.
             </p>
             <Button variant="outline" size="sm" className="mt-4" onClick={onResetToOptions}>
               Back to options
@@ -148,5 +148,4 @@ export function renderPaymentView(config: WidgetViewRenderConfig): React.ReactNo
       return null;
   }
 }
-
 

@@ -17,7 +17,7 @@ export function LoadingStagesView({ stages, currentStage, completedStages }: Loa
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Hang tight while we gather quotes, filter preferred chains, and check your balances.
+        Hang tight while we check prices and your balances so we can show the best options.
       </p>
       <ol className="space-y-3">
         {stages.map((stage) => {

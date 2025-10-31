@@ -14,45 +14,45 @@ import { Badge } from '../ui/primitives';
 function getOriginalStatusDisplayText(status) {
     switch (status) {
         case 'initial':
-            return 'Initializing';
+            return 'Starting up';
         case 'approval_pending':
-            return 'Approval Pending';
+            return 'Waiting for wallet approval';
         case 'approval_confirmed':
-            return 'Approval Confirmed';
+            return 'Approval confirmed';
         case 'swap_pending':
-            return 'Swap Pending';
+            return 'Swap in progress';
         case 'swap_confirmed':
-            return 'Swap Confirmed';
+            return 'Swap finished';
         case 'wrap_pending':
-            return 'Wrap Pending';
+            return 'Preparing token';
         case 'wrap_confirmed':
-            return 'Wrap Confirmed';
+            return 'Token ready';
         case 'deposit_pending':
-            return 'Deposit Pending';
+            return 'Sending funds';
         case 'deposit_confirmed':
-            return 'Deposit Confirmed';
+            return 'Funds sent';
         case 'relay_pending':
-            return 'Relay Pending';
+            return 'Waiting for delivery';
         case 'relay_filled':
-            return 'Relay Filled';
+            return 'Funds delivered';
         case 'settlement_pending':
-            return 'Settlement Pending';
+            return 'Finalizing payment';
         case 'settled':
-            return 'Settled';
+            return 'Payment completed';
         case 'requested_slow_fill':
-            return 'Slow Fill Requested';
+            return 'Slow delivery requested';
         case 'slow_fill_ready':
-            return 'Slow Fill Ready';
+            return 'Slow delivery ready';
         case 'bridge_pending':
-            return 'Bridge Pending';
+            return 'Moving across networks';
         case 'filled':
-            return 'Filled';
+            return 'Payment completed';
         case 'direct_pending':
-            return 'Direct Pending';
+            return 'Payment in progress';
         case 'direct_confirmed':
-            return 'Direct Confirmed';
+            return 'Payment completed';
         case 'failed':
-            return 'Failed';
+            return 'Payment failed';
         default:
             return String(status).replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
     }

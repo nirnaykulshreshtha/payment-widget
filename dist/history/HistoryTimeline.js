@@ -19,7 +19,7 @@ export function HistoryTimeline({ timeline, entry }) {
     console.log('[HistoryTimeline] Component called with:', { timeline: timeline?.length, entry: !!entry, entryMode: entry?.mode, originChainId: entry?.originChainId, destinationChainId: entry?.destinationChainId });
     const steps = buildSteps(timeline);
     if (!steps.length) {
-        return _jsx("p", { className: "text-xs text-muted-foreground", children: "Waiting for updates\u2026" });
+        return _jsx("p", { className: "text-xs text-muted-foreground", children: "Waiting for updates..." });
     }
     const flow = entry ? HISTORY_TIMELINE_STAGE_FLOW[entry.mode] ?? [] : [];
     const stageMap = new Map(timeline?.map((item) => [item.stage, item]) ?? []);
