@@ -43,7 +43,6 @@ export interface SetupConfig {
     }>>;
     viemChains?: Chain[];
     tokenPricesUsd?: Record<number, Record<string, number>>;
-    appearance?: PaymentTheme;
     showUnavailableOptions?: boolean;
     maxSwapQuoteOptions?: number;
 }
@@ -198,24 +197,5 @@ export interface PaymentHistoryEntry {
     destinationSpokePoolAddress?: Address;
     depositMessage?: Hex;
     timeline?: PaymentTimelineEntry[];
-}
-export interface PaymentTheme {
-    mode?: 'light' | 'dark';
-    brandColor?: string;
-    accentColor?: string;
-    backgroundColor?: string;
-    textColor?: string;
-    borderRadius?: string;
-    fontFamily?: string;
-    card?: {
-        backgroundColor?: string;
-        textColor?: string;
-        borderColor?: string;
-    };
-    button?: {
-        primaryClassName?: string;
-        secondaryClassName?: string;
-    };
-    className?: string;
 }
 export {};

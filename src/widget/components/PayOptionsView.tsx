@@ -105,9 +105,9 @@ export function PayOptionsView({
     // If user is searching, show search-specific message
     if (searchTerm) {
       return (
-        <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
-          <h3 className="text-sm font-semibold">No matches found</h3>
-          <p className="mt-2 text-xs text-muted-foreground">
+        <div className="pw-empty-state">
+          <h3 className="pw-empty-state__title">No matches found</h3>
+          <p className="pw-empty-state__description">
             Try another token symbol or network name.
           </p>
         </div>
@@ -118,23 +118,23 @@ export function PayOptionsView({
     const errorDisplay = formatErrorForDisplay(plannerError ?? null, false, accountConnected);
     
     return (
-      <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
-        <h3 className="text-sm font-semibold">{errorDisplay.title}</h3>
-        <p className="mt-2 text-xs text-muted-foreground">
+      <div className="pw-empty-state">
+        <h3 className="pw-empty-state__title">{errorDisplay.title}</h3>
+        <p className="pw-empty-state__description">
           {errorDisplay.description}
         </p>
         
         {/* Show action buttons based on error type */}
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <div className="pw-empty-state__actions">
           {errorDisplay.showRefreshButton && (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="inline-flex items-center gap-1"
+              className="pw-inline-button"
             >
-              <RefreshCw className={cn('h-3 w-3', isRefreshing && 'animate-spin')} />
+              <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} />
               Refresh
             </Button>
           )}
@@ -149,7 +149,7 @@ export function PayOptionsView({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="pw-view pw-view--options">
       <TargetSummary
         targetAmountLabel={targetAmountLabel}
         targetSymbol={targetSymbol}
@@ -169,7 +169,7 @@ export function PayOptionsView({
       {visibleOptions.length === 0 ? (
         renderNoResults()
       ) : (
-        <div className="max-h-[580px] space-y-3 overflow-y-auto pr-1">
+        <div className="pw-options-list">
           {visibleOptions.map((option) => (
             <OptionRow
               key={option.id}
@@ -184,7 +184,7 @@ export function PayOptionsView({
             />
           ))}
           {hasMore && (
-            <div ref={loadMoreRef} className="flex items-center justify-center pb-2">
+            <div ref={loadMoreRef} className="pw-load-more">
               <Button variant="outline" size="sm" onClick={loadMore}>
                 Load more options
               </Button>
@@ -196,7 +196,7 @@ export function PayOptionsView({
       <button
         type="button"
         onClick={onViewHistory}
-        className="w-full rounded-xl border border-border/60 px-4 py-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+        className="pw-text-button"
       >
         View recent activity
       </button>
@@ -215,22 +215,22 @@ interface TargetSummaryProps {
 
 function TargetSummary({ targetAmountLabel, targetSymbol, targetChainLabel, lastUpdated, onRefresh, isRefreshing }: TargetSummaryProps) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">You need to pay</span>
-        <span className="font-semibold text-foreground">
+    <div className="pw-target-summary">
+      <div className="pw-target-summary__headline">
+        <span className="pw-target-summary__label">You need to pay</span>
+        <span className="pw-target-summary__value">
           {targetAmountLabel} {targetSymbol} on {targetChainLabel}
         </span>
       </div>
-      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-        {lastUpdated ? <span className="text-muted-foreground text-xs">Updated {new Date(lastUpdated).toLocaleTimeString()}</span> : <span className="text-muted-foreground text-xs">Ready</span>}
+      <div className="pw-target-summary__meta">
+        {lastUpdated ? <span>Updated {new Date(lastUpdated).toLocaleTimeString()}</span> : <span>Ready</span>}
         <button
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline disabled:opacity-50"
+          className="pw-inline-action"
         >
-          <RefreshCw className={cn('h-3 w-3', isRefreshing && 'animate-spin')} /> Refresh
+          <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} /> Refresh
         </button>
       </div>
     </div>
@@ -246,15 +246,15 @@ interface SearchInputProps {
 
 function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount }: SearchInputProps) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+    <div className="pw-search">
       <input
         type="search"
         value={searchTerm}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search by token or network"
-        className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        className="pw-search__input"
       />
-      <div className="mt-2 text-[11px] text-muted-foreground">Showing {visibleCount} of {totalCount} options</div>
+      <div className="pw-search__meta">Showing {visibleCount} of {totalCount} options</div>
     </div>
   );
 }

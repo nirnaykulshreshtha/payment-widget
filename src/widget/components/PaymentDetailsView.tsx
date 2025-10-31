@@ -43,31 +43,31 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
   );
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} />
-        <div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+    <div className="pw-view pw-view--details">
+      <div className="pw-details__asset">
+        <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} className="pw-avatar--large" />
+        <div className="pw-details__asset-info">
+          <div className="pw-details__asset-heading">
             {option.displayToken.symbol}
-            <Badge variant="outline" className="text-[10px] uppercase tracking-[0.2em]">
+            <Badge variant="outline" className="pw-details__badge">
               {option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct'}
             </Badge>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="pw-details__chain">
             <ChainAvatar name={String(chainLabel)} logoUrl={chainLogos.get(originChainId)} />
             <span>{chainLabel}</span>
           </div>
         </div>
         <button
           type="button"
-          className="ml-auto text-xs text-primary underline-offset-4 hover:underline"
+          className="pw-inline-link"
           onClick={onChangeAsset}
         >
           Choose another asset
         </button>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-border/60 bg-card/40 p-4 text-sm">
+      <div className="pw-details-card">
         <DetailRow
           label="You send"
           value={`${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol}`}
@@ -116,7 +116,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
       </div>
 
       <Button
-        className="w-full"
+        className="pw-button--full"
         onClick={onExecute}
         disabled={
           isExecuting ||
@@ -144,9 +144,9 @@ interface DetailRowProps {
 
 function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
+    <div className="pw-detail-row">
+      <span className="pw-detail-row__label">{label}</span>
+      <span className="pw-detail-row__value">{value}</span>
     </div>
   );
 }
@@ -156,9 +156,9 @@ function renderMultipleHashes(hashes: string[], chainId: number) {
     return renderHashLink(hashes[0], chainId);
   }
   return (
-    <span className="flex items-center gap-1">
+    <span className="pw-hash-inline">
       {renderHashLink(hashes[0], chainId)}
-      <span className="text-xs text-muted-foreground">(+{hashes.length - 1} more)</span>
+      <span className="pw-hash-inline__more">(+{hashes.length - 1} more)</span>
     </span>
   );
 }

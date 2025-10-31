@@ -50,7 +50,6 @@ export interface SetupConfig {
   wrappedTokenMap?: Record<number, Record<string, { wrapped: TokenConfig; native: TokenConfig }>>;
   viemChains?: Chain[];
   tokenPricesUsd?: Record<number, Record<string, number>>;
-  appearance?: PaymentTheme;
   showUnavailableOptions?: boolean;
   maxSwapQuoteOptions?: number;
 }
@@ -247,22 +246,3 @@ export interface PaymentHistoryEntry {
   timeline?: PaymentTimelineEntry[];
 }
 
-export interface PaymentTheme {
-  mode?: 'light' | 'dark';
-  brandColor?: string;
-  accentColor?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  borderRadius?: string;
-  fontFamily?: string;
-  card?: {
-    backgroundColor?: string;
-    textColor?: string;
-    borderColor?: string;
-  };
-  button?: {
-    primaryClassName?: string;
-    secondaryClassName?: string;
-  };
-  className?: string;
-}

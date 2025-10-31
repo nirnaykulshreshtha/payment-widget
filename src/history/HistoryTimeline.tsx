@@ -6,7 +6,7 @@
  * Enhanced with transaction links, proper status labels, and active stage detection.
  */
 
-import { Dot, X, XCircle, Loader2, CheckCircle2, ArrowUpRight } from 'lucide-react';
+import { Dot, X, XCircle, Loader2, CheckCircle2, ArrowUpRight, Hash } from 'lucide-react';
 
 import { cn } from '../lib';
 import { formatErrorMessage } from '../lib/error-formatting';
@@ -14,9 +14,6 @@ import type { PaymentHistoryStatus, PaymentTimelineEntry, PaymentHistoryEntry, P
 import { HISTORY_BASE_COMPLETED_STAGES, HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS, HISTORY_TIMELINE_STAGE_FLOW, HISTORY_TIMELINE_STAGE_ORDER } from './constants';
 import type { HistoryTimelineStep } from './types';
 import { explorerUrlForChain, formatTimestamp, resolveTimelineStageChainId, shortHash } from './utils';
-
-const BASE_TIMELINE_VARIANT_CLASS = 'bg-accent border-muted-foreground/40 text-foreground';
-
 
 type TimelineStep = {
   stage: PaymentHistoryStatus;
@@ -126,8 +123,8 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
 
   if (!steps.length) {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+      <div className="pw-timeline__empty">
+        <Loader2 className="pw-timeline__icon pw-timeline__icon--spinning" />
         <span>Waiting for updates...</span>
       </div>
     );
@@ -145,9 +142,8 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
   }
 
   return (
-    <div className="relative ml-3">
-      <div className="absolute left-0 inset-y-0 border-l border-muted-foreground/20" />
-      <div className="space-y-4">
+    <div className="pw-timeline">
+      <div className="pw-timeline__entries">
         {steps.map((step, index) => {
           const isFailure = HISTORY_FAILURE_STAGES.has(step.stage);
           const isCompletedStage = completedStages.has(step.stage);
@@ -175,71 +171,54 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
             Icon = Dot;
           }
           
-          const iconClasses = isFailure
-            ? 'h-4 w-4 text-white'
-            : isActive
-              ? 'h-4 w-4 text-white animate-spin'
-              : isCompleted
-                ? 'h-4 w-4 text-white'
-                : 'h-4 w-4 text-white';
-
           return (
-            <div key={`${step.stage}-${step.timestamp}`} className="relative pl-6">
+            <div key={`${step.stage}-${step.timestamp}`} className="pw-timeline__item">
               <div
                 className={cn(
-                  'absolute left-0 top-1 h-6 w-6 -translate-x-1/2 rounded-full border-2 ring-4 ring-background flex items-center justify-center text-xs font-semibold transition-shadow',
-                  isCompleted && !isFailure && 'bg-primary border-primary shadow-sm shadow-primary/40',
-                  isFailure && 'bg-destructive border-destructive ring-destructive/30',
-                  isActive && 'bg-primary border-primary ring-primary/30',
-                  !isCompleted && !isFailure && !isActive && 'bg-muted border-muted-foreground/40',
+                  'pw-timeline__bullet',
+                  isCompleted && !isFailure && 'pw-timeline__bullet--completed',
+                  isFailure && 'pw-timeline__bullet--failure',
+                  isActive && 'pw-timeline__bullet--active',
                 )}
               >
-                <Icon className={iconClasses} />
+                <Icon
+                  className={cn(
+                    'pw-timeline__icon',
+                    isActive && 'pw-timeline__icon--spinning',
+                  )}
+                />
               </div>
 
-              <div className="min-h-[2.5rem]">
-                <div
-                  className={cn(
-                    'flex flex-col items-start justify-center gap-0 text-[12px] font-semibold uppercase text-white',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'rounded-xl',
-                    )}
-                  >
-                    {label}
-                  </span>
-                  <time className={cn('text-muted-foreground/70')}>
-                    {formatTimestamp(step.timestamp)}
-                  </time>
-                </div>
-                
-                {/* Transaction hash link - show for all stages with txHash */}
-                {step.txHash && (
-                  <div className="text-xs">
-                    {renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry))}
+              <div className="pw-timeline__content">
+                <div className="pw-timeline__header">
+                  <div className="pw-timeline__title">{label}</div>
+                  <div className="pw-timeline__meta">
+                    <time className="pw-timeline__time">
+                      {formatTimestamp(step.timestamp)}
+                    </time>
+                    {step.txHash ? (
+                      <div className="pw-timeline__hash">
+                        {renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry))}
+                      </div>
+                    ) : null}
                   </div>
-                )}
-                
-                {/* Notes */}
-                {!isFailure && step.notes && <p className="text-[11px] text-muted-foreground/90">{step.notes}</p>}
-                
-                {/* Error message for failed stages */}
-                {isFailure && entry?.errors && entry.errors.length > 0 && (
-                  <div className="mt-2 space-y-1">
+                </div>
+
+                {!isFailure && step.notes ? (
+                  <p className="pw-timeline__note">{step.notes}</p>
+                ) : null}
+
+                {isFailure && entry?.errors && entry.errors.length > 0 ? (
+                  <div className="pw-timeline__errors">
                     {entry.errors.map((error, errorIndex) => (
-                      <p key={errorIndex} className="text-[11px] text-destructive/90">
-                        {formatErrorMessage(error)}
-                      </p>
+                      <p key={errorIndex}>{formatErrorMessage(error)}</p>
                     ))}
                   </div>
-                )}
-                
-                {/* Active stage indicator */}
-                {isActive && !isFailure && (
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">In progress</p>
-                )}
+                ) : null}
+
+                {isActive && !isFailure ? (
+                  <p className="pw-timeline__status">In progress</p>
+                ) : null}
               </div>
             </div>
           );
@@ -319,29 +298,30 @@ function resolveChainId(stage: PaymentHistoryStatus, entry?: PaymentHistoryEntry
 function renderHashLink(hash: string | undefined, chainId?: number) {
   if (!hash) return '—';
   const explorer = explorerUrlForChain(chainId);
-  console.log('[HistoryTimeline] Explorer:', explorer);
-  console.log('[HistoryTimeline] Chain ID:', chainId);
-  if (!explorer) return shortHash(hash);
-  
+  if (!explorer) {
+    return (
+      <div className="pw-hash">
+        <Hash className="pw-hash__icon" />
+        <span className="pw-hash__value">{shortHash(hash)}</span>
+      </div>
+    );
+  }
+
   const explorerUrl = `${explorer}/tx/${hash}`;
-  
-  // Debug logging
-  console.log('[HistoryTimeline] Rendering hash link:', { hash, chainId, explorer, explorerUrl });
-  
   return (
     <a
       href={explorerUrl}
       target="_blank"
       rel="noreferrer noopener"
-      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 hover:underline-offset-4 cursor-pointer transition-all duration-200 font-medium"
-      onClick={(e) => {
-        // Ensure the link opens in a new tab
-        console.log('[HistoryTimeline] Hash link clicked:', explorerUrl);
-        e.preventDefault();
+      className="pw-hash pw-hash--interactive"
+      onClick={(event) => {
+        event.preventDefault();
         window.open(explorerUrl, '_blank', 'noopener,noreferrer');
       }}
     >
-      {shortHash(hash)} <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+      <Hash className="pw-hash__icon" />
+      <span className="pw-hash__value">{shortHash(hash)}</span>
+      <ArrowUpRight className="pw-hash__icon" />
     </a>
   );
 }

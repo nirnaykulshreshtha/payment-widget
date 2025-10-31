@@ -32,17 +32,17 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
   const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
 
   return (
-    <div className="space-y-5">
+    <div className="pw-view pw-view--tracking">
       <PaymentStatusHeader entry={entry} chainLookup={chainLookup} chainLogos={chainLogos} />
       {isProcessing && (
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        <div className="pw-tracking__notice">
+          <Loader2 className="pw-tracking__spinner" />
           <span>Still delivering your payment. Sit tight while we update the timeline.</span>
         </div>
       )}
       <AmountSection inputLabel={inputLabel} outputLabel={outputLabel} />
       <TransactionHashes entry={entry} />
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
+      <div className="pw-tracking__timeline">
         <HistoryTimeline timeline={entry.timeline} entry={entry} />
       </div>
       <UpdatedFooter updatedAt={entry.updatedAt} />
@@ -53,22 +53,20 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
 
 function AmountSection({ inputLabel, outputLabel }: { inputLabel: string; outputLabel: string }) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3">
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">You sent</div>
-            <div className="font-mono text-sm font-bold">{inputLabel}</div>
-          </div>
-          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+    <div className="pw-history-amount">
+      <div className="pw-history-amount__row">
+        <div className="pw-history-amount__meta">
+          <div className="pw-history-amount__label">You sent</div>
+          <div className="pw-history-amount__value">{inputLabel}</div>
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3">
-          <div className="space-y-1">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Estimated receive</div>
-            <div className="font-mono text-sm font-bold">{outputLabel}</div>
-          </div>
-          <div className="text-[10px] text-muted-foreground">Est.</div>
+        <ArrowRight className="pw-history-amount__icon" />
+      </div>
+      <div className="pw-history-amount__row">
+        <div className="pw-history-amount__meta">
+          <div className="pw-history-amount__label">Estimated receive</div>
+          <div className="pw-history-amount__value">{outputLabel}</div>
         </div>
+        <div className="pw-history-amount__hint">Est.</div>
       </div>
     </div>
   );
@@ -80,54 +78,52 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-2">
-        {entry.approvalTxHashes?.length ? (
-          <TransactionGroup
-            title="Wallet approval"
-            colorClass="bg-yellow-500"
-            hashes={entry.approvalTxHashes}
-            chainId={entry.originChainId}
-            variant="compact"
-          />
-        ) : null}
-        {entry.depositTxHash ? (
-          <TransactionGroup
-            title="Deposit sent"
-            colorClass="bg-blue-500"
-            hashes={[entry.depositTxHash]}
-            chainId={entry.originChainId}
-            variant="compact"
-          />
-        ) : null}
-        {entry.swapTxHash ? (
-          <TransactionGroup
-            title="Swap sent"
-            colorClass="bg-green-500"
-            hashes={[entry.swapTxHash]}
-            chainId={entry.originChainId}
-            variant="compact"
-          />
-        ) : null}
-        {entry.fillTxHash ? (
-          <TransactionGroup
-            title="Funds delivered"
-            colorClass="bg-purple-500"
-            hashes={[entry.fillTxHash]}
-            chainId={entry.destinationChainId}
-            variant="compact"
-          />
-        ) : null}
-        {entry.wrapTxHash ? (
-          <TransactionGroup
-            title="Wrap step"
-            colorClass="bg-orange-500"
-            hashes={[entry.wrapTxHash]}
-            chainId={entry.originChainId}
-            variant="compact"
-          />
-        ) : null}
-      </div>
+    <div className="pw-history-hashes">
+      {entry.approvalTxHashes?.length ? (
+        <TransactionGroup
+          title="Wallet approval"
+          indicatorColor="var(--pw-color-warning)"
+          hashes={entry.approvalTxHashes}
+          chainId={entry.originChainId}
+          variant="compact"
+        />
+      ) : null}
+      {entry.depositTxHash ? (
+        <TransactionGroup
+          title="Deposit sent"
+          indicatorColor="var(--pw-brand)"
+          hashes={[entry.depositTxHash]}
+          chainId={entry.originChainId}
+          variant="compact"
+        />
+      ) : null}
+      {entry.swapTxHash ? (
+        <TransactionGroup
+          title="Swap sent"
+          indicatorColor="var(--pw-color-success)"
+          hashes={[entry.swapTxHash]}
+          chainId={entry.originChainId}
+          variant="compact"
+        />
+      ) : null}
+      {entry.fillTxHash ? (
+        <TransactionGroup
+          title="Funds delivered"
+          indicatorColor="#7c3aed"
+          hashes={[entry.fillTxHash]}
+          chainId={entry.destinationChainId}
+          variant="compact"
+        />
+      ) : null}
+      {entry.wrapTxHash ? (
+        <TransactionGroup
+          title="Wrap step"
+          indicatorColor="#fb923c"
+          hashes={[entry.wrapTxHash]}
+          chainId={entry.originChainId}
+          variant="compact"
+        />
+      ) : null}
     </div>
   );
 }
@@ -136,12 +132,12 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
 
 function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
   return (
-    <div className="flex items-center justify-between border-t border-border/30 pt-3">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <ClockIcon className="h-3 w-3" />
-        <span className="text-[10px] uppercase tracking-wide">Last updated</span>
+    <div className="pw-history-updated">
+      <div className="pw-history-updated__meta">
+        <ClockIcon className="pw-history-updated__icon" />
+        <span className="pw-history-updated__label">Last updated</span>
       </div>
-      <time className="text-[10px] text-muted-foreground/80">
+      <time className="pw-history-updated__time">
         {new Date(updatedAt).toLocaleString()}
       </time>
     </div>
@@ -150,9 +146,9 @@ function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
 
 function EmptyStateView({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
-      <h3 className="text-sm font-semibold">{title}</h3>
-      {description && <p className="mt-2 text-xs text-muted-foreground">{description}</p>}
+    <div className="pw-empty-state">
+      <h3 className="pw-empty-state__title">{title}</h3>
+      {description && <p className="pw-empty-state__description">{description}</p>}
     </div>
   );
 }

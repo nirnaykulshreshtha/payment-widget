@@ -1,8 +1,5 @@
-/**
- * @fileoverview Renders chain avatars for the payment widget, supporting logo
- * fallbacks and aggressive logging for image errors.
- */
-export declare function ChainAvatar({ name, logoUrl }: {
+export declare function ChainAvatar({ name, logoUrl, className }: {
     name: string;
     logoUrl?: string;
+    className?: string;
 }): import("react/jsx-runtime").JSX.Element;

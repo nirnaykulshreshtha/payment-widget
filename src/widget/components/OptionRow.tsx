@@ -61,41 +61,49 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full rounded-2xl border border-border/60 bg-card/30 p-4 text-left transition hover:border-primary/50',
-        isSelected && 'border-primary/60 bg-primary/10',
+        'pw-option-card',
+        isSelected && 'pw-option-card--active',
+        !option.canMeetTarget && 'pw-option-card--unavailable',
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="pw-option-card__header">
         <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} />
-        <div className="flex-1">
-          <div className="flex items-center justify-between gap-2 text-sm font-semibold">
+        <div className="pw-option-card__summary">
+          <div className="pw-option-card__title-row">
             <span>{option.displayToken.symbol}</span>
             <span>{formatTokenAmount(option.balance, option.displayToken.decimals)} {option.displayToken.symbol}</span>
           </div>
-          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
+          <div className="pw-option-card__meta">
+            <span className="pw-option-card__chain">
               <ChainAvatar name={String(chainLabel)} logoUrl={chainLogos.get(originChainId)} />
-              {chainLabel}
+              <span>{chainLabel}</span>
             </span>
-            <span className={cn(!option.canMeetTarget && 'text-destructive/80 font-medium')}>{availabilityLabel}</span>
+            <span
+              className={cn(
+                'pw-option-card__availability',
+                !option.canMeetTarget && 'pw-option-card__availability--warning',
+              )}
+            >
+              {availabilityLabel}
+            </span>
           </div>
         </div>
-        <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="pw-option-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <polyline points="9 18 15 12 9 6" />
         </svg>
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">
+      <div className="pw-option-card__footer">
+        <p className="pw-option-card__detail">
           {option.estimatedFillTimeSec && ['bridge', 'swap'].includes(option.mode)
             ? <>Est. fill time {Math.round(option.estimatedFillTimeSec / 60)} min</>
             : null}
         </p>
-        <Badge variant="outline" className="text-[10px] uppercase tracking-[0.2em]">
+        <Badge variant="outline" className="pw-option-card__badge">
           {option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct'}
         </Badge>
       </div>
       {!option.canMeetTarget && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="pw-option-card__message">
           {unavailableMessage}
         </p>
       )}

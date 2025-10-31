@@ -1,1 +1,1 @@
-export declare function renderHashLink(hash: string | undefined, chainId?: number): string | import("react/jsx-runtime").JSX.Element;
+export declare function renderHashLink(hash: string | undefined, chainId?: number): import("react/jsx-runtime").JSX.Element | "—";

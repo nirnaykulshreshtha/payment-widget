@@ -78,14 +78,16 @@ export function renderPaymentView(config: WidgetViewRenderConfig): React.ReactNo
     case 'details':
       if (!selectedOption) {
         return (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
-            <h3 className="text-sm font-semibold">Pick a payment option</h3>
-            <p className="mt-2 text-xs text-muted-foreground">
+          <div className="pw-empty-state">
+            <h3 className="pw-empty-state__title">Pick a payment option</h3>
+            <p className="pw-empty-state__description">
               Select an option to review the details.
             </p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={onResetToOptions}>
-              Back to options
-            </Button>
+            <div className="pw-empty-state__actions">
+              <Button variant="outline" size="sm" className="pw-inline-button" onClick={onResetToOptions}>
+                Back to options
+              </Button>
+            </div>
           </div>
         );
       }
@@ -148,4 +150,3 @@ export function renderPaymentView(config: WidgetViewRenderConfig): React.ReactNo
       return null;
   }
 }
-

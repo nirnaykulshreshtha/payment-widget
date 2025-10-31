@@ -2,13 +2,12 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { erc20Abi } from 'viem';
-import { cn, summarizeError } from './lib';
+import { summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
 import { ZERO_ADDRESS, ZERO_INTEGRATOR_ID } from './config';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import { clearPaymentHistory, completeDirect, failBridge, failDirect, initializePaymentHistory, recordBridgeInit, recordDirectInit, recordSwapInit, updateBridgeAfterDeposit, updateBridgeAfterWrap, updateBridgeFilled, updateBridgeDepositTxHash, updateDirectTxPending, updateSwapApprovalConfirmed, updateSwapApprovalSubmitted, updateSwapFilled, updateSwapTxConfirmed, updateSwapTxPending, failSwap, refreshPendingHistory, } from './history';
-import { computeThemeVars } from './utils/theme';
 import { clonePaymentOption } from './widget/utils/clone-option';
 import { computeTargetWithSlippage } from './widget/utils/slippage';
 import { describeAmount, describeRawAmount } from './widget/utils/formatting';
@@ -29,10 +28,6 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         ...setupConfig,
         ...paymentConfig,
     }), [setupConfig, paymentConfig]);
-    const { style: themeStyle, className: themeClassName, button: themeButtonClasses } = useMemo(() => computeThemeVars(config.appearance), [config.appearance]);
-    const rootClassName = useMemo(() => cn('payment-widget flex-col w-full space-y-6', themeClassName, className), [themeClassName, className]);
-    const primaryButtonClass = themeButtonClasses?.primary;
-    const secondaryButtonClass = themeButtonClasses?.secondary;
     const client = acrossClient;
     const clientError = acrossClientError;
     const planner = useDepositPlanner({ client, setupConfig, paymentConfig });
@@ -1136,7 +1131,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         pushView,
         maxSlippageBps: config.maxSlippageBps,
     });
-    return (_jsxs("div", { style: themeStyle, className: cn(rootClassName, 'flex w-full justify-center'), children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "w-full mx-auto max-w-[480px] space-y-5 rounded-3xl border border-border/60 bg-[var(--payment-background,hsl(var(--background)))] p-5 shadow-xl sm:p-6", children: [_jsx(WidgetHeader, { title: viewMeta.title, subtitle: viewMeta.subtitle, onBack: canGoBack ? popView : undefined, onHistory: currentView.name !== 'history' ? () => pushView({ name: 'history' }) : undefined, onRefresh: currentView.name === 'options' ? planner.refresh : undefined, isRefreshing: planner.isLoading && currentView.name === 'options' }), renderView()] })] }));
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(WidgetHeader, { title: viewMeta.title, subtitle: viewMeta.subtitle, onBack: canGoBack ? popView : undefined, onHistory: currentView.name !== 'history' ? () => pushView({ name: 'history' }) : undefined, onRefresh: currentView.name === 'options' ? planner.refresh : undefined, isRefreshing: planner.isLoading && currentView.name === 'options' }), renderView()] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;

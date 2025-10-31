@@ -12,9 +12,9 @@ export interface PaymentHistoryScreenProps {
 
 export function PaymentHistoryScreen({ onSelectEntry, onClearHistory, isClearing }: PaymentHistoryScreenProps) {
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl bg-transparent p-0">
-        <div className="max-h-[580px] overflow-y-auto pr-1">
+    <div className="pw-view pw-view--history">
+      <div className="pw-history-panel">
+        <div className="pw-scroll-area">
           <PaymentHistoryList onSelect={(entry) => onSelectEntry(entry.id)} />
         </div>
       </div>

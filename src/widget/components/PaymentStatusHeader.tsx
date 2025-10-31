@@ -55,47 +55,38 @@ export function PaymentStatusHeader({ entry, chainLookup, chainLogos }: PaymentS
   });
 
   return (
-    <div className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-border/60 bg-card/40">
-      {/* Left side - Payment type and token flow */}
-      <div className="flex items-center gap-3">
-        {/* Token flow with avatars */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center relative w-auto">
-            {/* Input token avatar */}
-            <TokenAvatar 
-              symbol={entry.inputToken.symbol} 
-              logoUrl={entry.inputToken.logoUrl}
-              className="w-6 h-6 z-10 left-0"
-            />
-            {/* <ArrowRight className="w-4 h-4 text-muted-foreground" /> */}
-            {/* Output token avatar */}
-            <TokenAvatar 
-              symbol={entry.outputToken.symbol} 
-              logoUrl={entry.outputToken.logoUrl} 
-              className="w-6 h-6 -ml-2"
-            />
+    <div className="pw-status-header">
+      <div className="pw-status-header__flow">
+        <div className="pw-avatar-stack">
+          <TokenAvatar 
+            symbol={entry.inputToken.symbol} 
+            logoUrl={entry.inputToken.logoUrl}
+            className="pw-avatar--small"
+          />
+          <TokenAvatar 
+            symbol={entry.outputToken.symbol} 
+            logoUrl={entry.outputToken.logoUrl} 
+            className="pw-avatar--small"
+          />
+        </div>
+        <div className="pw-status-header__text">
+          <div className="pw-status-header__title">
+            {paymentType}
           </div>
-          <div className="space-y-1">
-            <div className="text-sm font-semibold text-foreground">
-              {paymentType}
-            </div>
-            {/* Chain flow indicators */}
-            <div className="flex items-center gap-2">
-              <ChainAvatar 
-                name={String(originChainName)} 
-                logoUrl={chainLogos.get(entry.originChainId)} 
-              />
-              <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              <ChainAvatar 
-                name={String(destinationChainName)} 
-                logoUrl={chainLogos.get(entry.destinationChainId)} 
-              />
-            </div>
+          <div className="pw-status-header__chains">
+            <ChainAvatar 
+              name={String(originChainName)} 
+              logoUrl={chainLogos.get(entry.originChainId)} 
+            />
+            <ArrowRight className="pw-status-header__direction" />
+            <ChainAvatar 
+              name={String(destinationChainName)} 
+              logoUrl={chainLogos.get(entry.destinationChainId)} 
+            />
           </div>
         </div>
       </div>
 
-      {/* Right side - Status display */}
       <StatusDisplay 
         status={entry.status}
         showOriginalStatus={false}

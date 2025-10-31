@@ -10,20 +10,21 @@ import { cn } from '../../../lib';
 export function TokenAvatar({ symbol, logoUrl, className }: { symbol: string; logoUrl?: string; className?: string }) {
   if (logoUrl) {
     return (
-      <img
-        src={logoUrl}
-        alt={symbol}
-        className={cn("h-9 w-9 rounded-full border border-border/60 object-cover", className)}
-        onError={(event) => {
-          event.currentTarget.style.display = 'none';
-        }}
-      />
+      <span className={cn('pw-avatar pw-avatar--token', className)}>
+        <img
+          src={logoUrl}
+          alt={symbol}
+          className="pw-avatar__image"
+          onError={(event) => {
+            event.currentTarget.style.display = 'none';
+          }}
+        />
+      </span>
     );
   }
   return (
-    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card text-sm font-semibold">
+    <span className={cn('pw-avatar pw-avatar--token pw-avatar--initials', className)}>
       {symbol.slice(0, 2).toUpperCase()}
     </span>
   );
 }
-

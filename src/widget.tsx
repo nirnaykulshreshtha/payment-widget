@@ -34,7 +34,6 @@ import {
   failSwap,
   refreshPendingHistory,
 } from './history';
-import { computeThemeVars } from './utils/theme';
 import { clonePaymentOption } from './widget/utils/clone-option';
 import { computeTargetWithSlippage } from './widget/utils/slippage';
 import { describeAmount, describeRawAmount } from './widget/utils/formatting';
@@ -61,16 +60,6 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     }),
     [setupConfig, paymentConfig],
   );
-  const { style: themeStyle, className: themeClassName, button: themeButtonClasses } = useMemo(
-    () => computeThemeVars(config.appearance),
-    [config.appearance],
-  );
-  const rootClassName = useMemo(
-    () => cn('payment-widget flex-col w-full space-y-6', themeClassName, className),
-    [themeClassName, className],
-  );
-  const primaryButtonClass = themeButtonClasses?.primary;
-  const secondaryButtonClass = themeButtonClasses?.secondary;
 
   const client = acrossClient;
   const clientError = acrossClientError;
@@ -1317,9 +1306,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     });
 
   return (
-    <div style={themeStyle} className={cn(rootClassName, 'flex w-full justify-center')}>
+    <div className="payment-widget flex-col w-full space-y-6">
       <PaymentToastViewport />
-      <div className="w-full mx-auto max-w-[480px] space-y-5 rounded-3xl border border-border/60 bg-[var(--payment-background,hsl(var(--background)))] p-5 shadow-xl sm:p-6">
+      <div className="payment-widget__layout">
         <WidgetHeader
           title={viewMeta.title}
           subtitle={viewMeta.subtitle}

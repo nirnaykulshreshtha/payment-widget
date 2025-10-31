@@ -5,5 +5,5 @@ import { jsx as _jsx } from "react/jsx-runtime";
  */
 import { PaymentHistoryList } from '../../history/HistoryList';
 export function PaymentHistoryScreen({ onSelectEntry, onClearHistory, isClearing }) {
-    return (_jsx("div", { className: "space-y-4", children: _jsx("div", { className: "rounded-2xl bg-transparent p-0", children: _jsx("div", { className: "max-h-[580px] overflow-y-auto pr-1", children: _jsx(PaymentHistoryList, { onSelect: (entry) => onSelectEntry(entry.id) }) }) }) }));
+    return (_jsx("div", { className: "pw-view pw-view--history", children: _jsx("div", { className: "pw-history-panel", children: _jsx("div", { className: "pw-scroll-area", children: _jsx(PaymentHistoryList, { onSelect: (entry) => onSelectEntry(entry.id) }) }) }) }));
 }

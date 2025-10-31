@@ -26,6 +26,6 @@ export const paymentToast = {
 };
 export function PaymentToastViewport() {
     return (_jsx("div", { className: "payment-widget-toaster", children: _jsx(Toaster, { position: "bottom-center", richColors: true, closeButton: true, toastOptions: {
-                className: 'payment-widget-toast rounded-2xl border border-border/40 bg-card text-foreground shadow-xl',
+                className: 'payment-widget-toast',
             } }) }));
 }

@@ -5,7 +5,7 @@
  * within the payment widget views.
  */
 
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Hash } from 'lucide-react';
 
 import { getExplorerUrl, shortenHash } from '../../utils/block-explorer';
 
@@ -16,7 +16,12 @@ export function renderHashLink(hash: string | undefined, chainId?: number) {
 
   const explorer = getExplorerUrl(chainId);
   if (!explorer) {
-    return shortenHash(hash);
+    return (
+      <div className="pw-hash">
+        <Hash className="pw-hash__icon" />
+        <span className="pw-hash__value">{shortenHash(hash)}</span>
+      </div>
+    );
   }
 
   const explorerUrl = `${explorer}/tx/${hash}`;
@@ -26,14 +31,15 @@ export function renderHashLink(hash: string | undefined, chainId?: number) {
       href={explorerUrl}
       target="_blank"
       rel="noreferrer noopener"
-      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 hover:underline-offset-4 cursor-pointer transition-all duration-200 font-medium"
+      className="pw-hash pw-hash--interactive"
       onClick={(event) => {
         event.preventDefault();
         window.open(explorerUrl, '_blank', 'noopener,noreferrer');
       }}
     >
-      {shortenHash(hash)} <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+      <Hash className="pw-hash__icon" />
+      <span className="pw-hash__value">{shortenHash(hash)}</span>
+      <ArrowUpRight className="pw-hash__icon" />
     </a>
   );
 }
-

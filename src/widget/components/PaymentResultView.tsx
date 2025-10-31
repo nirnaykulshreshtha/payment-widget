@@ -29,24 +29,24 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
     : reason ?? "We couldn't finish this payment.";
 
   return (
-    <div className="space-y-5">
+    <div className="pw-view pw-view--results">
       <div
         className={cn(
-          'flex items-start gap-3 rounded-2xl border p-4',
+          'pw-alert',
           isSuccess
-            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200'
-            : 'border-destructive/40 bg-destructive/10 text-destructive',
+            ? 'pw-alert--success'
+            : 'pw-alert--failure',
         )}
       >
-        {isSuccess ? <CheckCircle2 className="mt-0.5 h-5 w-5" /> : <XCircle className="mt-0.5 h-5 w-5" />}
-        <div className="space-y-1">
-          <p className="text-sm font-semibold">{headline}</p>
-          <p className="text-xs">{subline}</p>
+        {isSuccess ? <CheckCircle2 className="pw-alert__icon" /> : <XCircle className="pw-alert__icon" />}
+        <div className="pw-alert__body">
+          <p className="pw-alert__title">{headline}</p>
+          <p className="pw-alert__subtitle">{subline}</p>
         </div>
       </div>
 
       {summary && (
-        <div className="space-y-2 rounded-2xl border border-border/60 bg-card/40 p-4 text-sm">
+        <div className="pw-details-card">
           <DetailRow
             label="You sent"
             value={`${formatTokenAmount(summary.input.amount, summary.input.token.decimals)} ${summary.input.token.symbol}`}
@@ -75,23 +75,23 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
         </div>
       )}
 
-      <div className="space-y-3">
-        {isSuccess && onViewTracking && (
-          <Button variant="outline" className="w-full" onClick={onViewTracking}>
+        <div className="grid gap-2">
+          {isSuccess && onViewTracking && (
+          <Button variant="primary" className="pw-button--full" onClick={onViewTracking}>
             View tracking
           </Button>
         )}
         {!isSuccess && onRetry && (
-          <Button className="w-full" onClick={onRetry}>
+          <Button className="pw-button--full" onClick={onRetry}>
             Try again
           </Button>
         )}
-        <Button variant="outline" className="w-full" onClick={onClose}>
+        <Button className="pw-button--full" onClick={onClose}>
           Back to options
         </Button>
       </div>
       {reference && (
-        <p className="text-center text-xs text-muted-foreground">Reference: {reference}</p>
+        <p className="pw-reference">Reference: {reference}</p>
       )}
     </div>
   );
@@ -104,9 +104,9 @@ interface DetailRowProps {
 
 function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
+    <div className="pw-detail-row">
+      <span className="pw-detail-row__label">{label}</span>
+      <span className="pw-detail-row__value">{value}</span>
     </div>
   );
 }
@@ -116,9 +116,9 @@ function renderHashWithOverflow(hashes: string[], chainId: number) {
     return renderHashLink(hashes[0], chainId);
   }
   return (
-    <span className="flex items-center gap-1">
+    <span className="pw-hash-inline">
       {renderHashLink(hashes[0], chainId)}
-      <span className="text-xs text-muted-foreground">(+{hashes.length - 1} more)</span>
+      <span className="pw-hash-inline__more">(+{hashes.length - 1} more)</span>
     </span>
   );
 }

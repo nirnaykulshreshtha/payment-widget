@@ -34,5 +34,4 @@ export interface HistoryTimelineRenderContext {
 export interface HistoryChainDisplay {
   name: string;
   shortName: string;
-  color: string;
 }

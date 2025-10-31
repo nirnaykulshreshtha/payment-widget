@@ -1,8 +1,8 @@
 export interface TransactionGroupProps {
     /** Title/label for the transaction group (e.g., "Approval", "Deposit") */
     title: string;
-    /** CSS class for the color indicator dot */
-    colorClass: string;
+    /** Optional CSS color for the indicator dot */
+    indicatorColor?: string;
     /** Array of transaction hashes to display */
     hashes: string[];
     /** Chain ID for resolving block explorer URLs */
@@ -20,4 +20,4 @@ export interface TransactionGroupProps {
  * @param chainId - Chain ID for block explorer URL resolution
  * @param variant - Layout variant affecting padding and spacing
  */
-export declare function TransactionGroup({ title, colorClass, hashes, chainId, variant }: TransactionGroupProps): import("react/jsx-runtime").JSX.Element;
+export declare function TransactionGroup({ title, indicatorColor, hashes, chainId, variant }: TransactionGroupProps): import("react/jsx-runtime").JSX.Element;

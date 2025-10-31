@@ -7,12 +7,12 @@ import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib';
 export function LoadingStagesView({ stages, currentStage, completedStages }) {
     const activeStage = currentStage === 'ready' ? stages[stages.length - 1]?.id : currentStage;
-    return (_jsxs("div", { className: "space-y-6", children: [_jsx("p", { className: "text-sm text-muted-foreground", children: "Hang tight while we check prices and your balances so we can show the best options." }), _jsx("ol", { className: "space-y-3", children: stages.map((stage) => {
+    return (_jsxs("div", { className: "pw-loading", children: [_jsx("p", { className: "pw-loading__intro", children: "Hang tight while we check prices and your balances so we can show the best options." }), _jsx("ol", { className: "pw-loading__list", children: stages.map((stage) => {
                     const state = completedStages.includes(stage.id) || currentStage === 'ready'
                         ? 'done'
                         : stage.id === activeStage
                             ? 'active'
                             : 'pending';
-                    return (_jsxs("li", { className: "flex items-center gap-3 text-sm", children: [state === 'done' && _jsx(CheckCircle2, { className: "h-4 w-4 text-emerald-500" }), state === 'active' && _jsx(Loader2, { className: "h-4 w-4 animate-spin text-primary" }), state === 'pending' && _jsx(Circle, { className: "h-4 w-4 text-muted-foreground" }), _jsx("span", { className: cn('text-muted-foreground', state !== 'pending' && 'text-foreground font-medium'), children: stage.label })] }, stage.id));
+                    return (_jsxs("li", { className: "pw-loading__item", children: [state === 'done' && _jsx(CheckCircle2, { className: "pw-loading__icon pw-loading__icon--done" }), state === 'active' && _jsx(Loader2, { className: "pw-loading__icon pw-loading__icon--active" }), state === 'pending' && _jsx(Circle, { className: "pw-loading__icon pw-loading__icon--pending" }), _jsx("span", { className: cn('pw-loading__label', state !== 'pending' && 'pw-loading__label--active'), children: stage.label })] }, stage.id));
                 }) })] }));
 }

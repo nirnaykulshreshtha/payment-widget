@@ -10,8 +10,8 @@ import { explorerUrlForChain, shortHash } from '../history/utils';
 export interface TransactionGroupProps {
   /** Title/label for the transaction group (e.g., "Approval", "Deposit") */
   title: string;
-  /** CSS class for the color indicator dot */
-  colorClass: string;
+  /** Optional CSS color for the indicator dot */
+  indicatorColor?: string;
   /** Array of transaction hashes to display */
   hashes: string[];
   /** Chain ID for resolving block explorer URLs */
@@ -32,7 +32,7 @@ export interface TransactionGroupProps {
  */
 export function TransactionGroup({ 
   title, 
-  colorClass, 
+  indicatorColor, 
   hashes, 
   chainId, 
   variant = 'default' 
@@ -44,25 +44,25 @@ export function TransactionGroup({
     variant
   });
 
-  const paddingClass = variant === 'compact' ? 'p-2 space-y-1' : 'p-3 space-y-2';
-
   return (
-    <div className={cn(
-      "rounded-lg border border-border/50 bg-muted/20 flex items-center justify-between",
-      paddingClass
-    )}>
-      <div className="flex items-center gap-2">
-        <div className={cn('w-2 h-2 rounded-full', colorClass)} />
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+    <div
+      className={cn(
+        'pw-transaction-group',
+        variant === 'compact' && 'pw-transaction-group--compact',
+      )}
+    >
+      <div className="pw-transaction-group__meta">
+        <span className="pw-transaction-group__indicator" style={indicatorColor ? { background: indicatorColor } : undefined} />
+        <div className="pw-transaction-group__title">
           {title}
         </div>
       </div>
-      <div className="space-y-1">
+      <div className="pw-transaction-group__hashes">
         {hashes.slice(0, 2).map((hash) => (
           <HashLink key={hash} hash={hash} chainId={chainId} />
         ))}
         {hashes.length > 2 ? (
-          <div className="text-[10px] text-muted-foreground/80">
+          <div className="pw-transaction-group__extra">
             +{hashes.length - 2} more
           </div>
         ) : null}
@@ -86,16 +86,16 @@ function HashLink({ hash, chainId }: { hash: string; chainId: number }) {
 
   if (!explorer) {
     return (
-      <div className="flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
-        <Hash className="h-3 w-3 text-muted-foreground" />
-        <span className="font-mono text-xs">{shortHash(hash)}</span>
+      <div className="pw-hash">
+        <Hash className="pw-hash__icon" />
+        <span className="pw-hash__value">{shortHash(hash)}</span>
       </div>
     );
   }
 
   return (
     <a
-      className="flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1 text-primary transition-colors hover:bg-muted/40 hover:border-primary/50"
+      className="pw-hash pw-hash--interactive"
       href={`${explorer}/tx/${hash}`}
       target="_blank"
       rel="noreferrer"
@@ -104,8 +104,8 @@ function HashLink({ hash, chainId }: { hash: string; chainId: number }) {
         console.log('HashLink: Opening explorer:', explorer);
       }}
     >
-      <Hash className="h-3 w-3" />
-      <span className="font-mono text-xs">{shortHash(hash)}</span>
+      <Hash className="pw-hash__icon" />
+      <span className="pw-hash__value">{shortHash(hash)}</span>
     </a>
   );
 }

@@ -48,19 +48,6 @@ export interface PaymentResultSummary {
   destinationChainId?: number;
 }
 
-/**
- * Theme configuration derived from the widget appearance configuration and
- * consumed by top-level layout components.
- */
-export interface WidgetTheme {
-  style?: CSSProperties;
-  className?: string;
-  button: {
-    primary?: string;
-    secondary?: string;
-  };
-}
-
 export interface PayOptionsViewProps {
   options: PaymentOption[];
   onSelect: (option: PaymentOption) => void;

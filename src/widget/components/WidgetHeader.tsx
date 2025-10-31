@@ -52,33 +52,39 @@ export function WidgetHeader({
   console.log('WidgetHeader: Rendering with customComponent:', !!customComponent, 'title:', title);
 
   return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex items-start gap-3">
+    <div className="pw-header">
+      <div className={cn('pw-header__title-wrap', onBack && 'pw-header__title-wrap--with-back')}>
         {onBack && (
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="pw-header__icon-button" onClick={onBack}>
+            <ArrowLeft className="pw-icon" />
           </Button>
         )}
-        <div className="space-y-1">
+        <div className="pw-header__text">
           {customComponent ? (
             customComponent
           ) : (
             <>
-              <h2 className="text-lg font-semibold leading-tight">{title}</h2>
-              {subtitle && <p className="text-xs leading-snug text-muted-foreground">{subtitle}</p>}
+              <h2 className="pw-header__title">{title}</h2>
+              {subtitle && <p className="pw-header__subtitle">{subtitle}</p>}
             </>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="pw-header__actions">
         {onRefresh && (
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={onRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          <Button
+            variant="outline"
+            size="icon"
+            className="pw-header__icon-button"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={cn('pw-icon', isRefreshing && 'pw-icon--spinning')} />
           </Button>
         )}
         {onHistory && (
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={onHistory}>
-            <HistoryIcon className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="pw-header__icon-button" onClick={onHistory}>
+            <HistoryIcon className="pw-icon" />
           </Button>
         )}
       </div>

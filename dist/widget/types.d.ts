@@ -1,8 +1,3 @@
-/**
- * @fileoverview Shared type definitions used by the payment widget views and
- * supporting utilities.
- */
-import type { CSSProperties } from 'react';
 import type { Hex } from 'viem';
 import type { PaymentHistoryStatus, PaymentOption, PaymentOptionMode, TokenConfig } from '../types';
 export declare const STATUS_LABELS: Record<PaymentHistoryStatus, string>;
@@ -53,18 +48,6 @@ export interface PaymentResultSummary {
     approvalTxHashes?: Hex[];
     originChainId?: number;
     destinationChainId?: number;
-}
-/**
- * Theme configuration derived from the widget appearance configuration and
- * consumed by top-level layout components.
- */
-export interface WidgetTheme {
-    style?: CSSProperties;
-    className?: string;
-    button: {
-        primary?: string;
-        secondary?: string;
-    };
 }
 export interface PayOptionsViewProps {
     options: PaymentOption[];

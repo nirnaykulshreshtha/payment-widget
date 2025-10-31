@@ -9,8 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useEffect, useState } from "react"
-import { PaymentWidget } from "@matching-platform/payment-widget"
+import "@matching-platform/payment-widget/styles.css"
 import { useAccount } from "wagmi"
+import InlineExample from "@/components/inline-example"
+import DialogExample from "@/components/dialog-example"
 
 export default function Home() {
 
@@ -65,20 +67,22 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PaymentWidget 
-                paymentConfig={{
-                  targetTokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-                  targetChainId: 84532,
-                  targetAmount: BigInt(0.001 * 10 ** 6),
-                  targetRecipient: address as `0x${string}`,
-                }}
-                onPaymentComplete={() => {
-                  console.log("Payment complete")
-                }}
-                onPaymentFailed={() => {
-                  console.log("Payment failed")
-                }}
-              />
+              <InlineExample />
+            </CardContent>
+          </Card>
+
+        </div>
+
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dialog widget</CardTitle>
+              <CardDescription>
+                Renders the widget inside a fullscreen dialog with scrollable content using a React portal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DialogExample />
             </CardContent>
           </Card>
 

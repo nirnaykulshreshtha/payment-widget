@@ -17,15 +17,14 @@ import { explorerUrlForChain, shortHash } from '../history/utils';
  * @param chainId - Chain ID for block explorer URL resolution
  * @param variant - Layout variant affecting padding and spacing
  */
-export function TransactionGroup({ title, colorClass, hashes, chainId, variant = 'default' }) {
+export function TransactionGroup({ title, indicatorColor, hashes, chainId, variant = 'default' }) {
     console.log('TransactionGroup: Rendering group:', {
         title,
         hashCount: hashes.length,
         chainId,
         variant
     });
-    const paddingClass = variant === 'compact' ? 'p-2 space-y-1' : 'p-3 space-y-2';
-    return (_jsxs("div", { className: cn("rounded-lg border border-border/50 bg-muted/20 flex items-center justify-between", paddingClass), children: [_jsxs("div", { className: "flex items-center gap-2", children: [_jsx("div", { className: cn('w-2 h-2 rounded-full', colorClass) }), _jsx("div", { className: "text-[10px] text-muted-foreground uppercase tracking-wide font-medium", children: title })] }), _jsxs("div", { className: "space-y-1", children: [hashes.slice(0, 2).map((hash) => (_jsx(HashLink, { hash: hash, chainId: chainId }, hash))), hashes.length > 2 ? (_jsxs("div", { className: "text-[10px] text-muted-foreground/80", children: ["+", hashes.length - 2, " more"] })) : null] })] }));
+    return (_jsxs("div", { className: cn('pw-transaction-group', variant === 'compact' && 'pw-transaction-group--compact'), children: [_jsxs("div", { className: "pw-transaction-group__meta", children: [_jsx("span", { className: "pw-transaction-group__indicator", style: indicatorColor ? { background: indicatorColor } : undefined }), _jsx("div", { className: "pw-transaction-group__title", children: title })] }), _jsxs("div", { className: "pw-transaction-group__hashes", children: [hashes.slice(0, 2).map((hash) => (_jsx(HashLink, { hash: hash, chainId: chainId }, hash))), hashes.length > 2 ? (_jsxs("div", { className: "pw-transaction-group__extra", children: ["+", hashes.length - 2, " more"] })) : null] })] }));
 }
 /**
  * Renders a clickable hash link that opens the transaction in a block explorer.
@@ -39,10 +38,10 @@ function HashLink({ hash, chainId }) {
         hasExplorer: !!explorer
     });
     if (!explorer) {
-        return (_jsxs("div", { className: "flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1", children: [_jsx(Hash, { className: "h-3 w-3 text-muted-foreground" }), _jsx("span", { className: "font-mono text-xs", children: shortHash(hash) })] }));
+        return (_jsxs("div", { className: "pw-hash", children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) })] }));
     }
-    return (_jsxs("a", { className: "flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1 text-primary transition-colors hover:bg-muted/40 hover:border-primary/50", href: `${explorer}/tx/${hash}`, target: "_blank", rel: "noreferrer", onClick: (event) => {
+    return (_jsxs("a", { className: "pw-hash pw-hash--interactive", href: `${explorer}/tx/${hash}`, target: "_blank", rel: "noreferrer", onClick: (event) => {
             event.stopPropagation();
             console.log('HashLink: Opening explorer:', explorer);
-        }, children: [_jsx(Hash, { className: "h-3 w-3" }), _jsx("span", { className: "font-mono text-xs", children: shortHash(hash) })] }));
+        }, children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) })] }));
 }

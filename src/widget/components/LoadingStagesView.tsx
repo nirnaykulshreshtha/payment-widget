@@ -15,11 +15,11 @@ export function LoadingStagesView({ stages, currentStage, completedStages }: Loa
   const activeStage = currentStage === 'ready' ? stages[stages.length - 1]?.id : currentStage;
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
+    <div className="pw-loading">
+      <p className="pw-loading__intro">
         Hang tight while we check prices and your balances so we can show the best options.
       </p>
-      <ol className="space-y-3">
+      <ol className="pw-loading__list">
         {stages.map((stage) => {
           const state = completedStages.includes(stage.id) || currentStage === 'ready'
             ? 'done'
@@ -27,11 +27,18 @@ export function LoadingStagesView({ stages, currentStage, completedStages }: Loa
               ? 'active'
               : 'pending';
           return (
-            <li key={stage.id} className="flex items-center gap-3 text-sm">
-              {state === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-              {state === 'active' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-              {state === 'pending' && <Circle className="h-4 w-4 text-muted-foreground" />}
-              <span className={cn('text-muted-foreground', state !== 'pending' && 'text-foreground font-medium')}>{stage.label}</span>
+            <li key={stage.id} className="pw-loading__item">
+              {state === 'done' && <CheckCircle2 className="pw-loading__icon pw-loading__icon--done" />}
+              {state === 'active' && <Loader2 className="pw-loading__icon pw-loading__icon--active" />}
+              {state === 'pending' && <Circle className="pw-loading__icon pw-loading__icon--pending" />}
+              <span
+                className={cn(
+                  'pw-loading__label',
+                  state !== 'pending' && 'pw-loading__label--active',
+                )}
+              >
+                {stage.label}
+              </span>
             </li>
           );
         })}

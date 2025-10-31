@@ -67,16 +67,14 @@ function getSimplifiedStatusInfo(status) {
         case 'failed':
             return {
                 text: 'FAILED',
-                className: 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400',
-                iconBg: 'bg-red-500'
+                tone: 'failure',
             };
         case 'settled':
         case 'filled':
         case 'direct_confirmed':
             return {
                 text: 'SUCCESS',
-                className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
-                iconBg: 'bg-emerald-500'
+                tone: 'success',
             };
         case 'direct_pending':
         case 'deposit_pending':
@@ -88,14 +86,12 @@ function getSimplifiedStatusInfo(status) {
         case 'settlement_pending':
             return {
                 text: 'PENDING',
-                className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20 dark:text-yellow-400',
-                iconBg: 'bg-yellow-500'
+                tone: 'warning',
             };
         default:
             return {
                 text: status.toUpperCase(),
-                className: 'bg-gray-500/10 text-gray-600 border-gray-500/20 dark:text-gray-400',
-                iconBg: 'bg-gray-500'
+                tone: 'neutral',
             };
     }
 }
@@ -121,10 +117,8 @@ export function StatusDisplay({ status, showOriginalStatus = true, showSimplifie
     });
     const originalStatusText = getOriginalStatusDisplayText(status);
     const simplifiedStatusInfo = getSimplifiedStatusInfo(status);
-    // If using variant prop, use Badge component with variant
     if (variant && showSimplifiedStatus) {
-        return (_jsxs("div", { className: cn('flex flex-col items-end gap-2', className), children: [showOriginalStatus && (_jsx("div", { className: cn('text-xs text-muted-foreground font-medium', originalStatusClassName), children: originalStatusText })), _jsx(Badge, { variant: variant, className: simplifiedStatusClassName, children: simplifiedStatusInfo.text })] }));
+        return (_jsxs("div", { className: cn('pw-status', className), children: [showOriginalStatus && (_jsx("div", { className: cn('pw-status__original', originalStatusClassName), children: originalStatusText })), _jsx(Badge, { variant: variant, className: cn('pw-status__badge', 'pw-status__badge--custom', simplifiedStatusClassName), children: simplifiedStatusInfo.text })] }));
     }
-    // Default styling with custom classes
-    return (_jsxs("div", { className: cn('flex flex-col items-end gap-2', className), children: [showOriginalStatus && (_jsx("div", { className: cn('text-xs text-muted-foreground font-medium', originalStatusClassName), children: originalStatusText })), showSimplifiedStatus && (_jsx("div", { className: cn("px-4 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border", simplifiedStatusInfo.className, simplifiedStatusClassName), children: simplifiedStatusInfo.text }))] }));
+    return (_jsxs("div", { className: cn('pw-status', className), children: [showOriginalStatus && (_jsx("div", { className: cn('pw-status__original', originalStatusClassName), children: originalStatusText })), showSimplifiedStatus && (_jsx("div", { className: cn('pw-status__badge', `pw-status__badge--${simplifiedStatusInfo.tone}`, simplifiedStatusClassName), children: simplifiedStatusInfo.text }))] }));
 }

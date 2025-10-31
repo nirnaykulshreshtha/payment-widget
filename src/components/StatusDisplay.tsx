@@ -86,16 +86,14 @@ function getSimplifiedStatusInfo(status: PaymentHistoryStatus) {
     case 'failed':
       return {
         text: 'FAILED',
-        className: 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400',
-        iconBg: 'bg-red-500'
+        tone: 'failure' as const,
       };
     case 'settled':
     case 'filled':
     case 'direct_confirmed':
       return {
         text: 'SUCCESS',
-        className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
-        iconBg: 'bg-emerald-500'
+        tone: 'success' as const,
       };
     case 'direct_pending':
     case 'deposit_pending':
@@ -107,14 +105,12 @@ function getSimplifiedStatusInfo(status: PaymentHistoryStatus) {
     case 'settlement_pending':
       return {
         text: 'PENDING',
-        className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20 dark:text-yellow-400',
-        iconBg: 'bg-yellow-500'
+        tone: 'warning' as const,
       };
     default:
       return {
         text: status.toUpperCase(),
-        className: 'bg-gray-500/10 text-gray-600 border-gray-500/20 dark:text-gray-400',
-        iconBg: 'bg-gray-500'
+        tone: 'neutral' as const,
       };
   }
 }
@@ -151,36 +147,36 @@ export function StatusDisplay({
   const originalStatusText = getOriginalStatusDisplayText(status);
   const simplifiedStatusInfo = getSimplifiedStatusInfo(status);
 
-  // If using variant prop, use Badge component with variant
   if (variant && showSimplifiedStatus) {
     return (
-      <div className={cn('flex flex-col items-end gap-2', className)}>
+      <div className={cn('pw-status', className)}>
         {showOriginalStatus && (
-          <div className={cn('text-xs text-muted-foreground font-medium', originalStatusClassName)}>
+          <div className={cn('pw-status__original', originalStatusClassName)}>
             {originalStatusText}
           </div>
         )}
-        <Badge variant={variant} className={simplifiedStatusClassName}>
+        <Badge variant={variant} className={cn('pw-status__badge', 'pw-status__badge--custom', simplifiedStatusClassName)}>
           {simplifiedStatusInfo.text}
         </Badge>
       </div>
     );
   }
 
-  // Default styling with custom classes
   return (
-    <div className={cn('flex flex-col items-end gap-2', className)}>
+    <div className={cn('pw-status', className)}>
       {showOriginalStatus && (
-        <div className={cn('text-xs text-muted-foreground font-medium', originalStatusClassName)}>
+        <div className={cn('pw-status__original', originalStatusClassName)}>
           {originalStatusText}
         </div>
       )}
       {showSimplifiedStatus && (
-        <div className={cn(
-          "px-4 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border",
-          simplifiedStatusInfo.className,
-          simplifiedStatusClassName
-        )}>
+        <div
+          className={cn(
+            'pw-status__badge',
+            `pw-status__badge--${simplifiedStatusInfo.tone}`,
+            simplifiedStatusClassName,
+          )}
+        >
           {simplifiedStatusInfo.text}
         </div>
       )}

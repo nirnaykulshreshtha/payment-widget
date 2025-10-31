@@ -39,7 +39,7 @@ export function PaymentToastViewport() {
         richColors
         closeButton
         toastOptions={{
-          className: 'payment-widget-toast rounded-2xl border border-border/40 bg-card text-foreground shadow-xl',
+          className: 'payment-widget-toast',
         }}
       />
     </div>

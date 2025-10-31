@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { WagmiProvider } from "@/components/providers/wagmi-provider";
 import { PaymentWidgetProvider } from "@/components/providers/payment-widget-provider";
 import { LazyMotionProvider } from "@/components/providers/LazyMotionProvider";
+
+const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`min-h-screen bg-background text-foreground antialiased transition-colors duration-300`}
+        className={`${inter.variable} min-h-screen bg-background text-foreground antialiased transition-colors duration-300`}
       >
         <WagmiProvider>
           <PaymentWidgetProvider>

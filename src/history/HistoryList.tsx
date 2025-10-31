@@ -10,29 +10,30 @@ import type { Hex } from 'viem';
 import { ArrowRight, Clock, ExternalLink, Hash } from 'lucide-react';
 
 import { cn } from '../lib';
-import { Badge, Card, CardContent, CardHeader } from '../ui/primitives';
+import { Card, CardContent, CardHeader } from '../ui/primitives';
 
 import { usePaymentHistoryStore } from './store';
 import type { PaymentHistoryEntry } from '../types';
 import { formatAmountWithSymbol } from '../utils/amount-format';
-import { HISTORY_STATUS_BADGE_VARIANT, HISTORY_STATUS_LABELS } from './constants';
+import { HISTORY_STATUS_LABELS } from './constants';
 import type { HistoryChainDisplay } from './types';
 import { explorerUrlForChain, shortHash } from './utils';
 import { TransactionGroup } from '../components/TransactionGroup';
 import { StatusDisplay } from '../components/StatusDisplay';
+import { TokenAvatar } from '../widget/components/avatars/TokenAvatar';
 
 /**
  * Chain information mapping for display purposes
  */
 const CHAIN_INFO: Record<number, HistoryChainDisplay> = {
-  1: { name: 'Ethereum', shortName: 'ETH', color: 'bg-blue-500' },
-  10: { name: 'Optimism', shortName: 'OP', color: 'bg-red-500' },
-  56: { name: 'BSC', shortName: 'BSC', color: 'bg-yellow-500' },
-  137: { name: 'Polygon', shortName: 'MATIC', color: 'bg-purple-500' },
-  8453: { name: 'Base', shortName: 'BASE', color: 'bg-blue-600' },
-  42161: { name: 'Arbitrum', shortName: 'ARB', color: 'bg-cyan-500' },
-  11155111: { name: 'Sepolia', shortName: 'SEP', color: 'bg-gray-500' },
-  84532: { name: 'Base Sepolia', shortName: 'BASE-SEP', color: 'bg-blue-400' },
+  1: { name: 'Ethereum', shortName: 'ETH' },
+  10: { name: 'Optimism', shortName: 'OP' },
+  56: { name: 'BSC', shortName: 'BSC' },
+  137: { name: 'Polygon', shortName: 'MATIC' },
+  8453: { name: 'Base', shortName: 'BASE' },
+  42161: { name: 'Arbitrum', shortName: 'ARB' },
+  11155111: { name: 'Sepolia', shortName: 'SEP' },
+  84532: { name: 'Base Sepolia', shortName: 'BASE-SEP' },
 };
 
 interface PaymentHistoryListProps {
@@ -49,14 +50,14 @@ export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListPr
 
   if (!entries.length) {
     return (
-      <div className={cn('payment-panel border border-dashed py-8 text-center text-xs text-muted-foreground', className)}>
+      <div className={cn('pw-history-empty', className)}>
         No payments yet. Your future transactions will appear here.
       </div>
     );
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('pw-history-list', className)}>
       {entries.map((entry) => (
         <HistoryListCard key={entry.id} entry={entry} onSelect={onSelect} />
       ))}
@@ -68,7 +69,6 @@ export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListPr
  * Renders an individual history entry card.
  */
 function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSelect?: (entry: PaymentHistoryEntry) => void }) {
-  const badgeVariant = HISTORY_STATUS_BADGE_VARIANT[entry.status] ?? 'outline';
   const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
   const outputLabel = formatAmountWithSymbol(entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol);
   const title = entry.mode === 'direct'
@@ -91,18 +91,18 @@ function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSe
     <Card
       onClick={onSelect ? handleClick : undefined}
       className={cn(
-        'payment-panel overflow-hidden border border-border/70 transition-all duration-200',
-        onSelect && 'cursor-pointer hover:border-primary/50 hover:shadow-xs hover:shadow-primary/40',
+        'pw-history-card',
+        onSelect && 'pw-history-card--interactive',
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-end gap-3 py-3">
+      <CardHeader className="pw-history-card__header">
         <StatusDisplay 
           status={entry.status}
           showOriginalStatus={false}
           showSimplifiedStatus={true}
         />
       </CardHeader>
-      <CardContent className="space-y-4 text-xs">
+      <CardContent className="pw-history-card__content">
         <HistoryListTokenFlow entry={entry} title={title} />
         <HistoryListAmountDetails inputLabel={inputLabel} outputLabel={outputLabel} />
         <HistoryListTransactionHashes entry={entry} />
@@ -120,22 +120,22 @@ function HistoryListTokenFlow({ entry, title }: { entry: PaymentHistoryEntry; ti
   const destinationChain = CHAIN_INFO[entry.destinationChainId]?.name || `Chain ${entry.destinationChainId}`;
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="pw-history-flow">
+      <div className="pw-history-flow__grid">
         <HistoryListTokenFlowColumn
           tokenSymbol={entry.inputToken.symbol}
+          tokenLogoUrl={entry.inputToken.logoUrl}
           chainLabel={originChain}
         />
         <HistoryListTokenFlowColumn
           tokenSymbol={entry.outputToken.symbol}
+          tokenLogoUrl={entry.outputToken.logoUrl}
           chainLabel={destinationChain}
         />
       </div>
-      <div className="flex items-center justify-center">
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border/30">
-          <ArrowRight className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{title}</span>
-        </div>
+      <div className="pw-history-flow__indicator">
+        <ArrowRight className="pw-history-flow__icon" />
+        <span className="pw-history-flow__label">{title}</span>
       </div>
     </div>
   );
@@ -144,18 +144,14 @@ function HistoryListTokenFlow({ entry, title }: { entry: PaymentHistoryEntry; ti
 /**
  * Displays a single token flow column.
  */
-function HistoryListTokenFlowColumn({ tokenSymbol, chainLabel }: { tokenSymbol: string; chainLabel: string }) {
+function HistoryListTokenFlowColumn({ tokenSymbol, tokenLogoUrl, chainLabel }: { tokenSymbol: string; tokenLogoUrl?: string; chainLabel: string }) {
   return (
-    <div className="space-y-2">
-      <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-xs font-bold">{tokenSymbol.charAt(0)}</span>
-          </div>
-          <div className="flex-col items-start gap-2">
-            <div className="font-mono text-sm font-semibold">{tokenSymbol}</div>
-            <div className="text-xs font-medium text-muted-foreground">{chainLabel}</div>
-          </div>
+    <div className="pw-history-flow__column">
+      <div className="pw-history-flow__token-card">
+        <TokenAvatar symbol={tokenSymbol} logoUrl={tokenLogoUrl} className="pw-avatar--small" />
+        <div className="pw-history-flow__token-meta">
+          <div className="pw-history-flow__token-symbol">{tokenSymbol}</div>
+          <div className="pw-history-flow__token-chain">{chainLabel}</div>
         </div>
       </div>
     </div>
@@ -167,11 +163,9 @@ function HistoryListTokenFlowColumn({ tokenSymbol, chainLabel }: { tokenSymbol: 
  */
 function HistoryListAmountDetails({ inputLabel, outputLabel }: { inputLabel: string; outputLabel: string }) {
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <HistoryListAmountRow label="You sent" value={inputLabel} indicator={<ArrowRight className="h-4 w-4 text-muted-foreground" />} />
-        <HistoryListAmountRow label="Estimated receive" value={outputLabel} indicator={<span className="text-[10px] text-muted-foreground">Est.</span>} />
-      </div>
+    <div className="pw-history-amount">
+      <HistoryListAmountRow label="You sent" value={inputLabel} indicator={<ArrowRight className="pw-history-amount__icon" />} />
+      <HistoryListAmountRow label="Estimated receive" value={outputLabel} indicator={<span className="pw-history-amount__hint">Est.</span>} />
     </div>
   );
 }
@@ -181,10 +175,10 @@ function HistoryListAmountDetails({ inputLabel, outputLabel }: { inputLabel: str
  */
 function HistoryListAmountRow({ label, value, indicator }: { label: string; value: string; indicator: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3">
-      <div className="space-y-1">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</div>
-        <div className="font-mono text-sm font-bold">{value}</div>
+    <div className="pw-history-amount__row">
+      <div className="pw-history-amount__meta">
+        <div className="pw-history-amount__label">{label}</div>
+        <div className="pw-history-amount__value">{value}</div>
       </div>
       {indicator}
     </div>
@@ -200,49 +194,47 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-2">
-        {entry.approvalTxHashes?.length ? (
-          <TransactionGroup
-            title="Wallet approval"
-            colorClass="bg-yellow-500"
-            hashes={entry.approvalTxHashes}
-            chainId={entry.originChainId}
-          />
-        ) : null}
-        {entry.depositTxHash ? (
-          <TransactionGroup
-            title="Deposit sent"
-            colorClass="bg-blue-500"
-            hashes={[entry.depositTxHash]}
-            chainId={entry.originChainId}
-          />
-        ) : null}
-        {entry.swapTxHash ? (
-          <TransactionGroup
-            title="Swap sent"
-            colorClass="bg-green-500"
-            hashes={[entry.swapTxHash]}
-            chainId={entry.originChainId}
-          />
-        ) : null}
-        {entry.fillTxHash ? (
-          <TransactionGroup
-            title="Funds delivered"
-            colorClass="bg-purple-500"
-            hashes={[entry.fillTxHash]}
-            chainId={entry.destinationChainId}
-          />
-        ) : null}
-        {entry.wrapTxHash ? (
-          <TransactionGroup
-            title="Wrap step"
-            colorClass="bg-orange-500"
-            hashes={[entry.wrapTxHash]}
-            chainId={entry.originChainId}
-          />
-        ) : null}
-      </div>
+    <div className="pw-history-hashes">
+      {entry.approvalTxHashes?.length ? (
+        <TransactionGroup
+          title="Wallet approval"
+          indicatorColor="var(--pw-color-warning)"
+          hashes={entry.approvalTxHashes}
+          chainId={entry.originChainId}
+        />
+      ) : null}
+      {entry.depositTxHash ? (
+        <TransactionGroup
+          title="Deposit sent"
+          indicatorColor="var(--pw-brand)"
+          hashes={[entry.depositTxHash]}
+          chainId={entry.originChainId}
+        />
+      ) : null}
+      {entry.swapTxHash ? (
+        <TransactionGroup
+          title="Swap sent"
+          indicatorColor="var(--pw-color-success)"
+          hashes={[entry.swapTxHash]}
+          chainId={entry.originChainId}
+        />
+      ) : null}
+      {entry.fillTxHash ? (
+        <TransactionGroup
+          title="Funds delivered"
+          indicatorColor="#7c3aed"
+          hashes={[entry.fillTxHash]}
+          chainId={entry.destinationChainId}
+        />
+      ) : null}
+      {entry.wrapTxHash ? (
+        <TransactionGroup
+          title="Wrap step"
+          indicatorColor="#fb923c"
+          hashes={[entry.wrapTxHash]}
+          chainId={entry.originChainId}
+        />
+      ) : null}
     </div>
   );
 }
@@ -253,12 +245,12 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
  */
 function HistoryListUpdatedTimestamp({ updatedAt }: { updatedAt: number }) {
   return (
-    <div className="flex items-center justify-between border-t border-border/30 pt-3">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Clock className="h-3 w-3" />
-        <span className="text-[10px] uppercase tracking-wide">Last updated</span>
+    <div className="pw-history-updated">
+      <div className="pw-history-updated__meta">
+        <Clock className="pw-history-updated__icon" />
+        <span className="pw-history-updated__label">Last updated</span>
       </div>
-      <time className="text-[10px] text-muted-foreground/80">{new Date(updatedAt).toLocaleString()}</time>
+      <time className="pw-history-updated__time">{new Date(updatedAt).toLocaleString()}</time>
     </div>
   );
 }
@@ -271,16 +263,16 @@ function HashLink({ hash, chainId }: { hash: Hex; chainId: number }) {
 
   if (!explorer) {
     return (
-      <div className="flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
-        <Hash className="h-3 w-3 text-muted-foreground" />
-        <span className="font-mono text-xs">{shortHash(hash)}</span>
+      <div className="pw-hash">
+        <Hash className="pw-hash__icon" />
+        <span className="pw-hash__value">{shortHash(hash)}</span>
       </div>
     );
   }
 
   return (
     <a
-      className="flex items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-2 py-1 text-primary transition-colors hover:bg-muted/40 hover:border-primary/50"
+      className="pw-hash pw-hash--interactive"
       href={`${explorer}/tx/${hash}`}
       target="_blank"
       rel="noreferrer"
@@ -288,9 +280,9 @@ function HashLink({ hash, chainId }: { hash: Hex; chainId: number }) {
         event.stopPropagation();
       }}
     >
-      <Hash className="h-3 w-3" />
-      <span className="font-mono text-xs">{shortHash(hash)}</span>
-      <ExternalLink className="h-3 w-3" />
+      <Hash className="pw-hash__icon" />
+      <span className="pw-hash__value">{shortHash(hash)}</span>
+      <ExternalLink className="pw-hash__icon" />
     </a>
   );
 }
