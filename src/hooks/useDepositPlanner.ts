@@ -852,6 +852,8 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
             integratorId: config.integratorId,
             apiUrl: config.apiUrl,
             skipOriginTxEstimation: true,
+            ...(config.appFee !== undefined ? { appFee: config.appFee } : {}),
+            ...(config.appFeeRecipient ? { appFeeRecipient: config.appFeeRecipient } : {}),
           });
 
           const inputAmount = BigInt(quote.inputAmount ?? quote.steps?.bridge?.inputAmount ?? '0');

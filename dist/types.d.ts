@@ -66,6 +66,10 @@ export interface PaymentConfig {
     ];
     fallbackRecipient?: Address;
     maxSlippageBps?: number;
+    /** Optional integrator fee forwarded to the swap quote API. */
+    appFee?: number;
+    /** Recipient that collects the integrator fee when {@link appFee} is set. */
+    appFeeRecipient?: Address;
 }
 export interface NetworkConfig {
     testnet: {

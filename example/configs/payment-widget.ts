@@ -21,6 +21,8 @@ interface PaymentPreset {
   maxSlippageBps: number
   tokenPricesUsd?: Record<number, Record<string, number>>
   fallbackRecipient?: Address
+  appFee?: number
+  appFeeRecipient?: Address
 }
 
 const MAINNET_PRESET: PaymentPreset = {
@@ -70,6 +72,13 @@ const readEnvInt = (key: string, fallback: number) => {
   const value = process.env[key]
   if (value === undefined) return fallback
   const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const readEnvNumber = (key: string, fallback?: number) => {
+  const value = process.env[key]
+  if (value === undefined) return fallback
+  const parsed = Number.parseFloat(value)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
@@ -144,7 +153,13 @@ interface BuildPaymentConfigOptions {
   overrides?: Partial<
     Pick<
       PaymentPreset,
-      "targetChainId" | "targetTokenAddress" | "targetAmount" | "fallbackRecipient" | "maxSlippageBps"
+      | "targetChainId"
+      | "targetTokenAddress"
+      | "targetAmount"
+      | "fallbackRecipient"
+      | "maxSlippageBps"
+      | "appFee"
+      | "appFeeRecipient"
     >
   >
 }
@@ -167,6 +182,10 @@ export const buildPaymentConfig = ({
   const targetRecipient = walletRecipient ?? fallbackRecipient
 
   const maxSlippageBps = overrides?.maxSlippageBps ?? readEnvInt("NEXT_PUBLIC_MAX_SLIPPAGE_BPS", preset.maxSlippageBps)
+  const appFee = overrides?.appFee ?? readEnvNumber("NEXT_PUBLIC_APP_FEE", preset.appFee)
+  const appFeeRecipient =
+    overrides?.appFeeRecipient ??
+    readEnvAddress("NEXT_PUBLIC_APP_FEE_RECIPIENT", preset.appFeeRecipient)
 
   return {
     targetTokenAddress,
@@ -175,6 +194,8 @@ export const buildPaymentConfig = ({
     targetRecipient,
     fallbackRecipient,
     maxSlippageBps,
+    appFee,
+    appFeeRecipient,
   }
 }
 
@@ -209,5 +230,7 @@ export const presetSummaryForMode = (mode: DemoMode) => {
     quoteRefreshMs: preset.quoteRefreshMs,
     showUnavailableOptions: preset.showUnavailableOptions,
     maxSlippageBps: preset.maxSlippageBps,
+    appFee: preset.appFee,
+    appFeeRecipient: preset.appFeeRecipient,
   }
 }

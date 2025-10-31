@@ -52,6 +52,7 @@ Per-widget payment target details:
 - `targetTokenAddress`, `targetChainId`, `targetAmount`.
 - `targetRecipient` or `targetContractCall`.
 - `maxSlippageBps` (applies to swap/bridge quotes).
+- Optional swap fee forwarding via `appFee` and `appFeeRecipient`.
 
 ### 3.3 Provider Context
 
