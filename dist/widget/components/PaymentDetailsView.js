@@ -24,10 +24,10 @@ export function PaymentDetailsView(props) {
                     (option.mode === 'swap' && !option.swapQuote), children: isExecuting
                     ? 'Processing…'
                     : option.mode === 'bridge'
-                        ? 'Bridge payment'
+                        ? 'Pay Now'
                         : option.mode === 'swap'
-                            ? 'Swap & bridge'
-                            : 'Send payment' })] }));
+                            ? 'Pay Now'
+                            : 'Pay Now' })] }));
 }
 function DetailRow({ label, value }) {
     return (_jsxs("div", { className: "flex items-center justify-between text-sm", children: [_jsx("span", { className: "text-muted-foreground", children: label }), _jsx("span", { className: "font-medium text-foreground", children: value })] }));

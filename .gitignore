@@ -21,6 +21,3 @@ Thumbs.db
 .env
 cache/
 artifacts/
-
-example
-example/*

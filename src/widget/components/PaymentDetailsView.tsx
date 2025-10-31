@@ -128,10 +128,10 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         {isExecuting
           ? 'Processing…'
           : option.mode === 'bridge'
-            ? 'Bridge payment'
+            ? 'Pay Now'
             : option.mode === 'swap'
-              ? 'Swap & bridge'
-              : 'Send payment'}
+              ? 'Pay Now'
+              : 'Pay Now'}
       </Button>
     </div>
   );

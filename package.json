@@ -46,12 +46,14 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
     "chai": "^4.5.0",
+    "chokidar": "^4.0.3",
     "ethers": "^6.13.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   },
   "scripts": {
     "build": "tsc && cp src/styles.css dist/styles.css",
+    "watch:build": "node ./scripts/watch-build.mjs",
     "type-check": "tsc --noEmit",
     "prepack": "npm run build"
   },

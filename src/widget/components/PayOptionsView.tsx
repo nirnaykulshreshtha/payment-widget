@@ -217,13 +217,13 @@ function TargetSummary({ targetAmountLabel, targetSymbol, targetChainLabel, last
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-4">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Target</span>
+        <span className="text-muted-foreground">You need to pay</span>
         <span className="font-semibold text-foreground">
           {targetAmountLabel} {targetSymbol} on {targetChainLabel}
         </span>
       </div>
       <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-        {lastUpdated ? <span>Updated {new Date(lastUpdated).toLocaleTimeString()}</span> : <span>Ready</span>}
+        {lastUpdated ? <span className="text-muted-foreground text-xs">Updated {new Date(lastUpdated).toLocaleTimeString()}</span> : <span className="text-muted-foreground text-xs">Ready</span>}
         <button
           type="button"
           onClick={onRefresh}
