@@ -1,13 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-/**
- * @fileoverview Provides the detailed payment tracking experience including
- * timeline, transaction hashes, and chain metadata with custom status header.
- */
-import { ArrowRight, ClockIcon } from 'lucide-react';
+import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
 import { formatAmountWithSymbol } from '../../history/utils';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { PaymentStatusHeader } from './PaymentStatusHeader';
+import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
 export function PaymentTrackingView({ historyId, chainLookup, chainLogos }) {
     const snapshot = usePaymentHistoryStore();
@@ -17,7 +14,8 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }) {
     }
     const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
     const outputLabel = formatAmountWithSymbol(entry.outputAmount ?? 0n, entry.outputToken.decimals, entry.outputToken.symbol);
-    return (_jsxs("div", { className: "space-y-5", children: [_jsx(PaymentStatusHeader, { entry: entry, chainLookup: chainLookup, chainLogos: chainLogos }), _jsx(AmountSection, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(TransactionHashes, { entry: entry }), _jsx("div", { className: "rounded-2xl border border-border/60 bg-card/40 p-4", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
+    const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
+    return (_jsxs("div", { className: "space-y-5", children: [_jsx(PaymentStatusHeader, { entry: entry, chainLookup: chainLookup, chainLogos: chainLogos }), isProcessing && (_jsxs("div", { className: "flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground", children: [_jsx(Loader2, { className: "h-4 w-4 animate-spin text-primary" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(AmountSection, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(TransactionHashes, { entry: entry }), _jsx("div", { className: "rounded-2xl border border-border/60 bg-card/40 p-4", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
 }
 function AmountSection({ inputLabel, outputLabel }) {
     return (_jsx("div", { className: "space-y-3", children: _jsxs("div", { className: "space-y-2", children: [_jsxs("div", { className: "flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3", children: [_jsxs("div", { className: "space-y-1", children: [_jsx("div", { className: "text-[10px] text-muted-foreground uppercase tracking-wide", children: "You sent" }), _jsx("div", { className: "font-mono text-sm font-bold", children: inputLabel })] }), _jsx(ArrowRight, { className: "h-4 w-4 text-muted-foreground" })] }), _jsxs("div", { className: "flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-3", children: [_jsxs("div", { className: "space-y-1", children: [_jsx("div", { className: "text-[10px] text-muted-foreground uppercase tracking-wide", children: "Estimated receive" }), _jsx("div", { className: "font-mono text-sm font-bold", children: outputLabel })] }), _jsx("div", { className: "text-[10px] text-muted-foreground", children: "Est." })] })] }) }));

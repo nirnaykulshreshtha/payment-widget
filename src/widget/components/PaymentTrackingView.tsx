@@ -1,14 +1,11 @@
-/**
- * @fileoverview Provides the detailed payment tracking experience including
- * timeline, transaction hashes, and chain metadata with custom status header.
- */
-import { ArrowRight, ClockIcon } from 'lucide-react';
+import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
 
 import type { PaymentHistoryEntry } from '../../types';
 import { formatAmountWithSymbol } from '../../history/utils';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { PaymentStatusHeader } from './PaymentStatusHeader';
+import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
 
 export interface PaymentTrackingViewProps {
@@ -32,10 +29,17 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
 
   const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
   const outputLabel = formatAmountWithSymbol(entry.outputAmount ?? 0n, entry.outputToken.decimals, entry.outputToken.symbol);
+  const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
 
   return (
     <div className="space-y-5">
       <PaymentStatusHeader entry={entry} chainLookup={chainLookup} chainLogos={chainLogos} />
+      {isProcessing && (
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span>Still delivering your payment. Sit tight while we update the timeline.</span>
+        </div>
+      )}
       <AmountSection inputLabel={inputLabel} outputLabel={outputLabel} />
       <TransactionHashes entry={entry} />
       <div className="rounded-2xl border border-border/60 bg-card/40 p-4">

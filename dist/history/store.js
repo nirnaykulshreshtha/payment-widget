@@ -744,7 +744,7 @@ export function updateBridgeAfterDeposit(id, depositId, depositTxHash, outputAmo
     const now = Date.now();
     store.updateEntry(id, (entry) => ({
         ...entry,
-        depositId,
+        depositId: depositId ?? entry.depositId,
         depositTxHash,
         outputAmount,
         status: 'relay_pending',
@@ -754,7 +754,11 @@ export function updateBridgeAfterDeposit(id, depositId, depositTxHash, outputAmo
             makeTimelineEntry('relay_pending', now),
         ]),
     }));
-    historyLog('bridge deposit recorded', { id, depositId: depositId.toString(), depositTxHash });
+    historyLog('bridge deposit recorded', {
+        id,
+        depositId: depositId ? depositId.toString() : undefined,
+        depositTxHash,
+    });
 }
 export function updateBridgeFilled(id, fillTxHash) {
     const now = Date.now();

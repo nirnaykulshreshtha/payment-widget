@@ -139,13 +139,14 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   const showFailureView = useCallback(
     ({ reason, historyId }: { reason: string; historyId?: string }) => {
       logError('showFailureView', { reason, historyId });
-      if (historyId) {
-        setActiveHistoryId((prev) => (prev === historyId ? null : prev));
-      }
       paymentToast.error(summarizeError(reason));
+      if (historyId) {
+        openTrackingView(historyId);
+        return;
+      }
       resetToOptions();
     },
-    [resetToOptions],
+    [openTrackingView, resetToOptions],
   );
 
   const chainLookup = useMemo(() => {
@@ -655,7 +656,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
         showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         setSelectedOption(null);
-        setActiveHistoryId(null);
+        if (!failureHistoryId) {
+          setActiveHistoryId(null);
+        }
       } finally {
         setIsExecuting(false);
       }
@@ -673,6 +676,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
       let historyIdRef = activeHistoryId;
 
       const route = option.route;
+      const quote = option.quote;
 
       try {
         setIsExecuting(true);
@@ -684,8 +688,8 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         log('executing bridge payment', {
           id: option.id,
           route,
-          inputAmount: describeRawAmount(option.quote.inputAmount, option.displayToken.decimals, option.displayToken.symbol),
-          outputAmount: describeAmount(option.quote.outputAmount, targetToken, option.displayToken.decimals, option.displayToken.symbol),
+          inputAmount: describeRawAmount(quote.inputAmount, option.displayToken.decimals, option.displayToken.symbol),
+          outputAmount: describeAmount(quote.outputAmount, targetToken, option.displayToken.decimals, option.displayToken.symbol),
         });
 
         const walletClientWithChain = await ensureWalletChain(route.originChainId, 'bridge-origin');
@@ -736,12 +740,12 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             outputToken: targetToken ?? option.displayToken,
             originChainId: route.originChainId,
             destinationChainId: route.destinationChainId,
-            inputAmount: option.quote.inputAmount,
-            outputAmount: option.quote.outputAmount,
+            inputAmount: quote.inputAmount,
+            outputAmount: quote.outputAmount,
             requiresWrap: option.requiresWrap ?? false,
             originSpokePoolAddress,
             destinationSpokePoolAddress,
-            depositMessage: option.quote.raw.deposit?.message as Hex | undefined,
+            depositMessage: quote.raw.deposit?.message as Hex | undefined,
           });
           setActiveHistoryId(historyIdRef);
         }
@@ -764,7 +768,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             ],
             functionName: 'deposit',
             account,
-            value: option.quote.inputAmount,
+            value: quote.inputAmount,
             chain: originViemChain,
           })) as Hex;
 
@@ -778,17 +782,37 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
         const result = await client.executeQuote({
           integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
-          deposit: option.quote.raw.deposit,
+          deposit: quote.raw.deposit,
           walletClient: walletClientWithChain as ConfiguredWalletClient,
           originClient,
           destinationClient,
           onProgress: (progress) => {
-            if (progress.step === 'deposit' && progress.status === 'txPending') {
-              setTxHash(progress.txHash as Hex);
-              if (historyIdRef && progress.txHash) {
-                updateBridgeDepositTxHash(historyIdRef, progress.txHash as Hex);
+            if (!historyIdRef) {
+              return;
+            }
+            if (progress.step === 'deposit') {
+              if (progress.status === 'txPending') {
+                if ('txHash' in progress && progress.txHash) {
+                  const pendingHash = progress.txHash as Hex;
+                  setTxHash(pendingHash);
+                  updateBridgeDepositTxHash(historyIdRef, pendingHash);
+                }
+                log('bridge progress update', progress);
               }
-              log('bridge progress update', progress);
+              if (progress.status === 'txSuccess') {
+                const txHash = progress.txReceipt?.transactionHash as Hex | undefined;
+                if (txHash) {
+                  const depositIdValue =
+                    typeof progress.depositId === 'string' || typeof progress.depositId === 'number'
+                      ? BigInt(progress.depositId)
+                      : undefined;
+                  updateBridgeAfterDeposit(historyIdRef, depositIdValue, txHash, quote.outputAmount);
+                  setTxHash(txHash);
+                }
+              }
+            }
+            if (progress.step === 'fill' && progress.status === 'txSuccess' && progress.txReceipt?.transactionHash) {
+              updateBridgeFilled(historyIdRef, progress.txReceipt.transactionHash as Hex);
             }
           },
         });
@@ -797,12 +821,16 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           throw result.error;
         }
 
-        if (historyIdRef && result.depositId && result.depositTxReceipt) {
+        if (historyIdRef && result.depositTxReceipt) {
+          const depositIdValue =
+            result.depositId !== undefined && result.depositId !== null
+              ? BigInt(result.depositId)
+              : undefined;
           updateBridgeAfterDeposit(
             historyIdRef,
-            BigInt(result.depositId),
+            depositIdValue,
             result.depositTxReceipt.transactionHash as Hex,
-            option.quote.outputAmount,
+            quote.outputAmount,
           );
         }
 
@@ -820,11 +848,11 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         const summary: PaymentResultSummary = {
           mode: 'bridge',
           input: {
-            amount: option.quote.inputAmount,
+            amount: quote.inputAmount,
             token: option.displayToken,
           },
           output: {
-            amount: option.quote.outputAmount,
+            amount: quote.outputAmount,
             token: targetToken ?? option.displayToken,
           },
           depositTxHash: result.depositTxReceipt?.transactionHash as Hex | undefined,
@@ -853,7 +881,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
         showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         setSelectedOption(null);
-        setActiveHistoryId(null);
+        if (!failureHistoryId) {
+          setActiveHistoryId(null);
+        }
       } finally {
         setIsExecuting(false);
       }
@@ -1036,7 +1066,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
         showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         setSelectedOption(null);
-        setActiveHistoryId(null);
+        if (!failureHistoryId) {
+          setActiveHistoryId(null);
+        }
       } finally {
         setIsExecuting(false);
       }

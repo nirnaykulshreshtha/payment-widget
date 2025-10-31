@@ -24,6 +24,7 @@ type TimelineStep = {
   timestamp: number;
   notes?: string;
   txHash?: string;
+  synthetic?: boolean;
 };
 
 interface HistoryTimelineProps {
@@ -38,28 +39,110 @@ interface HistoryTimelineProps {
 export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
   console.log('[HistoryTimeline] Component called with:', { timeline: timeline?.length, entry: !!entry, entryMode: entry?.mode, originChainId: entry?.originChainId, destinationChainId: entry?.destinationChainId });
   
-  const steps = buildSteps(timeline);
-
-  if (!steps.length) {
-    return <p className="text-xs text-muted-foreground">Waiting for updates...</p>;
-  }
+  const baseSteps = buildSteps(timeline);
+  const stageMap = new Map<PaymentHistoryStatus, TimelineStep>(baseSteps.map((step) => [step.stage, step]));
 
   const flow = entry ? HISTORY_TIMELINE_STAGE_FLOW[entry.mode] ?? [] : [];
-  const stageMap = new Map(timeline?.map((item) => [item.stage, item]) ?? []);
   const resolved = entry ? HISTORY_RESOLVED_STATUSES.has(entry.status) : false;
-  const lastStage = timeline?.[timeline.length - 1]?.stage ?? null;
-  const activeStage = resolved ? null : (entry && stageMap.has(entry.status) ? entry.status : lastStage);
-  const activeIndex = activeStage ? flow.indexOf(activeStage) : -1;
-  const nextStage = !resolved && activeIndex >= 0
-    ? flow.slice(activeIndex + 1).find((stage) => stage !== 'failed')
+  const lastRecordedStage = baseSteps[baseSteps.length - 1]?.stage ?? null;
+  const stageForStatus = entry?.status && flow.includes(entry.status) ? entry.status : null;
+
+  let activeStage: PaymentHistoryStatus | null = null;
+  if (!resolved) {
+    if (stageForStatus) {
+      activeStage = stageForStatus;
+    } else if (lastRecordedStage && flow.includes(lastRecordedStage)) {
+      activeStage = lastRecordedStage;
+    } else {
+      activeStage = null;
+    }
+  }
+
+  const activeFlowIndex = activeStage ? flow.indexOf(activeStage) : -1;
+
+  if (entry && flow.length) {
+    const fallbackTimestamp = entry.updatedAt ?? Date.now();
+    const ensureStage = (stage: PaymentHistoryStatus, timestamp: number) => {
+      if (!stageMap.has(stage)) {
+        stageMap.set(stage, {
+          stage,
+          label: HISTORY_STATUS_LABELS[stage] ?? stage,
+          timestamp,
+          synthetic: true,
+        });
+      }
+    };
+
+    if (entry.status === 'wrap_pending') {
+      const existingWrapPending = stageMap.get('wrap_pending')?.timestamp ?? entry.updatedAt ?? fallbackTimestamp;
+      ensureStage('wrap_pending', existingWrapPending);
+    }
+
+    if (activeFlowIndex >= 0) {
+      for (let i = 0; i <= activeFlowIndex; i += 1) {
+        const stage = flow[i];
+        const existingTimestamp = stageMap.get(stage)?.timestamp;
+        const timestamp =
+          existingTimestamp ??
+          (stage === 'initial' ? entry.createdAt : fallbackTimestamp);
+        ensureStage(stage, timestamp);
+      }
+
+      const nextStageCandidate = flow[activeFlowIndex + 1];
+      if (!resolved && nextStageCandidate) {
+        ensureStage(nextStageCandidate, stageMap.get(nextStageCandidate)?.timestamp ?? fallbackTimestamp);
+      }
+    } else if (!resolved && lastRecordedStage && flow.includes(lastRecordedStage)) {
+      const lastRecordedIndex = flow.indexOf(lastRecordedStage);
+      for (let i = 0; i <= Math.min(lastRecordedIndex + 1, flow.length - 1); i += 1) {
+        const stage = flow[i];
+        const existingTimestamp = stageMap.get(stage)?.timestamp;
+        const timestamp =
+          existingTimestamp ??
+          (stage === 'initial' ? entry.createdAt : fallbackTimestamp);
+        ensureStage(stage, timestamp);
+      }
+    }
+  }
+
+  let steps = (flow.length
+    ? flow.filter((stage) => stageMap.has(stage)).map((stage) => stageMap.get(stage)!)
+    : Array.from(stageMap.values())
+  ).sort((a, b) => getStagePosition(a.stage) - getStagePosition(b.stage) || a.timestamp - b.timestamp);
+
+  if (!resolved && activeFlowIndex >= 0 && flow.length) {
+    steps = steps.filter((step) => {
+      const index = flow.indexOf(step.stage);
+      return index <= activeFlowIndex + 1;
+    });
+  }
+  if (!resolved && activeFlowIndex === -1 && lastRecordedStage && flow.includes(lastRecordedStage)) {
+    const lastRecordedIndex = flow.indexOf(lastRecordedStage);
+    steps = steps.filter((step) => {
+      const index = flow.indexOf(step.stage);
+      return index <= lastRecordedIndex + 1;
+    });
+  }
+
+  if (!steps.length) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        <span>Waiting for updates...</span>
+      </div>
+    );
+  }
+
+  const activeDisplayIndex = activeStage ? steps.findIndex((step) => step.stage === activeStage) : -1;
+  const resolvedActiveIndex = activeDisplayIndex === -1 ? steps.length - 1 : activeDisplayIndex;
+  const nextStage = !resolved && activeFlowIndex >= 0
+    ? flow.slice(activeFlowIndex + 1).find((stage) => stage !== 'failed')
     : undefined;
 
   const completedStages = new Set(HISTORY_BASE_COMPLETED_STAGES);
   if (steps.length > 1) {
     completedStages.add('initial');
   }
-
-  const resolvedActiveIndex = activeIndex === -1 ? steps.length - 1 : activeIndex;
 
   return (
     <div className="relative ml-3">
@@ -68,8 +151,12 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
         {steps.map((step, index) => {
           const isFailure = HISTORY_FAILURE_STAGES.has(step.stage);
           const isCompletedStage = completedStages.has(step.stage);
-          const isCompleted = !isFailure && (isCompletedStage || index < resolvedActiveIndex);
-          const isActive = !isFailure && !isCompleted && index === resolvedActiveIndex;
+          const isActive = !isFailure && !resolved && index === activeDisplayIndex;
+          const isCompleted = !isFailure && !step.synthetic && (
+            resolved
+              ? index <= resolvedActiveIndex
+              : isCompletedStage || (activeDisplayIndex >= 0 && index < activeDisplayIndex)
+          );
           
           // Use proper status labels
           const label = HISTORY_STATUS_LABELS[step.stage] ?? step.label;
@@ -149,16 +236,9 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
                   </div>
                 )}
                 
-                {/* Active stage indicators */}
+                {/* Active stage indicator */}
                 {isActive && !isFailure && (
-                  <>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">In progress</p>
-                    {nextStage && (
-                      <p className="mt-1 text-[11px] text-muted-foreground/80">
-                        Up next: {HISTORY_STATUS_LABELS[nextStage] ?? nextStage}
-                      </p>
-                    )}
-                  </>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80">In progress</p>
                 )}
               </div>
             </div>
@@ -194,6 +274,7 @@ function buildSteps(timeline?: PaymentTimelineEntry[]): TimelineStep[] {
     timestamp: entry.timestamp,
     notes: entry.notes,
     txHash: entry.txHash,
+    synthetic: false,
   }));
 }
 
@@ -264,5 +345,3 @@ function renderHashLink(hash: string | undefined, chainId?: number) {
     </a>
   );
 }
-
-

@@ -23,6 +23,11 @@ export interface PaymentResultViewProps {
 
 export function PaymentResultView({ type, reference, reason, summary, historyId, onClose, onRetry, onViewTracking }: PaymentResultViewProps) {
   const isSuccess = type === 'success';
+  const headline = isSuccess ? 'Funds delivered' : "Payment didn't go through";
+  const subline = isSuccess
+    ? 'Your funds are now on the receiving network. Open tracking to see the full receipt.'
+    : reason ?? "We couldn't finish this payment.";
+
   return (
     <div className="space-y-5">
       <div
@@ -35,12 +40,8 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
       >
         {isSuccess ? <CheckCircle2 className="mt-0.5 h-5 w-5" /> : <XCircle className="mt-0.5 h-5 w-5" />}
         <div className="space-y-1">
-          <p className="text-sm font-semibold">{isSuccess ? 'Payment completed' : "Payment didn't go through"}</p>
-          <p className="text-xs">
-            {isSuccess
-              ? 'Your funds are now on the receiving network. Open tracking to see the full receipt.'
-              : reason ?? "We couldn't finish this payment."}
-          </p>
+          <p className="text-sm font-semibold">{headline}</p>
+          <p className="text-xs">{subline}</p>
         </div>
       </div>
 

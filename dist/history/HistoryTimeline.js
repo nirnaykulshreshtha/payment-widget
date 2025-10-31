@@ -1,5 +1,5 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 /**
  * @fileoverview Renders a vertical timeline that visualizes payment progress
  * using the Magic UI timeline-06 layout adapted for dynamic status data.
@@ -17,29 +17,100 @@ const BASE_TIMELINE_VARIANT_CLASS = 'bg-accent border-muted-foreground/40 text-f
  */
 export function HistoryTimeline({ timeline, entry }) {
     console.log('[HistoryTimeline] Component called with:', { timeline: timeline?.length, entry: !!entry, entryMode: entry?.mode, originChainId: entry?.originChainId, destinationChainId: entry?.destinationChainId });
-    const steps = buildSteps(timeline);
-    if (!steps.length) {
-        return _jsx("p", { className: "text-xs text-muted-foreground", children: "Waiting for updates..." });
-    }
+    const baseSteps = buildSteps(timeline);
+    const stageMap = new Map(baseSteps.map((step) => [step.stage, step]));
     const flow = entry ? HISTORY_TIMELINE_STAGE_FLOW[entry.mode] ?? [] : [];
-    const stageMap = new Map(timeline?.map((item) => [item.stage, item]) ?? []);
     const resolved = entry ? HISTORY_RESOLVED_STATUSES.has(entry.status) : false;
-    const lastStage = timeline?.[timeline.length - 1]?.stage ?? null;
-    const activeStage = resolved ? null : (entry && stageMap.has(entry.status) ? entry.status : lastStage);
-    const activeIndex = activeStage ? flow.indexOf(activeStage) : -1;
-    const nextStage = !resolved && activeIndex >= 0
-        ? flow.slice(activeIndex + 1).find((stage) => stage !== 'failed')
+    const lastRecordedStage = baseSteps[baseSteps.length - 1]?.stage ?? null;
+    const stageForStatus = entry?.status && flow.includes(entry.status) ? entry.status : null;
+    let activeStage = null;
+    if (!resolved) {
+        if (stageForStatus) {
+            activeStage = stageForStatus;
+        }
+        else if (lastRecordedStage && flow.includes(lastRecordedStage)) {
+            activeStage = lastRecordedStage;
+        }
+        else {
+            activeStage = null;
+        }
+    }
+    const activeFlowIndex = activeStage ? flow.indexOf(activeStage) : -1;
+    if (entry && flow.length) {
+        const fallbackTimestamp = entry.updatedAt ?? Date.now();
+        const ensureStage = (stage, timestamp) => {
+            if (!stageMap.has(stage)) {
+                stageMap.set(stage, {
+                    stage,
+                    label: HISTORY_STATUS_LABELS[stage] ?? stage,
+                    timestamp,
+                    synthetic: true,
+                });
+            }
+        };
+        if (entry.status === 'wrap_pending') {
+            const existingWrapPending = stageMap.get('wrap_pending')?.timestamp ?? entry.updatedAt ?? fallbackTimestamp;
+            ensureStage('wrap_pending', existingWrapPending);
+        }
+        if (activeFlowIndex >= 0) {
+            for (let i = 0; i <= activeFlowIndex; i += 1) {
+                const stage = flow[i];
+                const existingTimestamp = stageMap.get(stage)?.timestamp;
+                const timestamp = existingTimestamp ??
+                    (stage === 'initial' ? entry.createdAt : fallbackTimestamp);
+                ensureStage(stage, timestamp);
+            }
+            const nextStageCandidate = flow[activeFlowIndex + 1];
+            if (!resolved && nextStageCandidate) {
+                ensureStage(nextStageCandidate, stageMap.get(nextStageCandidate)?.timestamp ?? fallbackTimestamp);
+            }
+        }
+        else if (!resolved && lastRecordedStage && flow.includes(lastRecordedStage)) {
+            const lastRecordedIndex = flow.indexOf(lastRecordedStage);
+            for (let i = 0; i <= Math.min(lastRecordedIndex + 1, flow.length - 1); i += 1) {
+                const stage = flow[i];
+                const existingTimestamp = stageMap.get(stage)?.timestamp;
+                const timestamp = existingTimestamp ??
+                    (stage === 'initial' ? entry.createdAt : fallbackTimestamp);
+                ensureStage(stage, timestamp);
+            }
+        }
+    }
+    let steps = (flow.length
+        ? flow.filter((stage) => stageMap.has(stage)).map((stage) => stageMap.get(stage))
+        : Array.from(stageMap.values())).sort((a, b) => getStagePosition(a.stage) - getStagePosition(b.stage) || a.timestamp - b.timestamp);
+    if (!resolved && activeFlowIndex >= 0 && flow.length) {
+        steps = steps.filter((step) => {
+            const index = flow.indexOf(step.stage);
+            return index <= activeFlowIndex + 1;
+        });
+    }
+    if (!resolved && activeFlowIndex === -1 && lastRecordedStage && flow.includes(lastRecordedStage)) {
+        const lastRecordedIndex = flow.indexOf(lastRecordedStage);
+        steps = steps.filter((step) => {
+            const index = flow.indexOf(step.stage);
+            return index <= lastRecordedIndex + 1;
+        });
+    }
+    if (!steps.length) {
+        return (_jsxs("div", { className: "flex items-center gap-2 text-xs text-muted-foreground", children: [_jsx(Loader2, { className: "h-4 w-4 animate-spin text-primary" }), _jsx("span", { children: "Waiting for updates..." })] }));
+    }
+    const activeDisplayIndex = activeStage ? steps.findIndex((step) => step.stage === activeStage) : -1;
+    const resolvedActiveIndex = activeDisplayIndex === -1 ? steps.length - 1 : activeDisplayIndex;
+    const nextStage = !resolved && activeFlowIndex >= 0
+        ? flow.slice(activeFlowIndex + 1).find((stage) => stage !== 'failed')
         : undefined;
     const completedStages = new Set(HISTORY_BASE_COMPLETED_STAGES);
     if (steps.length > 1) {
         completedStages.add('initial');
     }
-    const resolvedActiveIndex = activeIndex === -1 ? steps.length - 1 : activeIndex;
     return (_jsxs("div", { className: "relative ml-3", children: [_jsx("div", { className: "absolute left-0 inset-y-0 border-l border-muted-foreground/20" }), _jsx("div", { className: "space-y-4", children: steps.map((step, index) => {
                     const isFailure = HISTORY_FAILURE_STAGES.has(step.stage);
                     const isCompletedStage = completedStages.has(step.stage);
-                    const isCompleted = !isFailure && (isCompletedStage || index < resolvedActiveIndex);
-                    const isActive = !isFailure && !isCompleted && index === resolvedActiveIndex;
+                    const isActive = !isFailure && !resolved && index === activeDisplayIndex;
+                    const isCompleted = !isFailure && !step.synthetic && (resolved
+                        ? index <= resolvedActiveIndex
+                        : isCompletedStage || (activeDisplayIndex >= 0 && index < activeDisplayIndex));
                     // Use proper status labels
                     const label = HISTORY_STATUS_LABELS[step.stage] ?? step.label;
                     // Enhanced icon logic - use different icons based on stage type
@@ -65,7 +136,7 @@ export function HistoryTimeline({ timeline, entry }) {
                             : isCompleted
                                 ? 'h-4 w-4 text-white'
                                 : 'h-4 w-4 text-white';
-                    return (_jsxs("div", { className: "relative pl-6", children: [_jsx("div", { className: cn('absolute left-0 top-1 h-6 w-6 -translate-x-1/2 rounded-full border-2 ring-4 ring-background flex items-center justify-center text-xs font-semibold transition-shadow', isCompleted && !isFailure && 'bg-primary border-primary shadow-sm shadow-primary/40', isFailure && 'bg-destructive border-destructive ring-destructive/30', isActive && 'bg-primary border-primary ring-primary/30', !isCompleted && !isFailure && !isActive && 'bg-muted border-muted-foreground/40'), children: _jsx(Icon, { className: iconClasses }) }), _jsxs("div", { className: "min-h-[2.5rem]", children: [_jsxs("div", { className: cn('flex flex-col items-start justify-center gap-0 text-[12px] font-semibold uppercase text-white'), children: [_jsx("span", { className: cn('rounded-xl'), children: label }), _jsx("time", { className: cn('text-muted-foreground/70'), children: formatTimestamp(step.timestamp) })] }), step.txHash && (_jsx("div", { className: "text-xs", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })), !isFailure && step.notes && _jsx("p", { className: "text-[11px] text-muted-foreground/90", children: step.notes }), isFailure && entry?.errors && entry.errors.length > 0 && (_jsx("div", { className: "mt-2 space-y-1", children: entry.errors.map((error, errorIndex) => (_jsx("p", { className: "text-[11px] text-destructive/90", children: formatErrorMessage(error) }, errorIndex))) })), isActive && !isFailure && (_jsxs(_Fragment, { children: [_jsx("p", { className: "text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80", children: "In progress" }), nextStage && (_jsxs("p", { className: "mt-1 text-[11px] text-muted-foreground/80", children: ["Up next: ", HISTORY_STATUS_LABELS[nextStage] ?? nextStage] }))] }))] })] }, `${step.stage}-${step.timestamp}`));
+                    return (_jsxs("div", { className: "relative pl-6", children: [_jsx("div", { className: cn('absolute left-0 top-1 h-6 w-6 -translate-x-1/2 rounded-full border-2 ring-4 ring-background flex items-center justify-center text-xs font-semibold transition-shadow', isCompleted && !isFailure && 'bg-primary border-primary shadow-sm shadow-primary/40', isFailure && 'bg-destructive border-destructive ring-destructive/30', isActive && 'bg-primary border-primary ring-primary/30', !isCompleted && !isFailure && !isActive && 'bg-muted border-muted-foreground/40'), children: _jsx(Icon, { className: iconClasses }) }), _jsxs("div", { className: "min-h-[2.5rem]", children: [_jsxs("div", { className: cn('flex flex-col items-start justify-center gap-0 text-[12px] font-semibold uppercase text-white'), children: [_jsx("span", { className: cn('rounded-xl'), children: label }), _jsx("time", { className: cn('text-muted-foreground/70'), children: formatTimestamp(step.timestamp) })] }), step.txHash && (_jsx("div", { className: "text-xs", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })), !isFailure && step.notes && _jsx("p", { className: "text-[11px] text-muted-foreground/90", children: step.notes }), isFailure && entry?.errors && entry.errors.length > 0 && (_jsx("div", { className: "mt-2 space-y-1", children: entry.errors.map((error, errorIndex) => (_jsx("p", { className: "text-[11px] text-destructive/90", children: formatErrorMessage(error) }, errorIndex))) })), isActive && !isFailure && (_jsx("p", { className: "text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80", children: "In progress" }))] })] }, `${step.stage}-${step.timestamp}`));
                 }) })] }));
 }
 /**
@@ -91,6 +162,7 @@ function buildSteps(timeline) {
         timestamp: entry.timestamp,
         notes: entry.notes,
         txHash: entry.txHash,
+        synthetic: false,
     }));
 }
 /**

@@ -856,11 +856,11 @@ export function updateBridgeAfterWrap(id: string, wrapTxHash: Hex) {
   historyLog('bridge wrap confirmed', { id, wrapTxHash });
 }
 
-export function updateBridgeAfterDeposit(id: string, depositId: bigint, depositTxHash: Hex, outputAmount: bigint) {
+export function updateBridgeAfterDeposit(id: string, depositId: bigint | null | undefined, depositTxHash: Hex, outputAmount: bigint) {
   const now = Date.now();
   store.updateEntry(id, (entry) => ({
     ...entry,
-    depositId,
+    depositId: depositId ?? entry.depositId,
     depositTxHash,
     outputAmount,
     status: 'relay_pending',
@@ -870,7 +870,11 @@ export function updateBridgeAfterDeposit(id: string, depositId: bigint, depositT
       makeTimelineEntry('relay_pending', now),
     ]),
   }));
-  historyLog('bridge deposit recorded', { id, depositId: depositId.toString(), depositTxHash });
+  historyLog('bridge deposit recorded', {
+    id,
+    depositId: depositId ? depositId.toString() : undefined,
+    depositTxHash,
+  });
 }
 
 export function updateBridgeFilled(id: string, fillTxHash?: Hex) {

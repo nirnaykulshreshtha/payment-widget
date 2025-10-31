@@ -26,7 +26,7 @@ export declare function recordBridgeInit(params: {
     depositMessage?: Hex;
 }): string;
 export declare function updateBridgeAfterWrap(id: string, wrapTxHash: Hex): void;
-export declare function updateBridgeAfterDeposit(id: string, depositId: bigint, depositTxHash: Hex, outputAmount: bigint): void;
+export declare function updateBridgeAfterDeposit(id: string, depositId: bigint | null | undefined, depositTxHash: Hex, outputAmount: bigint): void;
 export declare function updateBridgeFilled(id: string, fillTxHash?: Hex): void;
 export declare function updateBridgeDepositTxHash(id: string, depositTxHash: Hex): void;
 export declare function failBridge(id: string, errorMessage: string): void;
