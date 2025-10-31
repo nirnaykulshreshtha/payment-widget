@@ -124,7 +124,26 @@ export interface PaymentOption {
     swapRoute?: SwapRoute;
     canMeetTarget: boolean;
     estimatedFillTimeSec?: number;
+    unavailabilityReason?: OptionUnavailability;
 }
+export type OptionUnavailability = {
+    kind: 'minDepositShortfall';
+    requiredAmount: bigint;
+    availableAmount: bigint;
+    token: TokenConfig;
+} | {
+    kind: 'quoteFetchFailed';
+    message: string;
+} | {
+    kind: 'insufficientBalance';
+    requiredAmount: bigint;
+    availableAmount: bigint;
+    token: TokenConfig;
+} | {
+    kind: 'usdShortfall';
+    requiredUsd: number;
+    availableUsd: number | null;
+};
 export interface PaymentWidgetProps {
     paymentConfig: PaymentConfig;
     onPaymentComplete?: (reference: string) => void;

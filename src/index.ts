@@ -18,7 +18,6 @@ export { useAcrossClient } from './hooks/useAcrossClient.js';
 export { useDepositPlanner } from './hooks/useDepositPlanner.js';
 export { PaymentWidgetProvider } from './providers/payment-widget-provider.js';
 export { usePaymentSetup } from './hooks/usePaymentSetup.js';
-export { PaymentWidgetExample, PaymentWidgetTriggeredExample, PaymentWidgetDialogExample } from './example.js';
 export {
   encodeForwarderCall,
   encodeCalls,

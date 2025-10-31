@@ -35,6 +35,26 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
         ? `${formatTokenAmount(option.quote?.outputAmount ?? targetAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
         : '—';
   const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Insufficient balance';
+  const unavailableMessage = (() => {
+    if (!option.unavailabilityReason) {
+      return `Top up your ${option.displayToken.symbol} on ${chainLabel} to enable this route.`;
+    }
+
+    switch (option.unavailabilityReason.kind) {
+      case 'minDepositShortfall':
+        return `Minimum deposit is ${formatTokenAmount(option.unavailabilityReason.requiredAmount, option.displayToken.decimals)} ${option.displayToken.symbol}.`;
+      case 'quoteFetchFailed':
+        return 'Unable to fetch a bridge quote right now. Try refreshing.';
+      case 'insufficientBalance':
+        return `Requires ${formatTokenAmount(option.unavailabilityReason.requiredAmount, option.displayToken.decimals)} ${option.displayToken.symbol}.`;
+      case 'usdShortfall':
+        return option.unavailabilityReason.availableUsd != null
+          ? `Requires approximately $${option.unavailabilityReason.requiredUsd.toFixed(2)} liquidity (you have $${option.unavailabilityReason.availableUsd.toFixed(2)}).`
+          : 'Requires additional liquidity to meet the minimum USD threshold.';
+      default:
+        return `Top up your ${option.displayToken.symbol} on ${chainLabel} to enable this route.`;
+    }
+  })();
 
   return (
     <button
@@ -76,7 +96,7 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
       </div>
       {!option.canMeetTarget && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Top up your {option.displayToken.symbol} on chain {originChainId} to enable this route.
+          {unavailableMessage}
         </p>
       )}
     </button>

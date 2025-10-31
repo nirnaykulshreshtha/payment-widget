@@ -7,6 +7,7 @@ import type { AcrossClient, SwapApiToken } from '@across-protocol/app-sdk';
 
 import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_ADDRESS, deriveNativeToken } from '../config';
 import type {
+  OptionUnavailability,
   PaymentConfig,
   PaymentOption,
   QuoteSummary,
@@ -522,15 +523,16 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
     async (
       candidates: PaymentOption[],
       quoteEligibility: { requiredUsd: number | null; buffer: number },
-    ): Promise<Map<string, QuoteSummary>> => {
+    ): Promise<{ quotes: Map<string, QuoteSummary>; unavailability: Map<string, OptionUnavailability> }> => {
       if (!client) {
         log('skip quote fetch, no Across client');
-        return new Map();
+        return { quotes: new Map(), unavailability: new Map() };
       }
 
       const { requiredUsd, buffer } = quoteEligibility;
       const usdThreshold = requiredUsd !== null ? requiredUsd * buffer : null;
       const skippedByUsd: Array<{ id: string; estimatedBalanceUsd: number }> = [];
+      const unavailability = new Map<string, OptionUnavailability>();
 
       const filtered = candidates.filter((candidate) => {
         if (candidate.mode !== 'bridge' || !candidate.route) {
@@ -540,11 +542,14 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           return false;
         }
         const candidateUsd = candidate.estimatedBalanceUsd;
-        if (usdThreshold !== null && candidateUsd != null) {
-          if (candidateUsd < usdThreshold) {
-            skippedByUsd.push({ id: candidate.id, estimatedBalanceUsd: candidateUsd });
-            return false;
-          }
+        if (usdThreshold !== null && candidateUsd != null && candidateUsd < usdThreshold) {
+          skippedByUsd.push({ id: candidate.id, estimatedBalanceUsd: candidateUsd });
+          unavailability.set(candidate.id, {
+            kind: 'usdShortfall',
+            requiredUsd: usdThreshold,
+            availableUsd: candidateUsd,
+          });
+          return false;
         }
         return true;
       });
@@ -588,6 +593,12 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
               id: candidate.id,
               balance: describeAmount(candidate.balance, candidate.displayToken.decimals, candidate.displayToken.symbol),
               minDeposit: describeAmount(limits.minDeposit, candidate.displayToken.decimals, candidate.displayToken.symbol),
+            });
+            unavailability.set(candidate.id, {
+              kind: 'minDepositShortfall',
+              requiredAmount: limits.minDeposit,
+              availableAmount: candidate.balance,
+              token: candidate.displayToken,
             });
             return null;
           }
@@ -643,6 +654,10 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           return { id: candidate.id, summary };
         } catch (err) {
           logError('failed to fetch quote', { id: candidate.id, err });
+          unavailability.set(candidate.id, {
+            kind: 'quoteFetchFailed',
+            message: err instanceof Error ? err.message : String(err),
+          });
           return null;
         }
       });
@@ -664,7 +679,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           feesTotal: summary.feesTotal.toString(),
         })),
       });
-      return map;
+      return { quotes: map, unavailability };
     },
     [client, config.apiUrl, config.targetContractCalls, config.targetAmount],
   );
@@ -674,19 +689,20 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       candidates: PaymentOption[],
       targetTokenMeta: TokenConfig | null,
       quoteEligibility: { requiredUsd: number | null; buffer: number },
-    ): Promise<Map<string, SwapQuoteSummary>> => {
+    ): Promise<{ quotes: Map<string, SwapQuoteSummary>; unavailability: Map<string, OptionUnavailability> }> => {
       if (!client) {
         log('skip swap quote fetch, no Across client');
-        return new Map();
+        return { quotes: new Map(), unavailability: new Map() };
       }
       if (!targetTokenMeta) {
         log('skip swap quote fetch, no target token meta');
-        return new Map();
+        return { quotes: new Map(), unavailability: new Map() };
       }
 
       const { requiredUsd, buffer } = quoteEligibility;
       const usdThreshold = requiredUsd !== null ? requiredUsd * buffer : null;
       const skippedByUsd: string[] = [];
+      const unavailability = new Map<string, OptionUnavailability>();
 
       const swapCandidates = candidates.filter((candidate) => {
         if (candidate.mode !== 'swap' || !candidate.swapRoute) {
@@ -696,6 +712,11 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
         if (usdThreshold !== null && candidateUsd != null) {
           if (candidateUsd < usdThreshold) {
             skippedByUsd.push(candidate.id);
+            unavailability.set(candidate.id, {
+              kind: 'usdShortfall',
+              requiredUsd: usdThreshold,
+              availableUsd: candidateUsd,
+            });
             return false;
           }
         }
@@ -710,7 +731,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
         });
       }
       if (swapCandidates.length === 0) {
-        return new Map();
+        return { quotes: new Map(), unavailability };
       }
 
       log('fetching swap quotes', swapCandidates.map((candidate) => ({
@@ -733,7 +754,15 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       if (!depositor) {
         logError('swap quote requires connected wallet');
         setError('Connect a wallet to evaluate swap routes');
-        return new Map();
+        swapCandidates.forEach((candidate) => {
+          if (!unavailability.has(candidate.id)) {
+            unavailability.set(candidate.id, {
+              kind: 'quoteFetchFailed',
+              message: 'Wallet not connected for swap quote evaluation',
+            });
+          }
+        });
+        return { quotes: new Map(), unavailability };
       }
 
       const quoteTasks = limitedCandidates.map(async (candidate) => {
@@ -796,6 +825,10 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           return { id: candidate.id, summary, canMeetTarget } as const;
         } catch (err) {
           logError('failed to fetch swap quote', { id: candidate.id, err });
+          unavailability.set(candidate.id, {
+            kind: 'quoteFetchFailed',
+            message: err instanceof Error ? err.message : String(err),
+          });
           skippedCandidates.delete(candidate.id);
           return null;
         }
@@ -816,7 +849,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
         attempted: limitedCandidates.length,
         skipped: skippedCandidates.size,
       });
-      return map;
+      return { quotes: map, unavailability };
     },
     [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient],
   );
@@ -877,6 +910,65 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
 
       const swapIndex = new Map<string, SwapApiToken>();
       swapTokens.forEach((token) => swapIndex.set(`${token.address.toLowerCase()}-${token.chainId}`, token));
+
+      const bridgeTokenMetaCache = new Map<string, TokenConfig>();
+
+      /**
+       * Resolves and caches metadata for bridge route input tokens to ensure balance formatting uses
+       * the correct decimals even when the Across swap index omits a token entry (common on testnets).
+       */
+      const resolveBridgeTokenMeta = async (
+        tokenAddress: Address,
+        originChainId: number,
+        fallbackSymbol?: string | null,
+      ): Promise<TokenConfig | null> => {
+        const cacheKey = toTokenKey(originChainId, tokenAddress);
+        const cached = bridgeTokenMetaCache.get(cacheKey);
+        if (cached) {
+          return cached;
+        }
+
+        const swapKey = `${tokenAddress.toLowerCase()}-${originChainId}`;
+        const swapEntry = swapIndex.get(swapKey);
+        if (swapEntry) {
+          const meta: TokenConfig = {
+            address: swapEntry.address,
+            symbol: swapEntry.symbol,
+            decimals: swapEntry.decimals,
+            chainId: swapEntry.chainId,
+            logoUrl: swapEntry.logoUrl,
+          };
+          bridgeTokenMetaCache.set(cacheKey, meta);
+          return meta;
+        }
+
+        log('bridge route token missing from swap index, resolving via RPC', {
+          tokenAddress,
+          originChainId,
+          fallbackSymbol,
+        });
+
+        const resolved = await resolveTokenMeta(tokenAddress, originChainId, swapIndex);
+        if (resolved) {
+          bridgeTokenMetaCache.set(cacheKey, resolved);
+          return resolved;
+        }
+
+        logError('unable to resolve bridge route token metadata, falling back to defaults', {
+          tokenAddress,
+          originChainId,
+        });
+
+        const fallback: TokenConfig = {
+          address: tokenAddress,
+          symbol: fallbackSymbol ?? 'TOKEN',
+          decimals: 18,
+          chainId: originChainId,
+          logoUrl: undefined,
+        };
+        bridgeTokenMetaCache.set(cacheKey, fallback);
+        return fallback;
+      };
 
       const tokenUsdPrices = new Map<string, number>();
       const addUsdPrice = (chainId: number, address: Address | string, value: string | number | null | undefined) => {
@@ -944,81 +1036,85 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
 
       markStageComplete('resolvingTokens');
 
-      const bridgeOptions: PaymentOption[] = routes
-        .filter((route) => preferredOriginChains.has(route.originChainId))
-        .flatMap((route) => {
-          const tokenKey = `${route.inputToken.toLowerCase()}-${route.originChainId}`;
-          const tokenMeta = swapIndex.get(tokenKey);
+      const bridgeOptions: PaymentOption[] = [];
+      for (const route of routes) {
+        if (!preferredOriginChains.has(route.originChainId)) {
+          continue;
+        }
 
-          const baseDisplayToken: TokenConfig = tokenMeta
-            ? {
-                address: tokenMeta.address,
-                symbol: tokenMeta.symbol,
-                decimals: tokenMeta.decimals,
-                chainId: route.originChainId,
-                logoUrl: tokenMeta.logoUrl,
-              }
-            : {
-                address: route.inputToken,
-                symbol: route.inputTokenSymbol ?? 'TOKEN',
-                decimals: 18,
-                chainId: route.originChainId,
-                logoUrl: undefined,
-              };
+        const inputTokenAddress = route.inputToken as Address;
+        const baseMeta = await resolveBridgeTokenMeta(
+          inputTokenAddress,
+          route.originChainId,
+          route.inputTokenSymbol,
+        );
 
-          const adjustedRoute = {
-            ...route,
+        if (!baseMeta) {
+          logError('skipping bridge route due to missing token metadata', {
             originChainId: route.originChainId,
-          };
+            destinationChainId: route.destinationChainId,
+            inputToken: route.inputToken,
+          });
+          continue;
+        }
 
-          const basePriceUsd =
-            tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, baseDisplayToken.address)) ?? null;
+        const baseDisplayToken: TokenConfig = {
+          address: baseMeta.address,
+          symbol: baseMeta.symbol,
+          decimals: baseMeta.decimals,
+          chainId: baseMeta.chainId,
+          logoUrl: baseMeta.logoUrl,
+        };
 
-          const standardOption: PaymentOption = {
-            id: `bridge:${adjustedRoute.originChainId}:${baseDisplayToken.address.toLowerCase()}`,
+        const adjustedRoute = {
+          ...route,
+          originChainId: route.originChainId,
+        };
+
+        const basePriceUsd =
+          tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, baseDisplayToken.address)) ?? null;
+
+        bridgeOptions.push({
+          id: `bridge:${adjustedRoute.originChainId}:${baseDisplayToken.address.toLowerCase()}`,
+          mode: 'bridge',
+          displayToken: baseDisplayToken,
+          requiresWrap: false,
+          wrappedToken: undefined,
+          balance: 0n,
+          priceUsd: basePriceUsd,
+          estimatedBalanceUsd: null,
+          route: adjustedRoute,
+          quote: undefined,
+          canMeetTarget: false,
+          estimatedFillTimeSec: undefined,
+        });
+
+        const bySymbol = wrappedTokenMap?.[adjustedRoute.originChainId]?.[baseDisplayToken.symbol];
+        if (bySymbol) {
+          const nativePriceUsd =
+            tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, bySymbol.native.address)) ??
+            tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, bySymbol.wrapped.address)) ??
+            basePriceUsd;
+          bridgeOptions.push({
+            id: `bridge-native:${adjustedRoute.originChainId}:${bySymbol.native.address.toLowerCase()}`,
             mode: 'bridge',
-            displayToken: baseDisplayToken,
-            requiresWrap: false,
-            wrappedToken: undefined,
+            displayToken: bySymbol.native,
+            wrappedToken: bySymbol.wrapped,
+            requiresWrap: true,
             balance: 0n,
-            priceUsd: basePriceUsd,
+            priceUsd: nativePriceUsd,
             estimatedBalanceUsd: null,
-            route: adjustedRoute,
+            route: {
+              ...adjustedRoute,
+              inputToken: bySymbol.wrapped.address,
+              isNative: true,
+            },
             quote: undefined,
             canMeetTarget: false,
             estimatedFillTimeSec: undefined,
-          };
-
-          const bySymbol = wrappedTokenMap?.[adjustedRoute.originChainId]?.[baseDisplayToken.symbol];
-          const options: PaymentOption[] = [standardOption];
-
-          if (bySymbol) {
-            const nativePriceUsd =
-              tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, bySymbol.native.address)) ??
-              tokenUsdPrices.get(toTokenKey(adjustedRoute.originChainId, bySymbol.wrapped.address)) ??
-              basePriceUsd;
-            options.push({
-              id: `bridge-native:${adjustedRoute.originChainId}:${bySymbol.native.address.toLowerCase()}`,
-              mode: 'bridge',
-              displayToken: bySymbol.native,
-              wrappedToken: bySymbol.wrapped,
-              requiresWrap: true,
-              balance: 0n,
-              priceUsd: nativePriceUsd,
-              estimatedBalanceUsd: null,
-              route: {
-                ...adjustedRoute,
-                inputToken: bySymbol.wrapped.address,
-                isNative: true,
-              },
-              quote: undefined,
-              canMeetTarget: false,
-              estimatedFillTimeSec: undefined,
-            });
-          }
-
-          return options;
-        });
+          });
+        }
+      }
 
       log('constructed bridge options', bridgeOptions.map((option) => ({
         id: option.id,
@@ -1119,11 +1215,16 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           : null;
       const quoteEligibility = { requiredUsd, buffer: USD_SHORTFALL_BUFFER } as const;
 
-      const [bridgeQuotes, swapQuotes] = await Promise.all([
+      const [bridgeQuoteResult, swapQuoteResult] = await Promise.all([
         fetchBridgeQuotes(withBalances, quoteEligibility),
         fetchSwapQuotes(withBalances, targetTokenMeta, quoteEligibility),
       ]);
       markStageComplete('quotingRoutes');
+
+      const bridgeQuotes = bridgeQuoteResult.quotes;
+      const swapQuotes = swapQuoteResult.quotes;
+      const bridgeUnavailability = bridgeQuoteResult.unavailability;
+      const swapUnavailability = swapQuoteResult.unavailability;
 
       beginStage('finalizing');
       const enriched = withBalances
@@ -1143,6 +1244,14 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
             return {
               ...option,
               canMeetTarget,
+              unavailabilityReason: canMeetTarget
+                ? undefined
+                : {
+                    kind: 'insufficientBalance',
+                    requiredAmount: config.targetAmount,
+                    availableAmount: option.balance,
+                    token: option.displayToken,
+                  },
             };
           }
 
@@ -1176,6 +1285,12 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
             estimatedFillTimeSec: option.mode === 'swap'
               ? swapQuote?.estimatedFillTimeSec
               : quote?.raw.estimatedFillTimeSec,
+            unavailabilityReason:
+              canMeetTarget
+                ? undefined
+                : option.mode === 'swap'
+                  ? swapUnavailability.get(option.id)
+                  : bridgeUnavailability.get(option.id),
           };
         })
         .sort((a, b) => {

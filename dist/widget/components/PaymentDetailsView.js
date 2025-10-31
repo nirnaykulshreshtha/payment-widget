@@ -39,20 +39,24 @@ function renderMultipleHashes(hashes, chainId) {
     return (_jsxs("span", { className: "flex items-center gap-1", children: [renderHashLink(hashes[0], chainId), _jsxs("span", { className: "text-xs text-muted-foreground", children: ["(+", hashes.length - 1, " more)"] })] }));
 }
 function deriveAmounts(option, targetAmount, targetToken, maxSlippageBps) {
-    const targetDecimals = targetToken?.decimals ?? option.displayToken.decimals;
-    const payingAmount = option.mode === 'swap'
-        ? option.swapQuote?.inputAmount ?? option.balance
-        : option.mode === 'bridge'
-            ? option.quote?.inputAmount ?? option.balance
-            : targetAmount;
-    const receivingAmount = option.mode === 'swap'
-        ? option.swapQuote?.expectedOutputAmount ?? targetAmount
-        : option.mode === 'bridge'
-            ? option.quote?.outputAmount ?? 0n
-            : targetAmount;
-    const minExpectedAmount = option.mode === 'swap'
-        ? option.swapQuote?.minOutputAmount ?? option.swapQuote?.expectedOutputAmount ?? receivingAmount
-        : computeTargetWithSlippage(targetAmount, maxSlippageBps);
-    const approvalsRequired = option.mode === 'swap' ? option.swapQuote?.approvalTxns.length ?? 0 : 0;
-    return { payingAmount, receivingAmount, minExpectedAmount, approvalsRequired };
+    const fallbackReceiving = targetAmount;
+    if (option.mode === 'swap') {
+        const payingAmount = option.swapQuote?.inputAmount ?? 0n;
+        const receivingAmount = option.swapQuote?.expectedOutputAmount ?? fallbackReceiving;
+        const minExpectedAmount = option.swapQuote?.minOutputAmount ?? option.swapQuote?.expectedOutputAmount ?? receivingAmount;
+        const approvalsRequired = option.swapQuote?.approvalTxns.length ?? 0;
+        return { payingAmount, receivingAmount, minExpectedAmount, approvalsRequired };
+    }
+    if (option.mode === 'bridge') {
+        const payingAmount = option.quote?.inputAmount ?? targetAmount;
+        const receivingAmount = option.quote?.outputAmount ?? fallbackReceiving;
+        const minExpectedAmount = option.quote
+            ? computeTargetWithSlippage(option.quote.outputAmount, maxSlippageBps)
+            : computeTargetWithSlippage(targetAmount, maxSlippageBps);
+        return { payingAmount, receivingAmount, minExpectedAmount, approvalsRequired: 0 };
+    }
+    const payingAmount = targetAmount;
+    const receivingAmount = fallbackReceiving;
+    const minExpectedAmount = computeTargetWithSlippage(targetAmount, maxSlippageBps);
+    return { payingAmount, receivingAmount, minExpectedAmount, approvalsRequired: 0 };
 }
