@@ -10,7 +10,6 @@ const PLANNER_STAGE_DEFINITIONS = [
     { id: 'quotingRoutes', label: 'Constructing bridge quotes' },
     { id: 'finalizing', label: 'Finalising payment options' },
 ];
-const ZERO_HEX = '0x0000000000000000000000000000000000000000';
 const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11';
 const LOG_PREFIX = '[payment-planner]';
 const log = (...args) => console.log(LOG_PREFIX, ...args);
@@ -33,6 +32,51 @@ const isMethodUnavailableError = (error) => {
     return normalisedMessage.includes('method not found') || normalisedMessage.includes('does not exist');
 };
 const describeAmount = (amount, decimals, symbol) => `${formatUnits(amount, decimals)}${symbol ? ` ${symbol}` : ''} (${amount.toString()})`;
+/**
+ * Normalises unknown error-like values into a serialisable structure for logging and diagnostics.
+ * Ensures we capture the essential metadata (name, message, stack, status, code, url, etc.).
+ */
+const normaliseError = (error) => {
+    if (error instanceof Error) {
+        const base = {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+        };
+        const enriched = error;
+        if ('status' in enriched) {
+            base.status = enriched.status;
+        }
+        if ('code' in enriched) {
+            base.code = enriched.code;
+        }
+        if ('url' in enriched) {
+            base.url = enriched.url;
+        }
+        if ('requestId' in enriched) {
+            base.requestId = enriched.requestId;
+        }
+        if ('response' in enriched) {
+            base.response = enriched.response;
+        }
+        if (enriched.cause) {
+            base.cause = normaliseError(enriched.cause);
+        }
+        return base;
+    }
+    if (typeof error === 'object' && error !== null) {
+        try {
+            return JSON.parse(JSON.stringify(error));
+        }
+        catch {
+            return { value: error };
+        }
+    }
+    if (error === undefined) {
+        return { message: 'undefined' };
+    }
+    return { message: String(error) };
+};
 export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
     const [options, setOptions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -477,15 +521,30 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
                         boundedAmount: describeAmount(boundedAmount, candidate.displayToken.decimals, candidate.displayToken.symbol),
                     });
                 }
+                const recipientAddress = config.targetRecipient ?? config.walletClient?.account?.address;
+                const fallbackRecipient = config.targetContractCalls
+                    ? config.fallbackRecipient ?? config.walletClient?.account?.address
+                    : undefined;
+                if (config.targetContractCalls && !fallbackRecipient) {
+                    const message = 'Missing fallback recipient for cross-chain contract call execution';
+                    logError(message, {
+                        id: candidate.id,
+                    });
+                    unavailability.set(candidate.id, {
+                        kind: 'quoteFetchFailed',
+                        message,
+                    });
+                    return null;
+                }
                 const quote = await client.getQuote({
                     route: baseRoute,
                     inputAmount: boundedAmount,
                     apiUrl: config.apiUrl,
-                    recipient: config.targetRecipient ?? config.walletClient?.account?.address ?? ZERO_HEX,
+                    ...(recipientAddress ? { recipient: recipientAddress } : {}),
                     crossChainMessage: config.targetContractCalls
                         ? {
                             actions: config.targetContractCalls,
-                            fallbackRecipient: config.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_HEX,
+                            fallbackRecipient: fallbackRecipient,
                         }
                         : undefined,
                 });
@@ -514,7 +573,10 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
                 return { id: candidate.id, summary };
             }
             catch (err) {
-                logError('failed to fetch quote', { id: candidate.id, err });
+                logError('failed to fetch quote', {
+                    id: candidate.id,
+                    error: normaliseError(err),
+                });
                 unavailability.set(candidate.id, {
                     kind: 'quoteFetchFailed',
                     message: err instanceof Error ? err.message : String(err),
@@ -655,7 +717,10 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
                 return { id: candidate.id, summary, canMeetTarget };
             }
             catch (err) {
-                logError('failed to fetch swap quote', { id: candidate.id, err });
+                logError('failed to fetch swap quote', {
+                    id: candidate.id,
+                    error: normaliseError(err),
+                });
                 unavailability.set(candidate.id, {
                     kind: 'quoteFetchFailed',
                     message: err instanceof Error ? err.message : String(err),
