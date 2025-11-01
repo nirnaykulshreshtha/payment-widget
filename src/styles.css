@@ -141,14 +141,14 @@
   border-radius: calc(var(--pw-radius) * 1.2);
   border: 1px solid var(--pw-border-regular);
   background-color: var(--pw-card-bg);
-  padding: 24px;
+  padding: 16px;
   box-shadow: var(--pw-shadow-card);
   animation: pw-slide-up 0.45s ease;
 }
 
 @media (min-width: 640px) {
   .payment-widget .payment-widget__layout {
-    padding: 28px;
+    padding: 24px;
     gap: var(--pw-space-xl);
   }
 }
@@ -485,7 +485,7 @@
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px solid var(--pw-border-regular);
   background: var(--pw-surface-soft);
-  padding: 18px 20px;
+  padding: 10px 10px;
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-sm);
@@ -761,7 +761,7 @@
   border-radius: calc(var(--pw-radius) * 0.95);
   border: 1px solid var(--pw-border-regular);
   background: var(--pw-card-bg);
-  padding: 18px 20px;
+  padding: 18px 8px;
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-sm);
@@ -1044,7 +1044,7 @@
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px solid var(--pw-border-regular);
   background: var(--pw-surface-soft);
-  padding: 18px 20px;
+  padding: 10px 10px;
 }
 
 .payment-widget .pw-status-header__flow {
@@ -1140,7 +1140,7 @@
   gap: var(--pw-space-md);
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px solid transparent;
-  padding: 18px 20px;
+  padding: 10px 10px;
   animation: pw-fade-in 0.4s ease;
   animation-fill-mode: both;
 }
