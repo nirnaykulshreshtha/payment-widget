@@ -540,9 +540,9 @@
 
 .payment-widget .pw-search {
   border-radius: calc(var(--pw-radius) * 0.9);
-  border: 1px solid var(--pw-border-regular);
+  /* border: 1px solid var(--pw-border-regular); */
   background: var(--pw-card-bg);
-  padding: 16px;
+  /* padding: 16px; */
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-sm);
@@ -576,6 +576,7 @@
   flex-direction: column;
   gap: var(--pw-space-md);
   padding-right: 6px;
+  padding-top: 6px;
 }
 
 .payment-widget .pw-options-list::-webkit-scrollbar {
@@ -1193,6 +1194,7 @@
   max-height: 580px;
   overflow-y: auto;
   padding-right: 6px;
+  padding-top: 6px;
 }
 
 .payment-widget .pw-scroll-area::-webkit-scrollbar {
@@ -1402,7 +1404,6 @@
 .payment-widget .pw-history-updated__label {
   font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
 }
 
 .payment-widget .pw-history-updated__time {

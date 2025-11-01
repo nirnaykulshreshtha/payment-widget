@@ -164,6 +164,7 @@ export function PayOptionsView({
         onSearchChange={setSearchTerm}
         visibleCount={visibleOptions.length}
         totalCount={filteredOptions.length}
+        showSearchCount={false}
       />
 
       {visibleOptions.length === 0 ? (
@@ -193,13 +194,13 @@ export function PayOptionsView({
         </div>
       )}
 
-      <button
+      {/* <button
         type="button"
         onClick={onViewHistory}
         className="pw-text-button"
       >
         View recent activity
-      </button>
+      </button> */}
     </div>
   );
 }
@@ -242,9 +243,10 @@ interface SearchInputProps {
   onSearchChange: (value: string) => void;
   visibleCount: number;
   totalCount: number;
+  showSearchCount?: boolean;
 }
 
-function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount }: SearchInputProps) {
+function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount, showSearchCount = true }: SearchInputProps) {
   return (
     <div className="pw-search">
       <input
@@ -254,7 +256,7 @@ function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount }: S
         placeholder="Search by token or network"
         className="pw-search__input"
       />
-      <div className="pw-search__meta">Showing {visibleCount} of {totalCount} options</div>
+      {showSearchCount && <div className="pw-search__meta">Showing {visibleCount} of {totalCount} options</div>}
     </div>
   );
 }
