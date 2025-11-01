@@ -30,11 +30,11 @@
   --pw-color-success: var(--payment-success, var(--chart-2, #059669));
   --pw-color-warning: var(--payment-warning, var(--chart-4, #d97706));
   --pw-color-danger: var(--payment-danger, var(--destructive, #dc2626));
-  --pw-brand-soft: var(--payment-brand-soft, rgba(79, 70, 229, 0.16));
-  --pw-brand-strong: var(--payment-brand-strong, rgba(79, 70, 229, 0.95));
-  --pw-brand-soft-strong: var(--payment-brand-soft-strong, rgba(79, 70, 229, 0.35));
-  --pw-brand-border: var(--payment-brand-border, rgba(79, 70, 229, 0.45));
-  --pw-brand-border-strong: var(--payment-brand-border-strong, rgba(79, 70, 229, 0.65));
+  --pw-brand-soft: var(--payment-brand-soft, var(--primary), rgba(79, 70, 229, 0.16));
+  --pw-brand-strong: var(--payment-brand-strong, var(--primary), rgba(79, 70, 229, 0.95));
+  --pw-brand-soft-strong: var(--payment-brand-soft-strong, var(--primary), rgba(79, 70, 229, 0.35));
+  --pw-brand-border: var(--payment-brand-border, var(--primary), rgba(79, 70, 229, 0.45));
+  --pw-brand-border-strong: var(--payment-brand-border-strong, var(--primary), rgba(79, 70, 229, 0.65));
   --pw-brand-focus-ring: var(--payment-brand-focus-ring, rgba(79, 70, 229, 0.18));
   --pw-accent-soft: var(--payment-accent-soft, rgba(249, 115, 22, 0.18));
   --pw-accent-strong: var(--payment-accent-strong, rgba(249, 115, 22, 0.92));

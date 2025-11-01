@@ -222,7 +222,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
       {entry.fillTxHash ? (
         <TransactionGroup
           title="Funds delivered"
-          indicatorColor="#7c3aed"
+          indicatorColor="var(--pw-brand-strong)"
           hashes={[entry.fillTxHash]}
           chainId={entry.destinationChainId}
         />
@@ -230,7 +230,7 @@ function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry })
       {entry.wrapTxHash ? (
         <TransactionGroup
           title="Wrap step"
-          indicatorColor="#fb923c"
+          indicatorColor="var(--pw-accent-strong)"
           hashes={[entry.wrapTxHash]}
           chainId={entry.originChainId}
         />
