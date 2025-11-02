@@ -95,6 +95,20 @@ Context: Quality-of-life (UX-only) improvements to the payment widget. No logic 
 }
 ```
 
+### Deposit Planner Optimizations (2025-01-XX)
+
+**Motivation:** `useDepositPlanner` accumulated repeated filtering, string normalisation, and swap-index lookups that increased render-time cost on each refresh.
+
+**Optimisations Applied:**
+- Introduced `toSwapIndexKey` helper so swap index lookups reuse a single normalised key format.
+- Normalised target token address/chain metadata once per refresh and reused across downstream calculations.
+- Replaced chained `filter()`/`map()` passes when constructing swap options with a single `for ... of` loop to avoid extra allocations.
+- Reused the swap-index helper in bridge token resolution and target-token price hydration to cut repeated string work.
+
+**Behaviour:** End result is unchanged (same options, staging, and logging); code now avoids redundant array passes and string allocations during refresh.
+
+**Files:** `src/hooks/useDepositPlanner.ts`
+
 ### Future UX Enhancements (non-breaking)
 
 - Add skeleton states for history loading to reduce layout shifts.

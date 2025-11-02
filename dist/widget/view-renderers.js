@@ -18,8 +18,6 @@ export function renderPaymentView(config) {
                 content: (_jsx(LoadingStagesView, { stages: planner.stageDefinitions, currentStage: planner.loadingStage, completedStages: planner.completedStages })),
             };
         case 'options':
-            console.log('options: chainLookup', chainLookup);
-            console.log('options: chainLogos', chainLogos);
             return {
                 headerConfig: {
                     showHistory: true,

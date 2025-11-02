@@ -56,8 +56,6 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         ),
       };
     case 'options':
-      console.log('options: chainLookup', chainLookup);
-      console.log('options: chainLogos', chainLogos);
       return {
         headerConfig: {
           showHistory: true,

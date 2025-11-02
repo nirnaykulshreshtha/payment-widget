@@ -66,6 +66,7 @@ const BALANCE_CACHE_TTL_MS = 15_000;
 const USD_SHORTFALL_BUFFER = 0.98;
 
 const toTokenKey = (chainId: number, address: Address | string) => `${chainId}:${address.toLowerCase()}`;
+const toSwapIndexKey = (address: Address | string, chainId: number) => `${address.toLowerCase()}-${chainId}`;
 
 const isMethodUnavailableError = (error: unknown) => {
   if (!error || typeof error !== 'object') {
@@ -216,14 +217,15 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
 
   const resolveTokenMeta = useCallback(
     async (address: Address, chainId: number, swapIndex: Map<string, SwapApiToken>): Promise<TokenConfig | null> => {
-      const native = address.toLowerCase() === ZERO_ADDRESS.toLowerCase();
+      const normalisedAddress = address.toLowerCase();
+      const native = normalisedAddress === ZERO_ADDRESS.toLowerCase();
       if (native) {
         const nativeToken = deriveNativeToken(chainId, config.supportedChains);
         log('resolved native token metadata', { chainId, nativeToken });
         return nativeToken;
       }
 
-      const swapToken = swapIndex.get(`${address.toLowerCase()}-${chainId}`);
+      const swapToken = swapIndex.get(toSwapIndexKey(address, chainId));
       if (swapToken) {
         log('resolved token metadata from swap index', { chainId, address, symbol: swapToken.symbol });
         return {
@@ -960,18 +962,23 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
     beginStage('initializing');
 
     try {
+      const walletAddress = config.walletClient.account.address;
+      const targetChainId = config.targetChainId;
+      const targetTokenAddress = config.targetTokenAddress;
+      const targetTokenAddressLower = targetTokenAddress.toLowerCase();
+
       log('refresh start', {
-        account: config.walletClient.account.address,
-        targetToken: config.targetTokenAddress,
-        targetChainId: config.targetChainId,
+        account: walletAddress,
+        targetToken: targetTokenAddress,
+        targetChainId,
       });
       markStageComplete('initializing');
       beginStage('discoveringRoutes');
 
       const [routes, swapTokens] = await Promise.all([
         client.getAvailableRoutes({
-          destinationToken: config.targetTokenAddress,
-          destinationChainId: config.targetChainId,
+          destinationToken: targetTokenAddress,
+          destinationChainId: targetChainId,
           apiUrl: config.apiUrl,
         }),
         client.getSwapTokens({ apiUrl: config.apiUrl }),
@@ -987,7 +994,9 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       beginStage('resolvingTokens');
 
       const swapIndex = new Map<string, SwapApiToken>();
-      swapTokens.forEach((token) => swapIndex.set(`${token.address.toLowerCase()}-${token.chainId}`, token));
+      for (const token of swapTokens) {
+        swapIndex.set(toSwapIndexKey(token.address, token.chainId), token);
+      }
 
       const bridgeTokenMetaCache = new Map<string, TokenConfig>();
 
@@ -1006,7 +1015,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
           return cached;
         }
 
-        const swapKey = `${tokenAddress.toLowerCase()}-${originChainId}`;
+        const swapKey = toSwapIndexKey(tokenAddress, originChainId);
         const swapEntry = swapIndex.get(swapKey);
         if (swapEntry) {
           const meta: TokenConfig = {
@@ -1091,11 +1100,11 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
 
       propagateWrapPrices(wrappedTokenMap);
 
-      const targetTokenMeta = await resolveTokenMeta(config.targetTokenAddress, config.targetChainId, swapIndex);
+      const targetTokenMeta = await resolveTokenMeta(targetTokenAddress, targetChainId, swapIndex);
       if (!targetTokenMeta) {
         throw new Error('Unable to resolve target token metadata');
       }
-      const targetSwapToken = swapIndex.get(`${targetTokenMeta.address.toLowerCase()}-${targetTokenMeta.chainId}`);
+      const targetSwapToken = swapIndex.get(toSwapIndexKey(targetTokenMeta.address, targetTokenMeta.chainId));
       if (targetSwapToken?.priceUsd) {
         addUsdPrice(targetSwapToken.chainId, targetSwapToken.address, targetSwapToken.priceUsd);
       }
@@ -1202,39 +1211,46 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
         requiresWrap: option.requiresWrap,
       })));
 
-      const swapOptions: PaymentOption[] = targetTokenMeta
-        ? swapTokens
-            .filter((token) =>
-              token.address.toLowerCase() !== config.targetTokenAddress.toLowerCase() || token.chainId !== config.targetChainId,
-            )
-            .filter((token) => preferredOriginChains.has(token.chainId))
-            .map<PaymentOption>((token) => ({
-              id: `swap:${token.chainId}:${token.address.toLowerCase()}`,
-              mode: 'swap',
-              displayToken: {
-                address: token.address,
-                symbol: token.symbol,
-                decimals: token.decimals,
-                chainId: token.chainId,
-                logoUrl: token.logoUrl,
-              },
-              requiresWrap: false,
-              wrappedToken: undefined,
-              balance: 0n,
-              priceUsd: tokenUsdPrices.get(toTokenKey(token.chainId, token.address)) ?? null,
-              estimatedBalanceUsd: null,
-              swapRoute: {
-                originChainId: token.chainId,
-                destinationChainId: config.targetChainId,
-                inputToken: token.address,
-                outputToken: config.targetTokenAddress,
-              },
-              quote: undefined,
-              swapQuote: undefined,
-              canMeetTarget: false,
-              estimatedFillTimeSec: undefined,
-            }))
-        : [];
+      const swapOptions: PaymentOption[] = [];
+      if (targetTokenMeta) {
+        for (const token of swapTokens) {
+          if (!preferredOriginChains.has(token.chainId)) {
+            continue;
+          }
+
+          const tokenAddressLower = token.address.toLowerCase();
+          if (token.chainId === targetChainId && tokenAddressLower === targetTokenAddressLower) {
+            continue;
+          }
+
+          swapOptions.push({
+            id: `swap:${token.chainId}:${tokenAddressLower}`,
+            mode: 'swap',
+            displayToken: {
+              address: token.address,
+              symbol: token.symbol,
+              decimals: token.decimals,
+              chainId: token.chainId,
+              logoUrl: token.logoUrl,
+            },
+            requiresWrap: false,
+            wrappedToken: undefined,
+            balance: 0n,
+            priceUsd: tokenUsdPrices.get(toTokenKey(token.chainId, token.address)) ?? null,
+            estimatedBalanceUsd: null,
+            swapRoute: {
+              originChainId: token.chainId,
+              destinationChainId: targetChainId,
+              inputToken: token.address,
+              outputToken: targetTokenAddress,
+            },
+            quote: undefined,
+            swapQuote: undefined,
+            canMeetTarget: false,
+            estimatedFillTimeSec: undefined,
+          });
+        }
+      }
 
       if (swapOptions.length > 0) {
         log('constructed swap options', swapOptions.map((option) => ({
@@ -1245,7 +1261,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       }
 
       const directOption: PaymentOption = {
-        id: `direct:${config.targetChainId}:${config.targetTokenAddress.toLowerCase()}`,
+        id: `direct:${targetChainId}:${targetTokenAddressLower}`,
         mode: 'direct',
         displayToken: targetTokenMeta,
         requiresWrap: false,
