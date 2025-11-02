@@ -146,7 +146,12 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
   const chainLogos = useMemo(() => {
     const map = new Map<number, string | undefined>();
-    config.supportedChains.forEach((chain) => map.set(chain.chainId, chain.logoUrl));
+    config.supportedChains.forEach((chain) => {
+      if (!chain.logoUrl) {
+        log('chain missing logoUrl', { chainId: chain.chainId, name: chain.name });
+      }
+      map.set(chain.chainId, chain.logoUrl);
+    });
     return map;
   }, [config.supportedChains]);
 
@@ -1158,6 +1163,17 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   ]);
 
   const targetChainLabel = chainLookup.get(config.targetChainId) ?? config.targetChainId;
+  const sourceChainLabel = useMemo(() => {
+    if (!selectedOption) return null;
+    const originChainId =
+      selectedOption.route?.originChainId ??
+      selectedOption.swapRoute?.originChainId ??
+      selectedOption.displayToken.chainId;
+    if (originChainId == null || originChainId === config.targetChainId) {
+      return null;
+    }
+    return chainLookup.get(originChainId) ?? originChainId;
+  }, [chainLookup, config.targetChainId, selectedOption]);
   const targetSymbol = targetToken?.symbol ?? 'Token';
   const formattedTargetAmount = useMemo(
     () => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18),
@@ -1293,6 +1309,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           targetAmountLabel={formattedTargetAmount}
           targetSymbol={targetSymbol}
           targetChainLabel={targetChainLabel}
+          sourceChainLabel={sourceChainLabel ?? undefined}
           lastUpdated={planner.lastUpdated}
           onRefresh={planner.refresh}
           isRefreshing={headerConfig.showRefresh ? planner.isLoading : false}

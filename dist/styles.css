@@ -1914,6 +1914,108 @@
   font-weight: 600;
 }
 
+.payment-widget .pw-receipt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--pw-space-md);
+}
+
+.payment-widget .pw-receipt__card {
+  flex: 1 1 240px;
+  min-width: 220px;
+  border-radius: calc(var(--pw-radius) * 0.9);
+  border: 1px solid var(--pw-border-regular);
+  background-color: var(--pw-card-bg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-sm);
+  box-shadow: var(--pw-shadow-card);
+}
+
+.payment-widget .pw-receipt__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--pw-color-muted);
+  font-weight: 600;
+}
+
+.payment-widget .pw-receipt__asset {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-sm);
+}
+
+.payment-widget .pw-receipt__avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.payment-widget .pw-receipt__details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.payment-widget .pw-receipt__amount {
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.payment-widget .pw-receipt__token {
+  font-size: 0.78rem;
+  color: var(--pw-color-muted);
+}
+
+.payment-widget .pw-receipt__divider {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--pw-color-muted);
+}
+
+.payment-widget .pw-receipt__icon {
+  width: 18px;
+  height: 18px;
+}
+
+.payment-widget .pw-receipt__mode {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  text-align: center;
+  max-width: 120px;
+}
+
+.payment-widget .pw-receipt__skeleton {
+  flex: 1 1 240px;
+  min-height: 120px;
+}
+
+@media (max-width: 640px) {
+  .payment-widget .pw-receipt {
+    flex-direction: column;
+  }
+
+  .payment-widget .pw-receipt__divider {
+    flex-direction: row;
+    gap: var(--pw-space-xs);
+    justify-content: flex-start;
+  }
+
+  .payment-widget .pw-receipt__icon {
+    transform: rotate(90deg);
+  }
+}
+
 .payment-widget .pw-history-amount {
   display: flex;
   flex-direction: column;

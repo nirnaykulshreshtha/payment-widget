@@ -1,4 +1,4 @@
-import { ClockIcon, Loader2 } from 'lucide-react';
+import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
 import { Skeleton } from '../../ui/primitives';
 
 import type { PaymentHistoryEntry } from '../../types';
@@ -8,14 +8,14 @@ import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
 import { RelativeTime } from './RelativeTime';
+import { TokenAvatar } from './avatars/TokenAvatar';
 
 export interface PaymentTrackingViewProps {
   historyId: string;
   chainLookup: Map<number, string | number>;
-  chainLogos: Map<number, string | undefined>;
 }
 
-export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: PaymentTrackingViewProps) {
+export function PaymentTrackingView({ historyId, chainLookup }: PaymentTrackingViewProps) {
   const snapshot = usePaymentHistoryStore();
   const entry = snapshot.entries.find((item) => item.id === historyId);
 
@@ -44,7 +44,12 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
         <TrackingSectionSkeleton />
       ) : (
         <>
-          <AmountSection inputLabel={inputLabel} outputLabel={outputLabel} />
+          <ReceiptSummary
+            entry={entry}
+            chainLookup={chainLookup}
+            inputLabel={inputLabel}
+            outputLabel={outputLabel}
+          />
           <TransactionHashes entry={entry} />
         </>
       )}
@@ -57,19 +62,62 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
 }
 
 
-function AmountSection({ inputLabel, outputLabel }: { inputLabel: string; outputLabel: string }) {
+function ReceiptSummary({
+  entry,
+  chainLookup,
+  inputLabel,
+  outputLabel,
+}: {
+  entry: PaymentHistoryEntry;
+  chainLookup: Map<number, string | number>;
+  inputLabel: string;
+  outputLabel: string;
+}) {
+  const originChainLabel = chainLookup.get(entry.originChainId) ?? entry.originChainId;
+  const destinationChainLabel = chainLookup.get(entry.destinationChainId) ?? entry.destinationChainId;
+  const transferLabel =
+    entry.mode === 'direct'
+      ? 'Direct payment'
+      : entry.mode === 'swap'
+        ? 'Swap & send'
+        : 'Cross-network payment';
+
   return (
-    <div className="pw-history-amount">
-      <div className="pw-history-amount__row">
-        <div className="pw-history-amount__meta">
-          <div className="pw-history-amount__label">You sent</div>
-          <div className="pw-history-amount__value">{inputLabel}</div>
+    <div className="pw-receipt">
+      <div className="pw-receipt__card">
+        <span className="pw-receipt__label">You sent</span>
+        <div className="pw-receipt__asset">
+          <TokenAvatar
+            symbol={entry.inputToken.symbol}
+            logoUrl={entry.inputToken.logoUrl}
+            className="pw-receipt__avatar"
+          />
+          <div className="pw-receipt__details">
+            <span className="pw-receipt__amount">{inputLabel}</span>
+            <span className="pw-receipt__token">
+              {entry.inputToken.symbol} · {originChainLabel}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="pw-history-amount__row">
-        <div className="pw-history-amount__meta">
-          <div className="pw-history-amount__label">You received</div>
-          <div className="pw-history-amount__value">{outputLabel}</div>
+      <div className="pw-receipt__divider">
+        <ArrowRight className="pw-receipt__icon" aria-hidden />
+        <span className="pw-receipt__mode">{transferLabel}</span>
+      </div>
+      <div className="pw-receipt__card">
+        <span className="pw-receipt__label">You receive</span>
+        <div className="pw-receipt__asset">
+          <TokenAvatar
+            symbol={entry.outputToken.symbol}
+            logoUrl={entry.outputToken.logoUrl}
+            className="pw-receipt__avatar"
+          />
+          <div className="pw-receipt__details">
+            <span className="pw-receipt__amount">{outputLabel}</span>
+            <span className="pw-receipt__token">
+              {entry.outputToken.symbol} · {destinationChainLabel}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -135,9 +183,9 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
 function TrackingSectionSkeleton() {
   return (
     <div className="pw-tracking-skeleton">
-      <div className="pw-history-amount">
-        <Skeleton className="payment-skeleton" />
-        <Skeleton className="payment-skeleton" />
+      <div className="pw-receipt">
+        <Skeleton className="payment-skeleton pw-receipt__skeleton" />
+        <Skeleton className="payment-skeleton pw-receipt__skeleton" />
       </div>
       <div className="pw-history-hashes">
         <Skeleton className="payment-skeleton" />

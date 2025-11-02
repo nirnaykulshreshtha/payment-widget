@@ -151,17 +151,16 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     case 'tracking':
       return {
         headerConfig: {
-          showHistory: true,
-          showRefresh: true,
+          showHistory: false,
+          showRefresh: false,
           showPrimary: false,
-          showTimestamp: true,
+          showTimestamp: false,
           title: 'Payment Tracking',
         },
         content: (
           <PaymentTrackingView
           historyId={view.historyId}
           chainLookup={chainLookup}
-          chainLogos={chainLogos}
         />
         ),
       };

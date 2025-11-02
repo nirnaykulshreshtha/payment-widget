@@ -2,6 +2,11 @@ import type { Address, Chain, PublicClient } from 'viem';
 import type { ChainConfig, NetworkConfig, ResolvedSetupConfig, SetupConfig, TokenConfig } from './types';
 export declare const ZERO_ADDRESS: Address;
 export declare const ZERO_INTEGRATOR_ID: Address;
+/**
+ * Network configuration for supported chains.
+ * Note: The `logoUrl` property is optional but should be provided for better UX.
+ * When missing, chain avatars will fall back to displaying initials.
+ */
 export declare const NETWORK_CONFIG: NetworkConfig;
 export declare const DEFAULT_WRAPPED_TOKEN_MAP: Record<number, Record<string, {
     wrapped: TokenConfig;

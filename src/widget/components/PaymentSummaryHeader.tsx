@@ -18,6 +18,7 @@ export interface PaymentSummaryHeaderProps {
   targetAmountLabel: string;
   targetSymbol: string;
   targetChainLabel: string | number;
+  sourceChainLabel?: string | number | null;
   lastUpdated: number | null;
   onRefresh: () => void;
   isRefreshing: boolean;
@@ -36,6 +37,7 @@ export function PaymentSummaryHeader({
   targetAmountLabel,
   targetSymbol,
   targetChainLabel,
+  sourceChainLabel,
   lastUpdated,
   onRefresh,
   isRefreshing,
@@ -96,7 +98,11 @@ export function PaymentSummaryHeader({
                 <span className="pw-target-card__value">
                   {targetAmountLabel} {targetSymbol}
                 </span>
-                <span className="pw-target-card__chain">on {targetChainLabel}</span>
+                <span className="pw-target-card__chain">
+                  {sourceChainLabel
+                    ? `from ${sourceChainLabel} to ${targetChainLabel}`
+                    : `on ${targetChainLabel}`}
+                </span>
               </div>
             </div>
           )}

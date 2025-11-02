@@ -58,13 +58,13 @@ export function renderPaymentView(config) {
         case 'tracking':
             return {
                 headerConfig: {
-                    showHistory: true,
-                    showRefresh: true,
+                    showHistory: false,
+                    showRefresh: false,
                     showPrimary: false,
-                    showTimestamp: true,
+                    showTimestamp: false,
                     title: 'Payment Tracking',
                 },
-                content: (_jsx(PaymentTrackingView, { historyId: view.historyId, chainLookup: chainLookup, chainLogos: chainLogos })),
+                content: (_jsx(PaymentTrackingView, { historyId: view.historyId, chainLookup: chainLookup })),
             };
         case 'success':
             return {

@@ -71,6 +71,30 @@ Context: Quality-of-life (UX-only) improvements to the payment widget. No logic 
 
 - Followed the "aggressive logging" guideline with targeted, low-noise logs added to `RelativeTime`. Existing logs in other components remain intact.
 
+### Chain Logo Configuration Issue (2025-01-XX)
+
+**Problem:** `chainLogos` Map values are `undefined` for chains in `NETWORK_CONFIG`.
+
+**Root Cause:** The chain definitions in `src/config.ts` (`NETWORK_CONFIG`) do not include the `logoUrl` property. When `chainLogos` is built in `src/widget.tsx`, it sets `chain.logoUrl` which is `undefined` for all chains.
+
+**Impact:** Chain avatars fall back to showing initials instead of logos, but functionality is not broken (ChainAvatar handles undefined gracefully).
+
+**Solution:** Add `logoUrl` property to each chain in `NETWORK_CONFIG.testnet.chains` and `NETWORK_CONFIG.mainnet.chains`. The `logoUrl` should point to a CDN-hosted logo image (e.g., from chainlist.org, coinbase.com/assets, or polygon.technology).
+
+**Files Affected:**
+- `src/config.ts` - Chain definitions missing `logoUrl`
+- `src/widget.tsx` - Added logging to identify chains missing `logoUrl` (line 150-152)
+
+**Example:**
+```typescript
+{
+  chainId: 11155111,
+  name: 'Ethereum Sepolia',
+  logoUrl: 'https://example.com/ethereum-sepolia-logo.png', // Add this
+  // ... other properties
+}
+```
+
 ### Future UX Enhancements (non-breaking)
 
 - Add skeleton states for history loading to reduce layout shifts.
