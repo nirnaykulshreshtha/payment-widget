@@ -55,7 +55,7 @@ export function PaymentStatusHeader({ entry, chainLookup, chainLogos }: PaymentS
   });
 
   return (
-    <div className="pw-status-header">
+    <div className="pw-status-header" role="group" aria-labelledby={`pw-status-title-${entry.id}`}>
       <div className="pw-status-header__flow">
         <div className="pw-avatar-stack">
           <TokenAvatar 
@@ -69,8 +69,8 @@ export function PaymentStatusHeader({ entry, chainLookup, chainLogos }: PaymentS
             className="pw-avatar--small"
           />
         </div>
-        <div className="pw-status-header__text">
-          <div className="pw-status-header__title">
+        <div className="pw-status-header__text" aria-label={`${originChainName} to ${destinationChainName}`}>
+          <div className="pw-status-header__title" id={`pw-status-title-${entry.id}`}>
             {paymentType}
           </div>
           <div className="pw-status-header__chains">
@@ -78,7 +78,7 @@ export function PaymentStatusHeader({ entry, chainLookup, chainLogos }: PaymentS
               name={String(originChainName)} 
               logoUrl={chainLogos.get(entry.originChainId)} 
             />
-            <ArrowRight className="pw-status-header__direction" />
+            <ArrowRight className="pw-status-header__direction" aria-hidden="true" />
             <ChainAvatar 
               name={String(destinationChainName)} 
               logoUrl={chainLogos.get(entry.destinationChainId)} 

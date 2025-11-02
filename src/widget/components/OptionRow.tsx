@@ -65,6 +65,9 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
         isSelected && 'pw-option-card--active',
         !option.canMeetTarget && 'pw-option-card--unavailable',
       )}
+      aria-label={`Select ${option.displayToken.symbol} payment option on ${chainLabel}`}
+      aria-pressed={isSelected}
+      tabIndex={0}
     >
       <div className="pw-option-card__header">
         <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} />

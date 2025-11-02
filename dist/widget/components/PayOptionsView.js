@@ -1,5 +1,5 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 /**
  * @fileoverview Renders the available payment options grid with search,
  * filtering, and pagination logic for the payment widget.
@@ -9,8 +9,10 @@ import { RefreshCw } from 'lucide-react';
 import { cn } from '../../lib';
 import { filterOptionsByPriority } from '../utils/options';
 import { formatErrorForDisplay } from '../utils/error-messages';
+import { RelativeTime } from './RelativeTime';
 import { Button } from '../../ui/primitives';
 import { OptionRow } from './index';
+import { OptionCardSkeleton } from './OptionCardSkeleton';
 export function PayOptionsView({ options, onSelect, selectedOptionId, targetAmountLabel, targetSymbol, targetChainLabel, targetAmount, targetToken, chainLookup, chainLogos, lastUpdated, onRefresh, isRefreshing, onViewHistory, accountConnected, plannerError, }) {
     const DEFAULT_VISIBLE = 12;
     const LOAD_BATCH = 12;
@@ -54,6 +56,8 @@ export function PayOptionsView({ options, onSelect, selectedOptionId, targetAmou
     const visibleOptions = useMemo(() => filteredOptions.slice(0, visibleCount), [filteredOptions, visibleCount]);
     const hasMore = visibleCount < filteredOptions.length;
     const loadMoreRef = useRef(null);
+    const listRef = useRef(null);
+    const [columns, setColumns] = useState(1);
     useEffect(() => {
         if (!hasMore)
             return;
@@ -70,20 +74,47 @@ export function PayOptionsView({ options, onSelect, selectedOptionId, targetAmou
         observer.observe(node);
         return () => observer.disconnect();
     }, [hasMore, loadMore]);
+    // Track container width to estimate column count for adaptive skeletons
+    useEffect(() => {
+        const el = listRef.current;
+        if (!el || typeof ResizeObserver === 'undefined')
+            return;
+        const ro = new ResizeObserver(() => {
+            const width = el.clientWidth || 0;
+            // Estimate columns assuming ~320px card min width with gutter
+            const estimated = Math.max(1, Math.min(4, Math.round(width / 320)));
+            if (estimated !== columns) {
+                setColumns(estimated);
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [columns]);
     const renderNoResults = () => {
         // If user is searching, show search-specific message
         if (searchTerm) {
-            return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("h3", { className: "pw-empty-state__title", children: "No matches found" }), _jsx("p", { className: "pw-empty-state__description", children: "Try another token symbol or network name." })] }));
+            return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("div", { className: "pw-empty-state__icon", "aria-hidden": "true", children: "\uD83D\uDD0D" }), _jsx("h3", { className: "pw-empty-state__title", children: "No matches found" }), _jsx("p", { className: "pw-empty-state__description", children: "Try another token symbol or network name." }), _jsx("button", { type: "button", onClick: () => setSearchTerm(''), className: "pw-inline-link pw-empty-state__action", children: "Clear search" })] }));
         }
         // Use the new error formatting system
         const errorDisplay = formatErrorForDisplay(plannerError ?? null, false, accountConnected);
-        return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("h3", { className: "pw-empty-state__title", children: errorDisplay.title }), _jsx("p", { className: "pw-empty-state__description", children: errorDisplay.description }), _jsxs("div", { className: "pw-empty-state__actions", children: [errorDisplay.showRefreshButton && (_jsxs(Button, { variant: "outline", size: "sm", onClick: onRefresh, disabled: isRefreshing, className: "pw-inline-button", children: [_jsx(RefreshCw, { className: cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning') }), "Refresh"] })), errorDisplay.showHistoryButton && (_jsx(Button, { variant: "outline", size: "sm", onClick: onViewHistory, children: "View history" }))] })] }));
+        return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("div", { className: "pw-empty-state__icon", "aria-hidden": "true", children: "\u26A0\uFE0F" }), _jsx("h3", { className: "pw-empty-state__title", children: errorDisplay.title }), _jsx("p", { className: "pw-empty-state__description", children: errorDisplay.description }), errorDisplay.showRefreshButton || errorDisplay.showHistoryButton ? (_jsxs("div", { className: "pw-empty-state__actions", children: [errorDisplay.showRefreshButton && (_jsxs(Button, { variant: "outline", size: "sm", onClick: onRefresh, disabled: isRefreshing, className: "pw-inline-button", "aria-label": "Refresh payment options", children: [_jsx(RefreshCw, { className: cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning') }), "Refresh"] })), errorDisplay.showHistoryButton && (_jsx(Button, { variant: "outline", size: "sm", onClick: onViewHistory, "aria-label": "View payment history", children: "View history" }))] })) : null] }));
     };
-    return (_jsxs("div", { className: "pw-view pw-view--options", children: [_jsx(TargetSummary, { targetAmountLabel: targetAmountLabel, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: lastUpdated, onRefresh: onRefresh, isRefreshing: isRefreshing }), _jsx(SearchInput, { searchTerm: searchTerm, onSearchChange: setSearchTerm, visibleCount: visibleOptions.length, totalCount: filteredOptions.length, showSearchCount: false }), visibleOptions.length === 0 ? (renderNoResults()) : (_jsxs("div", { className: "pw-options-list", children: [visibleOptions.map((option) => (_jsx(OptionRow, { option: option, targetAmount: targetAmount, targetToken: targetToken, chainLookup: chainLookup, chainLogos: chainLogos, targetSymbol: targetSymbol, isSelected: selectedOptionId === option.id, onSelect: () => onSelect(option) }, option.id))), hasMore && (_jsx("div", { ref: loadMoreRef, className: "pw-load-more", children: _jsx(Button, { variant: "outline", size: "sm", onClick: loadMore, children: "Load more options" }) }))] }))] }));
+    return (_jsxs("div", { className: "pw-view pw-view--options", children: [_jsx(TargetSummary, { targetAmountLabel: targetAmountLabel, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: lastUpdated, onRefresh: onRefresh, isRefreshing: isRefreshing }), _jsx(SearchInput, { searchTerm: searchTerm, onSearchChange: setSearchTerm, visibleCount: visibleOptions.length, totalCount: filteredOptions.length, showSearchCount: false }), visibleOptions.length === 0 && !isRefreshing ? (renderNoResults()) : (_jsx("div", { className: "pw-options-list", ref: listRef, children: isRefreshing && visibleOptions.length === 0 ? (_jsx(OptionCardSkeleton, { count: 6 })) : (_jsxs(_Fragment, { children: [visibleOptions.map((option) => (_jsx(OptionRow, { option: option, targetAmount: targetAmount, targetToken: targetToken, chainLookup: chainLookup, chainLogos: chainLogos, targetSymbol: targetSymbol, isSelected: selectedOptionId === option.id, onSelect: () => onSelect(option) }, option.id))), isRefreshing && visibleOptions.length > 0 && ((() => {
+                            // Adaptive skeletons based on columns and remaining items
+                            const remaining = filteredOptions.length - visibleOptions.length;
+                            const base = Math.max(columns, 2);
+                            const count = Math.max(2, Math.min(6, Math.min(remaining, base * 2)));
+                            console.debug('[PayOptionsView] Showing progressive skeletons', { columns, remaining, count });
+                            return _jsx(OptionCardSkeleton, { count: count });
+                        })()), hasMore && (_jsx("div", { ref: loadMoreRef, className: "pw-load-more", children: _jsx(Button, { variant: "outline", size: "sm", onClick: loadMore, children: "Load more options" }) }))] })) }))] }));
 }
 function TargetSummary({ targetAmountLabel, targetSymbol, targetChainLabel, lastUpdated, onRefresh, isRefreshing }) {
-    return (_jsxs("div", { className: "pw-target-summary", children: [_jsxs("div", { className: "pw-target-summary__headline", children: [_jsx("span", { className: "pw-target-summary__label", children: "You need to pay" }), _jsxs("span", { className: "pw-target-summary__value", children: [targetAmountLabel, " ", targetSymbol, " on ", targetChainLabel] })] }), _jsxs("div", { className: "pw-target-summary__meta", children: [lastUpdated ? _jsxs("span", { children: ["Updated ", new Date(lastUpdated).toLocaleTimeString()] }) : _jsx("span", { children: "Ready" }), _jsxs("button", { type: "button", onClick: onRefresh, disabled: isRefreshing, className: "pw-inline-action", children: [_jsx(RefreshCw, { className: cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning') }), " Refresh"] })] })] }));
+    return (_jsxs("div", { className: "pw-target-summary", children: [_jsxs("div", { className: "pw-target-summary__headline", children: [_jsx("span", { className: "pw-target-summary__label", children: "You need to pay" }), _jsxs("span", { className: "pw-target-summary__value", children: [targetAmountLabel, " ", targetSymbol, " on ", targetChainLabel] })] }), _jsxs("div", { className: "pw-target-summary__meta", children: [lastUpdated ? (_jsxs("span", { children: ["Updated ", _jsx(RelativeTime, { timestamp: lastUpdated })] })) : (_jsx("span", { children: "Ready" })), _jsxs("button", { type: "button", onClick: onRefresh, disabled: isRefreshing, className: "pw-inline-action", "aria-label": "Refresh payment options", children: [_jsx(RefreshCw, { className: cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning') }), " Refresh"] })] })] }));
 }
 function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount, showSearchCount = true }) {
-    return (_jsxs("div", { className: "pw-search", children: [_jsx("input", { type: "search", value: searchTerm, onChange: (event) => onSearchChange(event.target.value), placeholder: "Search by token or network", className: "pw-search__input" }), showSearchCount && _jsxs("div", { className: "pw-search__meta", children: ["Showing ", visibleCount, " of ", totalCount, " options"] })] }));
+    return (_jsxs("div", { className: "pw-search", children: [_jsx("input", { type: "search", value: searchTerm, onChange: (event) => onSearchChange(event.target.value), onKeyDown: (event) => {
+                    if (event.key === 'Escape') {
+                        onSearchChange('');
+                    }
+                }, placeholder: "Search by token or network", className: "pw-search__input", "aria-label": "Search payment options", "aria-describedby": showSearchCount ? "search-results-count" : undefined }), showSearchCount && (_jsxs("div", { className: "pw-search__meta", id: "search-results-count", "aria-live": "polite", children: ["Showing ", visibleCount, " of ", totalCount, " options"] }))] }));
 }

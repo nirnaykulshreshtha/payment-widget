@@ -14,10 +14,12 @@ import type { PaymentOption, TokenConfig } from '../../types';
 import { formatTokenAmount } from '../../utils/amount-format';
 import { filterOptionsByPriority } from '../utils/options';
 import { formatErrorForDisplay } from '../utils/error-messages';
+import { RelativeTime } from './RelativeTime';
 
 import { Button, Badge } from '../../ui/primitives';
 import type { PayOptionsViewProps } from '../types';
 import { OptionRow } from './index';
+import { OptionCardSkeleton } from './OptionCardSkeleton';
 
 export function PayOptionsView({
   options,
@@ -85,6 +87,8 @@ export function PayOptionsView({
   );
   const hasMore = visibleCount < filteredOptions.length;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [columns, setColumns] = useState<number>(1);
 
   useEffect(() => {
     if (!hasMore) return;
@@ -101,15 +105,39 @@ export function PayOptionsView({
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
+  // Track container width to estimate column count for adaptive skeletons
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const width = el.clientWidth || 0;
+      // Estimate columns assuming ~320px card min width with gutter
+      const estimated = Math.max(1, Math.min(4, Math.round(width / 320)));
+      if (estimated !== columns) {
+        setColumns(estimated);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [columns]);
+
   const renderNoResults = () => {
     // If user is searching, show search-specific message
     if (searchTerm) {
       return (
         <div className="pw-empty-state">
+          <div className="pw-empty-state__icon" aria-hidden="true">🔍</div>
           <h3 className="pw-empty-state__title">No matches found</h3>
           <p className="pw-empty-state__description">
             Try another token symbol or network name.
           </p>
+          <button
+            type="button"
+            onClick={() => setSearchTerm('')}
+            className="pw-inline-link pw-empty-state__action"
+          >
+            Clear search
+          </button>
         </div>
       );
     }
@@ -119,31 +147,40 @@ export function PayOptionsView({
     
     return (
       <div className="pw-empty-state">
+        <div className="pw-empty-state__icon" aria-hidden="true">⚠️</div>
         <h3 className="pw-empty-state__title">{errorDisplay.title}</h3>
         <p className="pw-empty-state__description">
           {errorDisplay.description}
         </p>
         
         {/* Show action buttons based on error type */}
-        <div className="pw-empty-state__actions">
-          {errorDisplay.showRefreshButton && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="pw-inline-button"
-            >
-              <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} />
-              Refresh
-            </Button>
-          )}
-          {errorDisplay.showHistoryButton && (
-            <Button variant="outline" size="sm" onClick={onViewHistory}>
-              View history
-            </Button>
-          )}
-        </div>
+        {errorDisplay.showRefreshButton || errorDisplay.showHistoryButton ? (
+          <div className="pw-empty-state__actions">
+            {errorDisplay.showRefreshButton && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="pw-inline-button"
+                aria-label="Refresh payment options"
+              >
+                <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} />
+                Refresh
+              </Button>
+            )}
+            {errorDisplay.showHistoryButton && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onViewHistory}
+                aria-label="View payment history"
+              >
+                View history
+              </Button>
+            )}
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -167,29 +204,45 @@ export function PayOptionsView({
         showSearchCount={false}
       />
 
-      {visibleOptions.length === 0 ? (
+      {visibleOptions.length === 0 && !isRefreshing ? (
         renderNoResults()
       ) : (
-        <div className="pw-options-list">
-          {visibleOptions.map((option) => (
-            <OptionRow
-              key={option.id}
-              option={option}
-              targetAmount={targetAmount}
-              targetToken={targetToken}
-              chainLookup={chainLookup}
-              chainLogos={chainLogos}
-              targetSymbol={targetSymbol}
-              isSelected={selectedOptionId === option.id}
-              onSelect={() => onSelect(option)}
-            />
-          ))}
-          {hasMore && (
-            <div ref={loadMoreRef} className="pw-load-more">
-              <Button variant="outline" size="sm" onClick={loadMore}>
-                Load more options
-              </Button>
-            </div>
+        <div className="pw-options-list" ref={listRef}>
+          {isRefreshing && visibleOptions.length === 0 ? (
+            <OptionCardSkeleton count={6} />
+          ) : (
+            <>
+              {visibleOptions.map((option) => (
+                <OptionRow
+                  key={option.id}
+                  option={option}
+                  targetAmount={targetAmount}
+                  targetToken={targetToken}
+                  chainLookup={chainLookup}
+                  chainLogos={chainLogos}
+                  targetSymbol={targetSymbol}
+                  isSelected={selectedOptionId === option.id}
+                  onSelect={() => onSelect(option)}
+                />
+              ))}
+              {isRefreshing && visibleOptions.length > 0 && (
+                (() => {
+                  // Adaptive skeletons based on columns and remaining items
+                  const remaining = filteredOptions.length - visibleOptions.length;
+                  const base = Math.max(columns, 2);
+                  const count = Math.max(2, Math.min(6, Math.min(remaining, base * 2)));
+                  console.debug('[PayOptionsView] Showing progressive skeletons', { columns, remaining, count });
+                  return <OptionCardSkeleton count={count} />;
+                })()
+              )}
+              {hasMore && (
+                <div ref={loadMoreRef} className="pw-load-more">
+                  <Button variant="outline" size="sm" onClick={loadMore}>
+                    Load more options
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -224,12 +277,19 @@ function TargetSummary({ targetAmountLabel, targetSymbol, targetChainLabel, last
         </span>
       </div>
       <div className="pw-target-summary__meta">
-        {lastUpdated ? <span>Updated {new Date(lastUpdated).toLocaleTimeString()}</span> : <span>Ready</span>}
+        {lastUpdated ? (
+          <span>
+            Updated <RelativeTime timestamp={lastUpdated} />
+          </span>
+        ) : (
+          <span>Ready</span>
+        )}
         <button
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
           className="pw-inline-action"
+          aria-label="Refresh payment options"
         >
           <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} /> Refresh
         </button>
@@ -253,10 +313,21 @@ function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount, sho
         type="search"
         value={searchTerm}
         onChange={(event) => onSearchChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            onSearchChange('');
+          }
+        }}
         placeholder="Search by token or network"
         className="pw-search__input"
+        aria-label="Search payment options"
+        aria-describedby={showSearchCount ? "search-results-count" : undefined}
       />
-      {showSearchCount && <div className="pw-search__meta">Showing {visibleCount} of {totalCount} options</div>}
+      {showSearchCount && (
+        <div className="pw-search__meta" id="search-results-count" aria-live="polite">
+          Showing {visibleCount} of {totalCount} options
+        </div>
+      )}
     </div>
   );
 }

@@ -8,12 +8,17 @@ import { cn } from '../../../lib';
  */
 
 export function TokenAvatar({ symbol, logoUrl, className }: { symbol: string; logoUrl?: string; className?: string }) {
+  console.log('logoUrl in TokenAvatar', logoUrl);
   if (logoUrl) {
     return (
-      <span className={cn('pw-avatar pw-avatar--token', className)}>
+      <span
+        className={cn('pw-avatar pw-avatar--token', className)}
+        title={symbol}
+        aria-label={`${symbol} token`}
+      >
         <img
           src={logoUrl}
-          alt={symbol}
+          alt={`${symbol} token logo`}
           className="pw-avatar__image"
           onError={(event) => {
             event.currentTarget.style.display = 'none';
@@ -23,7 +28,12 @@ export function TokenAvatar({ symbol, logoUrl, className }: { symbol: string; lo
     );
   }
   return (
-    <span className={cn('pw-avatar pw-avatar--token pw-avatar--initials', className)}>
+    <span
+      className={cn('pw-avatar pw-avatar--token pw-avatar--initials', className)}
+      role="img"
+      aria-label={`${symbol} token`}
+      title={symbol}
+    >
       {symbol.slice(0, 2).toUpperCase()}
     </span>
   );

@@ -4,16 +4,16 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * @fileoverview Renders the payment history list for the payment widget with
  * contextual status styling and human readable error summaries.
  */
-import { useCallback } from 'react';
-import { ArrowRight, Clock, ExternalLink, Hash } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { cn } from '../lib';
-import { Card, CardContent, CardHeader } from '../ui/primitives';
+import { Card, CardContent, CardHeader, Skeleton } from '../ui/primitives';
 import { usePaymentHistoryStore } from './store';
 import { formatAmountWithSymbol } from '../utils/amount-format';
-import { explorerUrlForChain, shortHash } from './utils';
 import { TransactionGroup } from '../components/TransactionGroup';
 import { StatusDisplay } from '../components/StatusDisplay';
 import { TokenAvatar } from '../widget/components/avatars/TokenAvatar';
+import { RelativeTime } from '../widget/components/RelativeTime';
 /**
  * Chain information mapping for display purposes
  */
@@ -33,7 +33,22 @@ const CHAIN_INFO = {
 export function PaymentHistoryList({ className, onSelect }) {
     const snapshot = usePaymentHistoryStore();
     const entries = snapshot.entries;
+    const [showInitialSkeleton, setShowInitialSkeleton] = useState(false);
+    useEffect(() => {
+        // Show a brief skeleton on initial mount when there are no entries yet
+        if (!entries.length) {
+            console.debug('[HistoryList] showing initial skeleton');
+            setShowInitialSkeleton(true);
+            const t = setTimeout(() => {
+                setShowInitialSkeleton(false);
+            }, 800);
+            return () => clearTimeout(t);
+        }
+    }, []);
     if (!entries.length) {
+        if (showInitialSkeleton) {
+            return _jsx(HistoryListSkeleton, { className: className });
+        }
         return (_jsx("div", { className: cn('pw-history-empty', className), children: "No payments yet. Your future transactions will appear here." }));
     }
     return (_jsx("div", { className: cn('pw-history-list', className), children: entries.map((entry) => (_jsx(HistoryListCard, { entry: entry, onSelect: onSelect }, entry.id))) }));
@@ -56,7 +71,12 @@ function HistoryListCard({ entry, onSelect }) {
         event.stopPropagation();
         onSelect(entry);
     }, [entry, onSelect]);
-    return (_jsxs(Card, { onClick: onSelect ? handleClick : undefined, className: cn('pw-history-card', onSelect && 'pw-history-card--interactive'), children: [_jsx(CardHeader, { className: "pw-history-card__header", children: _jsx(StatusDisplay, { status: entry.status, showOriginalStatus: false, showSimplifiedStatus: true }) }), _jsxs(CardContent, { className: "pw-history-card__content", children: [_jsx(HistoryListTokenFlow, { entry: entry, title: title }), _jsx(HistoryListAmountDetails, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(HistoryListTransactionHashes, { entry: entry }), _jsx(HistoryListUpdatedTimestamp, { updatedAt: entry.updatedAt })] })] }));
+    return (_jsxs(Card, { onClick: onSelect ? handleClick : undefined, className: cn('pw-history-card', onSelect && 'pw-history-card--interactive'), role: onSelect ? 'button' : undefined, tabIndex: onSelect ? 0 : undefined, "aria-label": onSelect ? `${title} from ${entry.inputToken.symbol} to ${entry.outputToken.symbol}` : undefined, onKeyDown: onSelect ? (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleClick(event);
+            }
+        } : undefined, children: [_jsx(CardHeader, { className: "pw-history-card__header", children: _jsx(StatusDisplay, { status: entry.status, showOriginalStatus: false, showSimplifiedStatus: true }) }), _jsxs(CardContent, { className: "pw-history-card__content", children: [_jsx(HistoryListTokenFlow, { entry: entry, title: title }), _jsx(HistoryListAmountDetails, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(HistoryListTransactionHashes, { entry: entry }), _jsx(HistoryListUpdatedTimestamp, { updatedAt: entry.updatedAt })] })] }));
 }
 /**
  * Displays the token flow section for a history card.
@@ -97,17 +117,9 @@ function HistoryListTransactionHashes({ entry }) {
  * Displays the updated timestamp footer for a history card.
  */
 function HistoryListUpdatedTimestamp({ updatedAt }) {
-    return (_jsxs("div", { className: "pw-history-updated", children: [_jsxs("div", { className: "pw-history-updated__meta", children: [_jsx(Clock, { className: "pw-history-updated__icon" }), _jsx("span", { className: "pw-history-updated__label", children: "Last updated" })] }), _jsx("time", { className: "pw-history-updated__time", children: new Date(updatedAt).toLocaleString() })] }));
+    return (_jsxs("div", { className: "pw-history-updated", children: [_jsxs("div", { className: "pw-history-updated__meta", children: [_jsx(Clock, { className: "pw-history-updated__icon" }), _jsx("span", { className: "pw-history-updated__label", children: "Last updated" })] }), _jsx(RelativeTime, { timestamp: updatedAt, className: "pw-history-updated__time" })] }));
 }
-/**
- * Renders an explorer link for the provided transaction hash when available.
- */
-function HashLink({ hash, chainId }) {
-    const explorer = explorerUrlForChain(chainId);
-    if (!explorer) {
-        return (_jsxs("div", { className: "pw-hash", children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) })] }));
-    }
-    return (_jsxs("a", { className: "pw-hash pw-hash--interactive", href: `${explorer}/tx/${hash}`, target: "_blank", rel: "noreferrer", onClick: (event) => {
-            event.stopPropagation();
-        }, children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) }), _jsx(ExternalLink, { className: "pw-hash__icon" })] }));
+// Skeleton list for initial loading polish (UI-only)
+function HistoryListSkeleton({ className }) {
+    return (_jsx("div", { className: cn('pw-history-list', className), children: [1, 2, 3].map((i) => (_jsxs(Card, { className: "pw-history-card", children: [_jsx(CardHeader, { className: "pw-history-card__header", children: _jsx(Skeleton, { className: "payment-skeleton" }) }), _jsxs(CardContent, { className: "pw-history-card__content", children: [_jsxs("div", { className: "pw-history-flow", children: [_jsxs("div", { className: "pw-history-flow__grid", children: [_jsx(Skeleton, { className: "payment-skeleton" }), _jsx(Skeleton, { className: "payment-skeleton" })] }), _jsx("div", { className: "pw-history-flow__indicator", children: _jsx(Skeleton, { className: "payment-skeleton" }) })] }), _jsxs("div", { className: "pw-history-amount", children: [_jsx(Skeleton, { className: "payment-skeleton" }), _jsx(Skeleton, { className: "payment-skeleton" })] }), _jsx("div", { className: "pw-history-hashes", children: _jsx(Skeleton, { className: "payment-skeleton" }) }), _jsx("div", { className: "pw-history-updated", children: _jsx(Skeleton, { className: "payment-skeleton" }) })] })] }, i))) }));
 }

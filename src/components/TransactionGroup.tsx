@@ -3,9 +3,8 @@
  * hashes with a label, color indicator, and hash links. Used across history and
  * tracking views to maintain consistency.
  */
-import { Hash } from 'lucide-react';
 import { cn } from '../lib';
-import { explorerUrlForChain, shortHash } from '../history/utils';
+import { renderHashLink } from '../widget/utils/hash-link';
 
 export interface TransactionGroupProps {
   /** Title/label for the transaction group (e.g., "Approval", "Deposit") */
@@ -59,7 +58,7 @@ export function TransactionGroup({
       </div>
       <div className="pw-transaction-group__hashes">
         {hashes.slice(0, 2).map((hash) => (
-          <HashLink key={hash} hash={hash} chainId={chainId} />
+          <span key={hash}>{renderHashLink(hash, chainId)}</span>
         ))}
         {hashes.length > 2 ? (
           <div className="pw-transaction-group__extra">
@@ -68,44 +67,5 @@ export function TransactionGroup({
         ) : null}
       </div>
     </div>
-  );
-}
-
-/**
- * Renders a clickable hash link that opens the transaction in a block explorer.
- * Falls back to a non-clickable display if no explorer is available.
- */
-function HashLink({ hash, chainId }: { hash: string; chainId: number }) {
-  const explorer = explorerUrlForChain(chainId);
-
-  console.log('HashLink: Rendering hash link:', {
-    hash: shortHash(hash),
-    chainId,
-    hasExplorer: !!explorer
-  });
-
-  if (!explorer) {
-    return (
-      <div className="pw-hash">
-        <Hash className="pw-hash__icon" />
-        <span className="pw-hash__value">{shortHash(hash)}</span>
-      </div>
-    );
-  }
-
-  return (
-    <a
-      className="pw-hash pw-hash--interactive"
-      href={`${explorer}/tx/${hash}`}
-      target="_blank"
-      rel="noreferrer"
-      onClick={(event) => {
-        event.stopPropagation();
-        console.log('HashLink: Opening explorer:', explorer);
-      }}
-    >
-      <Hash className="pw-hash__icon" />
-      <span className="pw-hash__value">{shortHash(hash)}</span>
-    </a>
   );
 }

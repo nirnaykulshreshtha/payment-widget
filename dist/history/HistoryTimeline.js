@@ -5,11 +5,12 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * using the Magic UI timeline-06 layout adapted for dynamic status data.
  * Enhanced with transaction links, proper status labels, and active stage detection.
  */
-import { Dot, XCircle, Loader2, CheckCircle2, ArrowUpRight, Hash } from 'lucide-react';
+import { Dot, XCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib';
 import { formatErrorMessage } from '../lib/error-formatting';
 import { HISTORY_BASE_COMPLETED_STAGES, HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS, HISTORY_TIMELINE_STAGE_FLOW, HISTORY_TIMELINE_STAGE_ORDER } from './constants';
-import { explorerUrlForChain, formatTimestamp, resolveTimelineStageChainId, shortHash } from './utils';
+import { formatTimestamp, resolveTimelineStageChainId } from './utils';
+import { renderHashLink } from '../widget/utils/hash-link';
 /**
  * Displays a vertical timeline for the most recent payment progress updates.
  * Enhanced with transaction links, proper status labels, and active stage detection.
@@ -163,44 +164,4 @@ function buildSteps(timeline) {
 function getStagePosition(stage) {
     const index = HISTORY_TIMELINE_STAGE_ORDER.indexOf(stage);
     return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
-}
-/**
- * Resolves the chain ID for a given stage based on the payment entry context.
- */
-function resolveChainId(stage, entry) {
-    console.log('[HistoryTimeline] resolveChainId called with:', { stage, entry: !!entry, originChainId: entry?.originChainId, destinationChainId: entry?.destinationChainId });
-    if (!entry) {
-        console.log('[HistoryTimeline] No entry provided, returning undefined');
-        return undefined;
-    }
-    if (stage.startsWith('direct')) {
-        console.log('[HistoryTimeline] Direct stage, returning originChainId:', entry.originChainId);
-        return entry.originChainId;
-    }
-    if (stage.includes('approval') || stage.includes('swap') || stage.includes('deposit') || stage.includes('wrap')) {
-        console.log('[HistoryTimeline] Origin stage, returning originChainId:', entry.originChainId);
-        return entry.originChainId;
-    }
-    if (stage.includes('fill') || stage === 'settled' || stage === 'slow_fill_ready' || stage === 'relay_pending') {
-        console.log('[HistoryTimeline] Destination stage, returning destinationChainId:', entry.destinationChainId);
-        return entry.destinationChainId;
-    }
-    console.log('[HistoryTimeline] Default case, returning originChainId:', entry.originChainId);
-    return entry.originChainId;
-}
-/**
- * Renders a transaction hash as a clickable link to the block explorer.
- */
-function renderHashLink(hash, chainId) {
-    if (!hash)
-        return '—';
-    const explorer = explorerUrlForChain(chainId);
-    if (!explorer) {
-        return (_jsxs("div", { className: "pw-hash", children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) })] }));
-    }
-    const explorerUrl = `${explorer}/tx/${hash}`;
-    return (_jsxs("a", { href: explorerUrl, target: "_blank", rel: "noreferrer noopener", className: "pw-hash pw-hash--interactive", onClick: (event) => {
-            event.preventDefault();
-            window.open(explorerUrl, '_blank', 'noopener,noreferrer');
-        }, children: [_jsx(Hash, { className: "pw-hash__icon" }), _jsx("span", { className: "pw-hash__value", children: shortHash(hash) }), _jsx(ArrowUpRight, { className: "pw-hash__icon" })] }));
 }

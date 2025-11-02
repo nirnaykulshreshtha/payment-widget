@@ -1,4 +1,5 @@
 import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
+import { Skeleton } from '../../ui/primitives';
 
 import type { PaymentHistoryEntry } from '../../types';
 import { formatAmountWithSymbol } from '../../history/utils';
@@ -7,6 +8,7 @@ import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { PaymentStatusHeader } from './PaymentStatusHeader';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
+import { RelativeTime } from './RelativeTime';
 
 export interface PaymentTrackingViewProps {
   historyId: string;
@@ -40,8 +42,14 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
           <span>Still delivering your payment. Sit tight while we update the timeline.</span>
         </div>
       )}
-      <AmountSection inputLabel={inputLabel} outputLabel={outputLabel} />
-      <TransactionHashes entry={entry} />
+      {isProcessing ? (
+        <TrackingSectionSkeleton />
+      ) : (
+        <>
+          <AmountSection inputLabel={inputLabel} outputLabel={outputLabel} />
+          <TransactionHashes entry={entry} />
+        </>
+      )}
       <div className="pw-tracking__timeline">
         <HistoryTimeline timeline={entry.timeline} entry={entry} />
       </div>
@@ -128,6 +136,20 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
   );
 }
 
+function TrackingSectionSkeleton() {
+  return (
+    <div className="pw-tracking-skeleton">
+      <div className="pw-history-amount">
+        <Skeleton className="payment-skeleton" />
+        <Skeleton className="payment-skeleton" />
+      </div>
+      <div className="pw-history-hashes">
+        <Skeleton className="payment-skeleton" />
+      </div>
+    </div>
+  );
+}
+
 
 
 function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
@@ -137,9 +159,7 @@ function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
         <ClockIcon className="pw-history-updated__icon" />
         <span className="pw-history-updated__label">Last updated</span>
       </div>
-      <time className="pw-history-updated__time">
-        {new Date(updatedAt).toLocaleString()}
-      </time>
+      <RelativeTime timestamp={updatedAt} className="pw-history-updated__time" />
     </div>
   );
 }

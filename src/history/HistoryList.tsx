@@ -5,22 +5,20 @@
  * contextual status styling and human readable error summaries.
  */
 
-import { useCallback } from 'react';
-import type { Hex } from 'viem';
-import { ArrowRight, Clock, ExternalLink, Hash } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ArrowRight, Clock } from 'lucide-react';
 
 import { cn } from '../lib';
-import { Card, CardContent, CardHeader } from '../ui/primitives';
+import { Card, CardContent, CardHeader, Skeleton } from '../ui/primitives';
 
 import { usePaymentHistoryStore } from './store';
 import type { PaymentHistoryEntry } from '../types';
 import { formatAmountWithSymbol } from '../utils/amount-format';
-import { HISTORY_STATUS_LABELS } from './constants';
 import type { HistoryChainDisplay } from './types';
-import { explorerUrlForChain, shortHash } from './utils';
 import { TransactionGroup } from '../components/TransactionGroup';
 import { StatusDisplay } from '../components/StatusDisplay';
 import { TokenAvatar } from '../widget/components/avatars/TokenAvatar';
+import { RelativeTime } from '../widget/components/RelativeTime';
 
 /**
  * Chain information mapping for display purposes
@@ -48,7 +46,24 @@ export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListPr
   const snapshot = usePaymentHistoryStore();
   const entries = snapshot.entries;
 
+  const [showInitialSkeleton, setShowInitialSkeleton] = useState(false);
+
+  useEffect(() => {
+    // Show a brief skeleton on initial mount when there are no entries yet
+    if (!entries.length) {
+      console.debug('[HistoryList] showing initial skeleton');
+      setShowInitialSkeleton(true);
+      const t = setTimeout(() => {
+        setShowInitialSkeleton(false);
+      }, 800);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   if (!entries.length) {
+    if (showInitialSkeleton) {
+      return <HistoryListSkeleton className={className} />;
+    }
     return (
       <div className={cn('pw-history-empty', className)}>
         No payments yet. Your future transactions will appear here.
@@ -94,6 +109,15 @@ function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSe
         'pw-history-card',
         onSelect && 'pw-history-card--interactive',
       )}
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-label={onSelect ? `${title} from ${entry.inputToken.symbol} to ${entry.outputToken.symbol}` : undefined}
+      onKeyDown={onSelect ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleClick((event as unknown) as React.MouseEvent<HTMLDivElement>);
+        }
+      } : undefined}
     >
       <CardHeader className="pw-history-card__header">
         <StatusDisplay 
@@ -250,39 +274,43 @@ function HistoryListUpdatedTimestamp({ updatedAt }: { updatedAt: number }) {
         <Clock className="pw-history-updated__icon" />
         <span className="pw-history-updated__label">Last updated</span>
       </div>
-      <time className="pw-history-updated__time">{new Date(updatedAt).toLocaleString()}</time>
+      <RelativeTime timestamp={updatedAt} className="pw-history-updated__time" />
     </div>
   );
 }
 
-/**
- * Renders an explorer link for the provided transaction hash when available.
- */
-function HashLink({ hash, chainId }: { hash: Hex; chainId: number }) {
-  const explorer = explorerUrlForChain(chainId);
-
-  if (!explorer) {
-    return (
-      <div className="pw-hash">
-        <Hash className="pw-hash__icon" />
-        <span className="pw-hash__value">{shortHash(hash)}</span>
-      </div>
-    );
-  }
-
+// Skeleton list for initial loading polish (UI-only)
+function HistoryListSkeleton({ className }: { className?: string }) {
   return (
-    <a
-      className="pw-hash pw-hash--interactive"
-      href={`${explorer}/tx/${hash}`}
-      target="_blank"
-      rel="noreferrer"
-      onClick={(event) => {
-        event.stopPropagation();
-      }}
-    >
-      <Hash className="pw-hash__icon" />
-      <span className="pw-hash__value">{shortHash(hash)}</span>
-      <ExternalLink className="pw-hash__icon" />
-    </a>
+    <div className={cn('pw-history-list', className)}>
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="pw-history-card">
+          <CardHeader className="pw-history-card__header">
+            <Skeleton className="payment-skeleton" />
+          </CardHeader>
+          <CardContent className="pw-history-card__content">
+            <div className="pw-history-flow">
+              <div className="pw-history-flow__grid">
+                <Skeleton className="payment-skeleton" />
+                <Skeleton className="payment-skeleton" />
+              </div>
+              <div className="pw-history-flow__indicator">
+                <Skeleton className="payment-skeleton" />
+              </div>
+            </div>
+            <div className="pw-history-amount">
+              <Skeleton className="payment-skeleton" />
+              <Skeleton className="payment-skeleton" />
+            </div>
+            <div className="pw-history-hashes">
+              <Skeleton className="payment-skeleton" />
+            </div>
+            <div className="pw-history-updated">
+              <Skeleton className="payment-skeleton" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

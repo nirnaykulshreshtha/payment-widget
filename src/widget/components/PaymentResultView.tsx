@@ -8,7 +8,7 @@ import { cn } from '../../lib';
 import type { PaymentResultSummary } from '../types';
 import { formatTokenAmount } from '../../utils/amount-format';
 import { renderHashLink } from '../utils/hash-link';
-import { Button } from '../../ui/primitives';
+import { Button, Skeleton } from '../../ui/primitives';
 
 export interface PaymentResultViewProps {
   type: 'success' | 'failure';
@@ -45,7 +45,7 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
         </div>
       </div>
 
-      {summary && (
+      {summary ? (
         <div className="pw-details-card">
           <DetailRow
             label="You sent"
@@ -72,6 +72,12 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
           {summary.fillTxHash && (
             <DetailRow label="Delivery transaction" value={renderHashLink(summary.fillTxHash as string, summary.destinationChainId ?? summary.input.token.chainId)} />
           )}
+        </div>
+      ) : (
+        <div className="pw-details-card">
+          <Skeleton className="payment-skeleton" />
+          <Skeleton className="payment-skeleton" />
+          <Skeleton className="payment-skeleton" />
         </div>
       )}
 

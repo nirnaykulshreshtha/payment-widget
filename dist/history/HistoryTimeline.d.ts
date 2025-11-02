@@ -9,3 +9,6 @@ interface HistoryTimelineProps {
  */
 export declare function HistoryTimeline({ timeline, entry }: HistoryTimelineProps): import("react/jsx-runtime").JSX.Element;
 export {};
+/**
+ * Resolves the chain ID for a given stage based on the payment entry context.
+ */

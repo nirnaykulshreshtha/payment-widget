@@ -62,6 +62,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
           type="button"
           className="pw-inline-link"
           onClick={onChangeAsset}
+          aria-label="Select a different payment asset"
         >
           Choose another asset
         </button>
@@ -124,14 +125,26 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
           (option.mode === 'bridge' && !option.quote) ||
           (option.mode === 'swap' && !option.swapQuote)
         }
+        aria-label={
+          isExecuting
+            ? 'Processing payment'
+            : option.canMeetTarget
+              ? 'Execute payment'
+              : 'Payment option unavailable'
+        }
       >
-        {isExecuting
-          ? 'Processing...'
-          : option.mode === 'bridge'
+        {isExecuting ? (
+          <span className="pw-button__content">
+            <span className="pw-button__spinner" aria-hidden="true" />
+            Processing...
+          </span>
+        ) : (
+          option.mode === 'bridge'
             ? 'Pay Now'
             : option.mode === 'swap'
               ? 'Pay Now'
-              : 'Pay Now'}
+              : 'Pay Now'
+        )}
       </Button>
     </div>
   );

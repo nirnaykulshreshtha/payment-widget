@@ -55,7 +55,13 @@ export function WidgetHeader({
     <div className="pw-header">
       <div className={cn('pw-header__title-wrap', onBack && 'pw-header__title-wrap--with-back')}>
         {onBack && (
-          <Button variant="outline" size="icon" className="pw-header__icon-button" onClick={onBack}>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="pw-header__icon-button" 
+            onClick={onBack}
+            aria-label="Go back"
+          >
             <ArrowLeft className="pw-icon" />
           </Button>
         )}
@@ -78,12 +84,19 @@ export function WidgetHeader({
             className="pw-header__icon-button"
             onClick={onRefresh}
             disabled={isRefreshing}
+            aria-label={isRefreshing ? "Refreshing" : "Refresh"}
           >
             <RefreshCw className={cn('pw-icon', isRefreshing && 'pw-icon--spinning')} />
           </Button>
         )}
         {onHistory && (
-          <Button variant="outline" size="icon" className="pw-header__icon-button" onClick={onHistory}>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="pw-header__icon-button" 
+            onClick={onHistory}
+            aria-label="View payment history"
+          >
             <HistoryIcon className="pw-icon" />
           </Button>
         )}

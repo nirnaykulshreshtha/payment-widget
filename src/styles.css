@@ -295,6 +295,21 @@
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
 }
 
+.payment-widget .pw-button__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-widget .pw-button__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: payment-widget-spin 0.6s linear infinite;
+}
+
 .payment-widget .payment-button--secondary {
   background-color: var(--pw-accent-strong);
   color: var(--pw-color-contrast);
@@ -375,6 +390,35 @@
     transform: translateY(0) scale(1);
   }
 }
+
+@keyframes pw-fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-widget .pw-view {
+  animation: pw-fade-slide 0.3s ease;
+}
+
+.payment-widget .pw-option-card,
+.payment-widget .pw-details-card,
+.payment-widget .pw-history-card {
+  animation: pw-fade-slide 0.3s ease;
+  animation-fill-mode: both;
+}
+
+.payment-widget .pw-option-card:nth-child(1) { animation-delay: 0.05s; }
+.payment-widget .pw-option-card:nth-child(2) { animation-delay: 0.1s; }
+.payment-widget .pw-option-card:nth-child(3) { animation-delay: 0.15s; }
+.payment-widget .pw-option-card:nth-child(4) { animation-delay: 0.2s; }
+.payment-widget .pw-option-card:nth-child(5) { animation-delay: 0.25s; }
+.payment-widget .pw-option-card:nth-child(n+6) { animation-delay: 0.3s; }
 
 .payment-widget-toaster {
   position: fixed;
@@ -577,6 +621,9 @@
   gap: var(--pw-space-md);
   padding-right: 6px;
   padding-top: 6px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pw-border-soft) transparent;
 }
 
 .payment-widget .pw-options-list::-webkit-scrollbar {
@@ -617,11 +664,19 @@
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px dashed var(--pw-border-regular);
   background: var(--pw-surface-subtle);
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-sm);
+  align-items: center;
+  gap: var(--pw-space-md);
+}
+
+.payment-widget .pw-empty-state__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--pw-space-sm);
+  opacity: 0.6;
 }
 
 .payment-widget .pw-empty-state__title {
@@ -769,6 +824,12 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   animation: pw-fade-in 0.35s ease;
   animation-fill-mode: both;
+  position: relative;
+}
+
+.payment-widget .pw-option-card:focus-visible {
+  outline: 2px solid var(--pw-brand-border-strong);
+  outline-offset: 2px;
 }
 
 .payment-widget .pw-option-card:hover {
@@ -785,6 +846,72 @@
 
 .payment-widget .pw-option-card--unavailable {
   opacity: 0.92;
+}
+
+.payment-widget .pw-option-card--skeleton {
+  pointer-events: none;
+  animation: pw-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.payment-widget .pw-avatar--skeleton {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--pw-surface-muted);
+  animation: pw-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.payment-widget .pw-skeleton-line {
+  height: 1em;
+  background: var(--pw-surface-muted);
+  border-radius: 4px;
+  animation: pw-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.payment-widget .pw-skeleton-line--title {
+  width: 60px;
+  height: 16px;
+}
+
+.payment-widget .pw-skeleton-line--amount {
+  width: 80px;
+  height: 16px;
+}
+
+.payment-widget .pw-skeleton-line--chain {
+  width: 70px;
+  height: 12px;
+}
+
+.payment-widget .pw-skeleton-line--availability {
+  width: 100px;
+  height: 12px;
+}
+
+.payment-widget .pw-skeleton-line--detail {
+  width: 120px;
+  height: 12px;
+}
+
+.payment-widget .pw-skeleton-line--badge {
+  width: 50px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.payment-widget .pw-skeleton-line--chevron {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+@keyframes pw-skeleton-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .payment-widget .pw-option-card__header {
@@ -1023,6 +1150,12 @@
   text-decoration: none;
 }
 
+.payment-widget .pw-hash--interactive:focus-visible {
+  outline: none;
+  border-color: var(--pw-brand-border-strong);
+  box-shadow: 0 0 0 3px var(--pw-brand-focus-ring);
+}
+
 .payment-widget .pw-hash__icon {
   width: 14px;
   height: 14px;
@@ -1035,6 +1168,79 @@
 
 .payment-widget .pw-hash__value {
   font-size: 0.7rem;
+}
+
+.payment-widget .pw-hash-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.payment-widget .pw-hash__copy {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.payment-widget .pw-hash-container:hover .pw-hash__copy,
+.payment-widget .pw-hash:hover ~ .pw-hash__copy {
+  opacity: 1;
+}
+
+.payment-widget .pw-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: calc(var(--pw-radius) * 0.4);
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  color: var(--pw-color-muted);
+}
+
+.payment-widget .pw-copy-button:hover {
+  background-color: var(--pw-surface-soft);
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-copy-button:active {
+  transform: scale(0.95);
+}
+
+.payment-widget .pw-copy-button--icon {
+  width: 32px;
+  height: 32px;
+}
+
+.payment-widget .pw-copy-button--inline {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+}
+
+.payment-widget .pw-copy-button--text {
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-copy-button__icon {
+  width: 14px;
+  height: 14px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.payment-widget .pw-copy-button__icon--success {
+  color: var(--pw-color-success);
+  transform: scale(1.1);
+}
+
+.payment-widget .pw-copy-button__text {
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .payment-widget .pw-status-header {
@@ -1239,6 +1445,12 @@
   transform: translateY(-2px);
   border-color: var(--pw-brand-border);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.payment-widget .pw-history-card--interactive:focus-visible {
+  outline: none;
+  border-color: var(--pw-brand-border-strong);
+  box-shadow: 0 0 0 3px var(--pw-brand-focus-ring), 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .payment-widget .pw-history-card__header {
@@ -1609,5 +1821,21 @@
 
   .payment-widget .pw-inline-button {
     width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-widget .pw-option-card {
+    min-height: 60px;
+    padding: 16px 12px;
+  }
+
+  .payment-widget .pw-button {
+    min-height: 48px;
+    font-size: 0.9rem;
+  }
+
+  .payment-widget .pw-search__input {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
