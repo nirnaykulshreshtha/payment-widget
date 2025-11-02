@@ -72,6 +72,9 @@ export interface RenderedPaymentView {
   headerConfig: {
     showRefresh: boolean;
     showHistory: boolean;
+    showPrimary?: boolean;
+    title?: string;
+    showTimestamp?: boolean;
   };
 }
 

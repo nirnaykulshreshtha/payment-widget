@@ -56,6 +56,8 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         ),
       };
     case 'options':
+      console.log('options: chainLookup', chainLookup);
+      console.log('options: chainLogos', chainLogos);
       return {
         headerConfig: {
           showHistory: true,
@@ -106,7 +108,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       }
       return {
         headerConfig: {
-          showHistory: true,
+          showHistory: false,
           showRefresh: true,
         },
         content: (
@@ -134,6 +136,9 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         headerConfig: {
           showHistory: false,
           showRefresh: false,
+          showPrimary: false,
+          showTimestamp: false,
+          title: 'Recent Activity',
         },
         content: (
           <PaymentHistoryScreen
@@ -148,6 +153,9 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         headerConfig: {
           showHistory: true,
           showRefresh: true,
+          showPrimary: false,
+          showTimestamp: true,
+          title: 'Payment Tracking',
         },
         content: (
           <PaymentTrackingView

@@ -1299,6 +1299,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           onViewHistory={openHistoryView}
           showRefresh={headerConfig.showRefresh}
           showHistory={headerConfig.showHistory}
+          showPrimary={headerConfig.showPrimary}
+          title={headerConfig.title}
+          showTimestamp={headerConfig.showTimestamp}
           onBack={canGoBack ? popView : undefined}
           showBack={canGoBack}
           backLabel={backButtonLabel}

@@ -1111,7 +1111,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 backButtonLabel = 'Back';
         }
     }
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, showPrimary: headerConfig.showPrimary, title: headerConfig.title, showTimestamp: headerConfig.showTimestamp, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;

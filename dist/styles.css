@@ -579,6 +579,12 @@
   min-width: 220px;
   margin-top: 8px;
 }
+.payment-widget .pw-target-card__title {
+  margin-top: 8px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 
 .payment-widget .pw-target-card__eyebrow {
   font-size: 0.75rem;

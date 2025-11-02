@@ -11,5 +11,8 @@ export interface PaymentSummaryHeaderProps {
     showHistory?: boolean;
     showBack?: boolean;
     backLabel?: string;
+    showPrimary?: boolean;
+    title?: string;
+    showTimestamp?: boolean;
 }
-export declare function PaymentSummaryHeader({ targetAmountLabel, targetSymbol, targetChainLabel, lastUpdated, onRefresh, isRefreshing, onViewHistory, onBack, showRefresh, showHistory, showBack, backLabel, }: PaymentSummaryHeaderProps): import("react/jsx-runtime").JSX.Element;
+export declare function PaymentSummaryHeader({ targetAmountLabel, targetSymbol, targetChainLabel, lastUpdated, onRefresh, isRefreshing, onViewHistory, onBack, showRefresh, showHistory, showBack, backLabel, showPrimary, showTimestamp, title, }: PaymentSummaryHeaderProps): import("react/jsx-runtime").JSX.Element;

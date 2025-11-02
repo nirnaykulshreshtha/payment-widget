@@ -18,6 +18,8 @@ export function renderPaymentView(config) {
                 content: (_jsx(LoadingStagesView, { stages: planner.stageDefinitions, currentStage: planner.loadingStage, completedStages: planner.completedStages })),
             };
         case 'options':
+            console.log('options: chainLookup', chainLookup);
+            console.log('options: chainLogos', chainLogos);
             return {
                 headerConfig: {
                     showHistory: true,
@@ -37,7 +39,7 @@ export function renderPaymentView(config) {
             }
             return {
                 headerConfig: {
-                    showHistory: true,
+                    showHistory: false,
                     showRefresh: true,
                 },
                 content: (_jsx(PaymentDetailsView, { option: selectedOption, targetToken: targetToken, targetAmount: targetAmount, maxSlippageBps: maxSlippageBps, chainLookup: chainLookup, chainLogos: chainLogos, wrapTxHash: wrapTxHash, depositTxHash: txHash, swapTxHash: swapTxHash, approvalTxHashes: approvalTxHashes, isExecuting: isExecuting, onExecute: onExecutePayment, onChangeAsset: onChangeAsset, onRefresh: onRefresh, isRefreshing: planner.isLoading })),
@@ -47,6 +49,9 @@ export function renderPaymentView(config) {
                 headerConfig: {
                     showHistory: false,
                     showRefresh: false,
+                    showPrimary: false,
+                    showTimestamp: false,
+                    title: 'Recent Activity',
                 },
                 content: (_jsx(PaymentHistoryScreen, { onSelectEntry: (entryId) => onOpenTracking(entryId), onClearHistory: onClearHistory, isClearing: isClearingHistory })),
             };
@@ -55,6 +60,9 @@ export function renderPaymentView(config) {
                 headerConfig: {
                     showHistory: true,
                     showRefresh: true,
+                    showPrimary: false,
+                    showTimestamp: true,
+                    title: 'Payment Tracking',
                 },
                 content: (_jsx(PaymentTrackingView, { historyId: view.historyId, chainLookup: chainLookup, chainLogos: chainLogos })),
             };

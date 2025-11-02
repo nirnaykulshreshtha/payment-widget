@@ -27,6 +27,9 @@ export interface PaymentSummaryHeaderProps {
   showHistory?: boolean;
   showBack?: boolean;
   backLabel?: string;
+  showPrimary?: boolean;
+  title?: string;
+  showTimestamp?: boolean;
 }
 
 export function PaymentSummaryHeader({
@@ -42,10 +45,16 @@ export function PaymentSummaryHeader({
   showHistory = true,
   showBack = false,
   backLabel,
+  showPrimary = true,
+  showTimestamp = true,
+  title,
 }: PaymentSummaryHeaderProps) {
   const hasActions = showHistory || showRefresh;
   const showBackButton = Boolean(showBack && onBack);
   const resolvedBackLabel = backLabel ?? 'Back';
+  const hasTitle = Boolean(title);
+  const headingId = 'pw-target-card-heading';
+  const sectionLabelId = showPrimary || hasTitle ? headingId : undefined;
 
   const handleRefresh = () => {
     log('refresh clicked');
@@ -64,31 +73,40 @@ export function PaymentSummaryHeader({
   };
 
   return (
-    <section className="pw-target-card" aria-labelledby="pw-target-card-heading" aria-live="polite" aria-busy={isRefreshing ? true : undefined}>
-      <div className="pw-target-card__primary-group">
-        {showBackButton && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="pw-target-card__back"
-          >
-            <ArrowLeft className="pw-icon-sm" aria-hidden />
-            {resolvedBackLabel}
-          </Button>
-        )}
-        <div className="pw-target-card__primary">
-          <span className="pw-target-card__eyebrow" id="pw-target-card-heading">
-            YOU NEED TO PAY
-          </span>
-          <div className="pw-target-card__amount">
-            <span className="pw-target-card__value">
-              {targetAmountLabel} {targetSymbol}
-            </span>
-            <span className="pw-target-card__chain">on {targetChainLabel}</span>
-          </div>
+    <section className="pw-target-card" aria-labelledby={sectionLabelId} aria-live="polite" aria-busy={isRefreshing ? true : undefined}>
+      {(showBackButton || showPrimary || hasTitle) && (
+        <div className="pw-target-card__primary-group">
+          {showBackButton && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBack}
+              className="pw-target-card__back"
+            >
+              <ArrowLeft className="pw-icon-sm" aria-hidden />
+              {resolvedBackLabel}
+            </Button>
+          )}
+          {showPrimary && (
+            <div className="pw-target-card__primary">
+              <span className="pw-target-card__eyebrow" id={headingId}>
+                YOU NEED TO PAY
+              </span>
+              <div className="pw-target-card__amount">
+                <span className="pw-target-card__value">
+                  {targetAmountLabel} {targetSymbol}
+                </span>
+                <span className="pw-target-card__chain">on {targetChainLabel}</span>
+              </div>
+            </div>
+          )}
+          {!showPrimary && title && (
+            <div className="pw-target-card__title" id={headingId}>
+              {title}
+            </div>
+          )}
         </div>
-      </div>
+      )}
       <div className="pw-target-card__meta">
         {hasActions && (
           <div className="pw-target-card__actions" role="group" aria-label="Payment actions">
@@ -119,15 +137,17 @@ export function PaymentSummaryHeader({
             )}
           </div>
         )}
-        <span className="pw-target-card__timestamp">
-          {lastUpdated ? (
-            <>
-              Updated <RelativeTime timestamp={lastUpdated} />
-            </>
-          ) : (
-            'Ready to pay'
-          )}
-        </span>
+        {showTimestamp && (
+          <span className="pw-target-card__timestamp">
+            {lastUpdated ? (
+              <>
+                Updated <RelativeTime timestamp={lastUpdated} />
+              </>
+            ) : (
+              'Ready to pay'
+            )}
+          </span>
+        )}
       </div>
     </section>
   );
