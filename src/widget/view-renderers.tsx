@@ -143,6 +143,8 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
           onSelectEntry={(entryId) => onOpenTracking(entryId)}
           onClearHistory={onClearHistory}
           isClearing={isClearingHistory}
+          chainLookup={chainLookup}
+          chainLogos={chainLogos}
         />
         ),
       };

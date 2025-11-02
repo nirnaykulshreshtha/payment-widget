@@ -51,7 +51,7 @@ export function renderPaymentView(config) {
                     showTimestamp: false,
                     title: 'Recent Activity',
                 },
-                content: (_jsx(PaymentHistoryScreen, { onSelectEntry: (entryId) => onOpenTracking(entryId), onClearHistory: onClearHistory, isClearing: isClearingHistory })),
+                content: (_jsx(PaymentHistoryScreen, { onSelectEntry: (entryId) => onOpenTracking(entryId), onClearHistory: onClearHistory, isClearing: isClearingHistory, chainLookup: chainLookup, chainLogos: chainLogos })),
             };
         case 'tracking':
             return {

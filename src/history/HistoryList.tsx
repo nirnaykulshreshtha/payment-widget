@@ -5,20 +5,19 @@
  * contextual status styling and human readable error summaries.
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, Clock } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 
 import { cn } from '../lib';
-import { Card, CardContent, CardHeader, Skeleton } from '../ui/primitives';
+import { Card, Skeleton } from '../ui/primitives';
 
 import { usePaymentHistoryStore } from './store';
 import type { PaymentHistoryEntry } from '../types';
 import { formatAmountWithSymbol } from '../utils/amount-format';
 import type { HistoryChainDisplay } from './types';
-import { TransactionGroup } from '../components/TransactionGroup';
 import { StatusDisplay } from '../components/StatusDisplay';
-import { TokenAvatar } from '../widget/components/avatars/TokenAvatar';
 import { RelativeTime } from '../widget/components/RelativeTime';
+import { ChainAvatar } from '../widget/components/avatars/ChainAvatar';
 
 /**
  * Chain information mapping for display purposes
@@ -37,12 +36,14 @@ const CHAIN_INFO: Record<number, HistoryChainDisplay> = {
 interface PaymentHistoryListProps {
   className?: string;
   onSelect?: (entry: PaymentHistoryEntry) => void;
+  chainLookup: Map<number, string | number>;
+  chainLogos: Map<number, string | undefined>;
 }
 
 /**
  * Renders the history entries for the payment widget.
  */
-export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListProps) {
+export function PaymentHistoryList({ className, onSelect, chainLookup, chainLogos }: PaymentHistoryListProps) {
   const snapshot = usePaymentHistoryStore();
   const entries = snapshot.entries;
 
@@ -74,7 +75,13 @@ export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListPr
   return (
     <div className={cn('pw-history-list', className)}>
       {entries.map((entry) => (
-        <HistoryListCard key={entry.id} entry={entry} onSelect={onSelect} />
+        <HistoryListCard
+          key={entry.id}
+          entry={entry}
+          onSelect={onSelect}
+          chainLookup={chainLookup}
+          chainLogos={chainLogos}
+        />
       ))}
     </div>
   );
@@ -83,14 +90,32 @@ export function PaymentHistoryList({ className, onSelect }: PaymentHistoryListPr
 /**
  * Renders an individual history entry card.
  */
-function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSelect?: (entry: PaymentHistoryEntry) => void }) {
-  const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
-  const outputLabel = formatAmountWithSymbol(entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol);
-  const title = entry.mode === 'direct'
-    ? 'Direct payment'
-    : entry.mode === 'swap'
-      ? 'Swap and send'
-      : 'Cross-network payment';
+function HistoryListCard({
+  entry,
+  onSelect,
+  chainLookup,
+  chainLogos,
+}: {
+  entry: PaymentHistoryEntry;
+  onSelect?: (entry: PaymentHistoryEntry) => void;
+  chainLookup: Map<number, string | number>;
+  chainLogos: Map<number, string | undefined>;
+}) {
+  const inputLabel = useMemo(
+    () => formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol),
+    [entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol],
+  );
+  const outputLabel = useMemo(
+    () => formatAmountWithSymbol(entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol),
+    [entry.outputAmount, entry.outputToken.decimals, entry.outputToken.symbol],
+  );
+
+  const primaryAmountLabel = entry.outputAmount > 0n ? outputLabel : inputLabel;
+  const originChainLabel = resolveChainLabel(entry.originChainId, chainLookup);
+  const destinationChainLabel = resolveChainLabel(entry.destinationChainId, chainLookup);
+  const originChainLogo = chainLogos.get(entry.originChainId);
+  const destinationChainLogo = chainLogos.get(entry.destinationChainId);
+  const interactionLabel = `${primaryAmountLabel} from ${originChainLabel} to ${destinationChainLabel}`;
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -111,7 +136,7 @@ function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSe
       )}
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
-      aria-label={onSelect ? `${title} from ${entry.inputToken.symbol} to ${entry.outputToken.symbol}` : undefined}
+      aria-label={onSelect ? interactionLabel : undefined}
       onKeyDown={onSelect ? (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
@@ -119,163 +144,39 @@ function HistoryListCard({ entry, onSelect }: { entry: PaymentHistoryEntry; onSe
         }
       } : undefined}
     >
-      <CardHeader className="pw-history-card__header">
-        <StatusDisplay 
-          status={entry.status}
-          showOriginalStatus={false}
-          showSimplifiedStatus={true}
-        />
-      </CardHeader>
-      <CardContent className="pw-history-card__content">
-        <HistoryListTokenFlow entry={entry} title={title} />
-        <HistoryListAmountDetails inputLabel={inputLabel} outputLabel={outputLabel} />
-        <HistoryListTransactionHashes entry={entry} />
-        <HistoryListUpdatedTimestamp updatedAt={entry.updatedAt} />
-      </CardContent>
-    </Card>
-  );
-}
-
-/**
- * Displays the token flow section for a history card.
- */
-function HistoryListTokenFlow({ entry, title }: { entry: PaymentHistoryEntry; title: string }) {
-  const originChain = CHAIN_INFO[entry.originChainId]?.name || `Chain ${entry.originChainId}`;
-  const destinationChain = CHAIN_INFO[entry.destinationChainId]?.name || `Chain ${entry.destinationChainId}`;
-
-  return (
-    <div className="pw-history-flow">
-      <div className="pw-history-flow__grid">
-        <HistoryListTokenFlowColumn
-          tokenSymbol={entry.inputToken.symbol}
-          tokenLogoUrl={entry.inputToken.logoUrl}
-          chainLabel={originChain}
-        />
-        <HistoryListTokenFlowColumn
-          tokenSymbol={entry.outputToken.symbol}
-          tokenLogoUrl={entry.outputToken.logoUrl}
-          chainLabel={destinationChain}
-        />
-      </div>
-      <div className="pw-history-flow__indicator">
-        <ArrowRight className="pw-history-flow__icon" />
-        <span className="pw-history-flow__label">{title}</span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Displays a single token flow column.
- */
-function HistoryListTokenFlowColumn({ tokenSymbol, tokenLogoUrl, chainLabel }: { tokenSymbol: string; tokenLogoUrl?: string; chainLabel: string }) {
-  return (
-    <div className="pw-history-flow__column">
-      <div className="pw-history-flow__token-card">
-        <TokenAvatar symbol={tokenSymbol} logoUrl={tokenLogoUrl} className="pw-avatar--small" />
-        <div className="pw-history-flow__token-meta">
-          <div className="pw-history-flow__token-symbol">{tokenSymbol}</div>
-          <div className="pw-history-flow__token-chain">{chainLabel}</div>
+      <div className="pw-history-card__layout">
+        <div className="pw-history-card__top">
+          <div className="pw-history-card__amount">{primaryAmountLabel}</div>
+          <StatusDisplay
+            status={entry.status}
+            showOriginalStatus={false}
+            showSimplifiedStatus
+            className="pw-history-card__status"
+          />
+        </div>
+        <div className="pw-history-card__chains" aria-label={`from ${originChainLabel} to ${destinationChainLabel}`}>
+          <span className="pw-history-card__chain-prefix">from</span>
+          <ChainAvatar
+            name={originChainLabel}
+            logoUrl={originChainLogo}
+            className="pw-history-card__chain-avatar"
+          />
+          <span className="pw-history-card__chain-name">{originChainLabel}</span>
+          <span className="pw-history-card__chain-prefix">to</span>
+          <ArrowRight className="pw-history-card__chain-arrow" aria-hidden="true" />
+          <ChainAvatar
+            name={destinationChainLabel}
+            logoUrl={destinationChainLogo}
+            className="pw-history-card__chain-avatar"
+          />
+          <span className="pw-history-card__chain-name">{destinationChainLabel}</span>
+        </div>
+        <div className="pw-history-card__footer">
+          <span className="pw-history-card__updated-label">Updated</span>
+          <RelativeTime timestamp={entry.updatedAt} className="pw-history-card__updated-time" />
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * Displays the amount section for a history card.
- */
-function HistoryListAmountDetails({ inputLabel, outputLabel }: { inputLabel: string; outputLabel: string }) {
-  return (
-    <div className="pw-history-amount">
-      <HistoryListAmountRow label="You sent" value={inputLabel} indicator={<ArrowRight className="pw-history-amount__icon" />} />
-      <HistoryListAmountRow label="Estimated receive" value={outputLabel} indicator={<span className="pw-history-amount__hint">Est.</span>} />
-    </div>
-  );
-}
-
-/**
- * Displays a single amount row.
- */
-function HistoryListAmountRow({ label, value, indicator }: { label: string; value: string; indicator: React.ReactNode }) {
-  return (
-    <div className="pw-history-amount__row">
-      <div className="pw-history-amount__meta">
-        <div className="pw-history-amount__label">{label}</div>
-        <div className="pw-history-amount__value">{value}</div>
-      </div>
-      {indicator}
-    </div>
-  );
-}
-
-/**
- * Displays the transaction hash section for a history card.
- */
-function HistoryListTransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
-  if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
-    return null;
-  }
-
-  return (
-    <div className="pw-history-hashes">
-      {entry.approvalTxHashes?.length ? (
-        <TransactionGroup
-          title="Wallet approval"
-          indicatorColor="var(--pw-color-warning)"
-          hashes={entry.approvalTxHashes}
-          chainId={entry.originChainId}
-        />
-      ) : null}
-      {entry.depositTxHash ? (
-        <TransactionGroup
-          title="Deposit sent"
-          indicatorColor="var(--pw-brand)"
-          hashes={[entry.depositTxHash]}
-          chainId={entry.originChainId}
-        />
-      ) : null}
-      {entry.swapTxHash ? (
-        <TransactionGroup
-          title="Swap sent"
-          indicatorColor="var(--pw-color-success)"
-          hashes={[entry.swapTxHash]}
-          chainId={entry.originChainId}
-        />
-      ) : null}
-      {entry.fillTxHash ? (
-        <TransactionGroup
-          title="Funds delivered"
-          indicatorColor="var(--pw-brand-strong)"
-          hashes={[entry.fillTxHash]}
-          chainId={entry.destinationChainId}
-        />
-      ) : null}
-      {entry.wrapTxHash ? (
-        <TransactionGroup
-          title="Wrap step"
-          indicatorColor="var(--pw-accent-strong)"
-          hashes={[entry.wrapTxHash]}
-          chainId={entry.originChainId}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-
-/**
- * Displays the updated timestamp footer for a history card.
- */
-function HistoryListUpdatedTimestamp({ updatedAt }: { updatedAt: number }) {
-  return (
-    <div className="pw-history-updated">
-      <div className="pw-history-updated__meta">
-        <Clock className="pw-history-updated__icon" />
-        <span className="pw-history-updated__label">Last updated</span>
-      </div>
-      <RelativeTime timestamp={updatedAt} className="pw-history-updated__time" />
-    </div>
+    </Card>
   );
 }
 
@@ -285,32 +186,30 @@ function HistoryListSkeleton({ className }: { className?: string }) {
     <div className={cn('pw-history-list', className)}>
       {[1, 2, 3].map((i) => (
         <Card key={i} className="pw-history-card">
-          <CardHeader className="pw-history-card__header">
-            <Skeleton className="payment-skeleton" />
-          </CardHeader>
-          <CardContent className="pw-history-card__content">
-            <div className="pw-history-flow">
-              <div className="pw-history-flow__grid">
-                <Skeleton className="payment-skeleton" />
-                <Skeleton className="payment-skeleton" />
-              </div>
-              <div className="pw-history-flow__indicator">
-                <Skeleton className="payment-skeleton" />
-              </div>
+          <div className="pw-history-card__layout">
+            <div className="pw-history-card__top">
+              <Skeleton className="payment-skeleton pw-history-card__amount-skeleton" />
+              <Skeleton className="payment-skeleton pw-history-card__status-skeleton" />
             </div>
-            <div className="pw-history-amount">
-              <Skeleton className="payment-skeleton" />
-              <Skeleton className="payment-skeleton" />
+            <div className="pw-history-card__chains">
+              <Skeleton className="payment-skeleton pw-history-card__chain-skeleton" />
             </div>
-            <div className="pw-history-hashes">
-              <Skeleton className="payment-skeleton" />
+            <div className="pw-history-card__footer">
+              <Skeleton className="payment-skeleton pw-history-card__time-skeleton" />
             </div>
-            <div className="pw-history-updated">
-              <Skeleton className="payment-skeleton" />
-            </div>
-          </CardContent>
+          </div>
         </Card>
       ))}
     </div>
   );
+}
+
+function resolveChainLabel(chainId: number, chainLookup: Map<number, string | number>): string {
+  const resolved = chainLookup.get(chainId);
+  if (resolved !== undefined) {
+    return String(resolved);
+  }
+  const fallback = CHAIN_INFO[chainId]?.name;
+  if (fallback) return fallback;
+  return `Chain ${chainId}`;
 }
