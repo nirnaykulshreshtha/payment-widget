@@ -38,7 +38,7 @@ export function renderPaymentView(config) {
             return {
                 headerConfig: {
                     showHistory: true,
-                    showRefresh: false,
+                    showRefresh: true,
                 },
                 content: (_jsx(PaymentDetailsView, { option: selectedOption, targetToken: targetToken, targetAmount: targetAmount, maxSlippageBps: maxSlippageBps, chainLookup: chainLookup, chainLogos: chainLogos, wrapTxHash: wrapTxHash, depositTxHash: txHash, swapTxHash: swapTxHash, approvalTxHashes: approvalTxHashes, isExecuting: isExecuting, onExecute: onExecutePayment, onChangeAsset: onChangeAsset })),
             };

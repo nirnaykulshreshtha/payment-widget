@@ -568,7 +568,7 @@
 .payment-widget .pw-target-card__primary-group {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-sm);
+  gap: var(--pw-space-xs);
   min-width: 220px;
 }
 
@@ -577,6 +577,7 @@
   flex-direction: column;
   gap: 10px;
   min-width: 220px;
+  margin-top: 8px;
 }
 
 .payment-widget .pw-target-card__eyebrow {
@@ -594,7 +595,7 @@
 }
 
 .payment-widget .pw-target-card__value {
-  font-size: 1.35rem;
+  font-size: 1.6rem;
   font-weight: 700;
 }
 
@@ -868,6 +869,12 @@
   width: 44px;
   height: 44px;
   font-size: 1rem;
+}
+
+.payment-widget .pw-avatar--payment {
+  width: 48px;
+  height: 48px;
+  font-size: 1.1rem;
 }
 
 .payment-widget .pw-avatar--chain {
@@ -1190,6 +1197,34 @@
   text-decoration: underline;
 }
 
+.payment-widget .pw-inline-link--accent {
+  color: var(--pw-accent-strong);
+  font-weight: 500;
+}
+
+.payment-widget .pw-inline-link--accent:hover {
+  color: var(--pw-accent-strong);
+  text-decoration: underline;
+}
+
+/* Payment Details Asset Section - Redesigned for Payment Gateway */
+.payment-widget .pw-details__asset-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-lg);
+  padding: var(--pw-space-lg) 0;
+  border-bottom: 1px solid var(--pw-border-line);
+  margin-bottom: var(--pw-space-lg);
+}
+
+.payment-widget .pw-details__asset-main {
+  display: flex;
+  align-items: center;
+  gap: var(--pw-space-md);
+  flex: 1;
+}
+
 .payment-widget .pw-details__asset {
   display: flex;
   align-items: center;
@@ -1199,7 +1234,7 @@
 .payment-widget .pw-details__asset-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--pw-space-sm);
 }
 
 .payment-widget .pw-details__asset-heading {
@@ -1210,8 +1245,36 @@
   font-size: 1rem;
 }
 
+.payment-widget .pw-details__asset-name {
+  font-weight: 600;
+  color: var(--pw-color-text);
+}
+
 .payment-widget .pw-details__badge {
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-color: var(--pw-border-regular);
+  background-color: transparent;
+}
+
+.payment-widget .pw-details__badge--mode {
+  border-color: var(--pw-border-regular);
+  color: var(--pw-color-text);
+}
+
+.payment-widget .pw-details__chain-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--pw-color-muted);
+}
+
+.payment-widget .pw-details__chain-name {
+  color: var(--pw-color-muted);
 }
 
 .payment-widget .pw-details__chain {
@@ -1226,10 +1289,10 @@
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px solid var(--pw-border-regular);
   background: var(--pw-card-bg);
-  padding: 20px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   animation: pw-fade-in 0.4s ease;
   animation-fill-mode: both;
 }
@@ -1239,14 +1302,101 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.9rem;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--pw-border-line);
+}
+
+.payment-widget .pw-detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 12px;
+}
+
+.payment-widget .pw-detail-row:first-child {
+  padding-top: 12px;
 }
 
 .payment-widget .pw-detail-row__label {
-  color: var(--pw-color-muted);
+  color: var(--pw-color-text);
+  font-weight: 400;
 }
 
 .payment-widget .pw-detail-row__value {
   font-weight: 600;
+  color: var(--pw-color-text);
+  text-align: right;
+}
+
+/* Breakdown Toggle */
+.payment-widget .pw-breakdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--pw-color-text);
+  border-bottom: 1px solid var(--pw-border-line);
+  transition: color var(--pw-transition);
+}
+
+.payment-widget .pw-breakdown-toggle:first-child {
+  padding-top: 16px;
+}
+
+.payment-widget .pw-breakdown-toggle:hover {
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-breakdown-toggle.is-open {
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-breakdown-toggle:focus-visible {
+  outline: 2px solid var(--pw-brand-focus-ring);
+  outline-offset: 2px;
+  border-radius: calc(var(--pw-radius) * 0.4);
+}
+
+.payment-widget .pw-breakdown-toggle__label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.payment-widget .pw-breakdown-toggle .pw-icon-sm {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--pw-transition);
+}
+
+.payment-widget .pw-breakdown-toggle__chevron {
+  display: inline-flex;
+  transition: transform 220ms ease;
+}
+
+.payment-widget .pw-breakdown-toggle__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Breakdown Content */
+.payment-widget .pw-breakdown-content-animated {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: max-height 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease, transform 300ms ease;
+  will-change: max-height, opacity, transform;
+}
+
+.payment-widget .pw-breakdown-content-animated.is-open {
+  max-height: 800px;
+  opacity: 1;
+  transform: translateY(0);
+  padding-bottom: 4px;
 }
 
 .payment-widget .pw-hash-inline {
@@ -1262,6 +1412,37 @@
 
 .payment-widget .pw-button--full {
   width: 100%;
+}
+
+.payment-widget .pw-button--pay-now {
+  margin-top: var(--pw-space-sm);
+  padding: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--pw-accent-strong);
+  color: var(--pw-color-contrast);
+  border: none;
+  border-radius: calc(var(--pw-radius) * 0.9);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+  transition: background-color var(--pw-transition), box-shadow var(--pw-transition), transform var(--pw-transition);
+}
+
+.payment-widget .pw-button--pay-now:not(:disabled):hover {
+  background: var(--pw-accent-strong);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
+
+.payment-widget .pw-button--pay-now:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+}
+
+.payment-widget .pw-button--pay-now:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .payment-widget .pw-transaction-group {

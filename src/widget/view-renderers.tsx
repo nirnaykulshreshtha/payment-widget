@@ -107,7 +107,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       return {
         headerConfig: {
           showHistory: true,
-          showRefresh: false,
+          showRefresh: true,
         },
         content: (
           <PaymentDetailsView

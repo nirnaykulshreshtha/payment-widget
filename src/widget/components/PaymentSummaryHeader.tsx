@@ -1,10 +1,13 @@
+'use client';
+
 /**
  * @fileoverview Shared payment summary header used across widget views.
  * Presents the target payment information alongside history/refresh actions.
  */
-'use client';
 
-import { History, RefreshCw } from 'lucide-react';
+import { ArrowLeft, History, RefreshCw } from 'lucide-react';
+const LOG_PREFIX = '[payment-summary-header]';
+const log = (...args: unknown[]) => console.debug(LOG_PREFIX, ...args);
 
 import { cn } from '../../lib';
 import { Button } from '../../ui/primitives';
@@ -19,8 +22,11 @@ export interface PaymentSummaryHeaderProps {
   onRefresh: () => void;
   isRefreshing: boolean;
   onViewHistory: () => void;
+  onBack?: () => void;
   showRefresh?: boolean;
   showHistory?: boolean;
+  showBack?: boolean;
+  backLabel?: string;
 }
 
 export function PaymentSummaryHeader({
@@ -31,22 +37,56 @@ export function PaymentSummaryHeader({
   onRefresh,
   isRefreshing,
   onViewHistory,
+  onBack,
   showRefresh = true,
   showHistory = true,
+  showBack = false,
+  backLabel,
 }: PaymentSummaryHeaderProps) {
   const hasActions = showHistory || showRefresh;
+  const showBackButton = Boolean(showBack && onBack);
+  const resolvedBackLabel = backLabel ?? 'Back';
+
+  const handleRefresh = () => {
+    log('refresh clicked');
+    onRefresh();
+  };
+
+  const handleViewHistory = () => {
+    log('view history clicked');
+    onViewHistory();
+  };
+
+  const handleBack = () => {
+    if (!onBack) return;
+    log('back clicked');
+    onBack();
+  };
 
   return (
-    <section className="pw-target-card" aria-labelledby="pw-target-card-heading" aria-live="polite">
-      <div className="pw-target-card__primary">
-        <span className="pw-target-card__eyebrow" id="pw-target-card-heading">
-          You need to pay
-        </span>
-        <div className="pw-target-card__amount">
-          <span className="pw-target-card__value">
-            {targetAmountLabel} {targetSymbol}
+    <section className="pw-target-card" aria-labelledby="pw-target-card-heading" aria-live="polite" aria-busy={isRefreshing ? true : undefined}>
+      <div className="pw-target-card__primary-group">
+        {showBackButton && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+            className="pw-target-card__back"
+          >
+            <ArrowLeft className="pw-icon-sm" aria-hidden />
+            {resolvedBackLabel}
+          </Button>
+        )}
+        <div className="pw-target-card__primary">
+          <span className="pw-target-card__eyebrow" id="pw-target-card-heading">
+            YOU NEED TO PAY
           </span>
-          <span className="pw-target-card__chain">on {targetChainLabel}</span>
+          <div className="pw-target-card__amount">
+            <span className="pw-target-card__value">
+              {targetAmountLabel} {targetSymbol}
+            </span>
+            <span className="pw-target-card__chain">on {targetChainLabel}</span>
+          </div>
         </div>
       </div>
       <div className="pw-target-card__meta">
@@ -56,7 +96,7 @@ export function PaymentSummaryHeader({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onViewHistory}
+                onClick={handleViewHistory}
                 className="pw-target-card__history"
                 aria-label="View payment history"
               >
@@ -67,7 +107,7 @@ export function PaymentSummaryHeader({
             {showRefresh && (
               <Button
                 variant="outline"
-                onClick={onRefresh}
+                onClick={handleRefresh}
                 disabled={isRefreshing}
                 size="sm"
                 className="pw-target-card__refresh"

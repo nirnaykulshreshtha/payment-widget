@@ -1265,6 +1265,25 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   });
 
   const { headerConfig, content } = renderedView;
+  const canGoBack = viewStack.length > 1;
+  const previousViewName = canGoBack ? viewStack[viewStack.length - 2]?.name ?? null : null;
+  let backButtonLabel: string | undefined;
+
+  if (canGoBack) {
+    switch (currentView.name) {
+      case 'tracking':
+        backButtonLabel = previousViewName === 'history' ? 'Back to history' : 'Back';
+        break;
+      case 'details':
+      case 'history':
+      case 'success':
+      case 'failure':
+        backButtonLabel = 'Back to options';
+        break;
+      default:
+        backButtonLabel = 'Back';
+    }
+  }
 
   return (
     <div className="payment-widget flex-col w-full space-y-6">
@@ -1280,6 +1299,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           onViewHistory={openHistoryView}
           showRefresh={headerConfig.showRefresh}
           showHistory={headerConfig.showHistory}
+          onBack={canGoBack ? popView : undefined}
+          showBack={canGoBack}
+          backLabel={backButtonLabel}
         />
         {content}
       </div>

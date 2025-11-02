@@ -1093,7 +1093,25 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         maxSlippageBps: config.maxSlippageBps,
     });
     const { headerConfig, content } = renderedView;
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory }), content] })] }));
+    const canGoBack = viewStack.length > 1;
+    const previousViewName = canGoBack ? viewStack[viewStack.length - 2]?.name ?? null : null;
+    let backButtonLabel;
+    if (canGoBack) {
+        switch (currentView.name) {
+            case 'tracking':
+                backButtonLabel = previousViewName === 'history' ? 'Back to history' : 'Back';
+                break;
+            case 'details':
+            case 'history':
+            case 'success':
+            case 'failure':
+                backButtonLabel = 'Back to options';
+                break;
+            default:
+                backButtonLabel = 'Back';
+        }
+    }
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;
