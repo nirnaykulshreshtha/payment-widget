@@ -7,16 +7,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { RefreshCw } from 'lucide-react';
+import { History, RefreshCw, Search } from 'lucide-react';
 
 import { cn } from '../../lib';
-import type { PaymentOption, TokenConfig } from '../../types';
-import { formatTokenAmount } from '../../utils/amount-format';
 import { filterOptionsByPriority } from '../utils/options';
 import { formatErrorForDisplay } from '../utils/error-messages';
 import { RelativeTime } from './RelativeTime';
 
-import { Button, Badge } from '../../ui/primitives';
+import { Button } from '../../ui/primitives';
 import type { PayOptionsViewProps } from '../types';
 import { OptionRow } from './index';
 import { OptionCardSkeleton } from './OptionCardSkeleton';
@@ -194,6 +192,7 @@ export function PayOptionsView({
         lastUpdated={lastUpdated}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
+        onViewHistory={onViewHistory}
       />
 
       <SearchInput
@@ -265,36 +264,66 @@ interface TargetSummaryProps {
   lastUpdated: number | null;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onViewHistory: () => void;
 }
 
-function TargetSummary({ targetAmountLabel, targetSymbol, targetChainLabel, lastUpdated, onRefresh, isRefreshing }: TargetSummaryProps) {
+function TargetSummary({
+  targetAmountLabel,
+  targetSymbol,
+  targetChainLabel,
+  lastUpdated,
+  onRefresh,
+  isRefreshing,
+  onViewHistory,
+}: TargetSummaryProps) {
   return (
-    <div className="pw-target-summary">
-      <div className="pw-target-summary__headline">
-        <span className="pw-target-summary__label">You need to pay</span>
-        <span className="pw-target-summary__value">
-          {targetAmountLabel} {targetSymbol} on {targetChainLabel}
+    <section className="pw-target-card" aria-labelledby="pw-target-card-heading" aria-live="polite">
+      <div className="pw-target-card__primary">
+        <span className="pw-target-card__eyebrow" id="pw-target-card-heading">
+          You need to pay
+        </span>
+        <div className="pw-target-card__amount">
+          <span className="pw-target-card__value">
+            {targetAmountLabel} {targetSymbol}
+          </span>
+          <span className="pw-target-card__chain">on {targetChainLabel}</span>
+        </div>
+      </div>
+      <div className="pw-target-card__meta">
+        <div className="pw-target-card__actions" role="group" aria-label="Payment actions">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onViewHistory}
+            className="pw-target-card__history"
+            aria-label="View payment history"
+          >
+            <History className="pw-icon-sm" aria-hidden />
+            View history
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            size="sm"
+            className="pw-target-card__refresh"
+            aria-label={isRefreshing ? 'Refreshing payment options' : 'Refresh payment options'}
+          >
+            <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} />
+            Refresh
+          </Button>
+        </div>
+        <span className="pw-target-card__timestamp">
+          {lastUpdated ? (
+            <>
+              Updated <RelativeTime timestamp={lastUpdated} />
+            </>
+          ) : (
+            'Ready to pay'
+          )}
         </span>
       </div>
-      <div className="pw-target-summary__meta">
-        {lastUpdated ? (
-          <span>
-            Updated <RelativeTime timestamp={lastUpdated} />
-          </span>
-        ) : (
-          <span>Ready</span>
-        )}
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          className="pw-inline-action"
-          aria-label="Refresh payment options"
-        >
-          <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} /> Refresh
-        </button>
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -307,25 +336,49 @@ interface SearchInputProps {
 }
 
 function SearchInput({ searchTerm, onSearchChange, visibleCount, totalCount, showSearchCount = true }: SearchInputProps) {
+  const metaId = showSearchCount ? 'search-results-count' : undefined;
+  const shouldShowUtilities = showSearchCount;
+
   return (
     <div className="pw-search">
-      <input
-        type="search"
-        value={searchTerm}
-        onChange={(event) => onSearchChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            onSearchChange('');
-          }
-        }}
-        placeholder="Search by token or network"
-        className="pw-search__input"
-        aria-label="Search payment options"
-        aria-describedby={showSearchCount ? "search-results-count" : undefined}
-      />
-      {showSearchCount && (
-        <div className="pw-search__meta" id="search-results-count" aria-live="polite">
-          Showing {visibleCount} of {totalCount} options
+      <label className="pw-search__label" htmlFor="pw-search-input">
+        Search by token or network
+      </label>
+      <div className="pw-search__field">
+        <Search className="pw-search__icon" aria-hidden />
+        <input
+          id="pw-search-input"
+          type="search"
+          value={searchTerm}
+          onChange={(event) => onSearchChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              onSearchChange('');
+            }
+          }}
+          placeholder="Try Base, Ethereum, or USDC"
+          className="pw-search__input"
+          aria-label="Search payment options"
+          aria-describedby={metaId}
+        />
+        {searchTerm && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSearchChange('')}
+            className="pw-search__clear"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+      {shouldShowUtilities && (
+        <div className="pw-search__utilities">
+          {showSearchCount && (
+            <div className="pw-search__meta" id="search-results-count" aria-live="polite">
+              Showing {visibleCount} of {totalCount} options
+            </div>
+          )}
         </div>
       )}
     </div>

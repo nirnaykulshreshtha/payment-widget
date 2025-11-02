@@ -24,17 +24,20 @@ export interface OptionRowProps {
   onSelect: () => void;
 }
 
-export function OptionRow({ option, targetAmount, targetToken, chainLookup, chainLogos, targetSymbol, isSelected, onSelect }: OptionRowProps) {
+export function OptionRow({
+  option,
+  targetAmount: _targetAmount,
+  targetToken: _targetToken,
+  chainLookup,
+  chainLogos,
+  targetSymbol: _targetSymbol,
+  isSelected,
+  onSelect,
+}: OptionRowProps) {
   const originChainId = option.route?.originChainId ?? option.swapRoute?.originChainId ?? option.displayToken.chainId;
   const chainLabel = chainLookup.get(originChainId) ?? originChainId;
-  const estimatedOutput = option.mode === 'bridge' && option.quote
-    ? `${formatTokenAmount(option.quote.outputAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-    : option.mode === 'swap' && option.swapQuote
-      ? `${formatTokenAmount(option.swapQuote.expectedOutputAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-      : option.mode === 'direct'
-        ? `${formatTokenAmount(option.quote?.outputAmount ?? targetAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-        : '—';
-  const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Not enough balance';
+  const formattedBalance = `${formatTokenAmount(option.balance, option.displayToken.decimals)} ${option.displayToken.symbol}`;
+  const modeLabel = option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct';
   const unavailableMessage = (() => {
     if (!option.unavailabilityReason) {
       return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
@@ -49,7 +52,7 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
         return `Requires ${formatTokenAmount(option.unavailabilityReason.requiredAmount, option.displayToken.decimals)} ${option.displayToken.symbol}.`;
       case 'usdShortfall':
         return option.unavailabilityReason.availableUsd != null
-          ? `You'll need about $${option.unavailabilityReason.requiredUsd.toFixed(2)} available (currently $${option.unavailabilityReason.availableUsd.toFixed(2)}).`
+        ? `You'll need about $${option.unavailabilityReason.requiredUsd.toFixed(2)} available (currently $${option.unavailabilityReason.availableUsd.toFixed(2)}).`
           : "You'll need more funds in USD terms to use this option.";
       default:
         return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
@@ -62,6 +65,7 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
       onClick={onSelect}
       className={cn(
         'pw-option-card',
+        'pw-option-card--checkout',
         isSelected && 'pw-option-card--active',
         !option.canMeetTarget && 'pw-option-card--unavailable',
       )}
@@ -69,41 +73,29 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
       aria-pressed={isSelected}
       tabIndex={0}
     >
-      <div className="pw-option-card__header">
-        <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} />
-        <div className="pw-option-card__summary">
-          <div className="pw-option-card__title-row">
-            <span>{option.displayToken.symbol}</span>
-            <span>{formatTokenAmount(option.balance, option.displayToken.decimals)} {option.displayToken.symbol}</span>
-          </div>
-          <div className="pw-option-card__meta">
-            <span className="pw-option-card__chain">
-              <ChainAvatar name={String(chainLabel)} logoUrl={chainLogos.get(originChainId)} />
+      <div className="pw-option-card__grid">
+        <div className="pw-option-card__asset">
+          <TokenAvatar symbol={option.displayToken.symbol} logoUrl={option.displayToken.logoUrl} />
+          <div className="pw-option-card__asset-meta">
+            <div className="pw-option-card__symbol-row">
+              <span className="pw-option-card__symbol">{option.displayToken.symbol}</span>
+              {/* <Badge variant="outline" className="pw-option-card__mode-badge">
+                {modeLabel.toUpperCase()}
+              </Badge> */}
+            </div>
+            <div className="pw-option-card__chain">
+              {/* <ChainAvatar name={String(chainLabel)} logoUrl={chainLogos.get(originChainId)} /> */}
               <span>{chainLabel}</span>
-            </span>
-            <span
-              className={cn(
-                'pw-option-card__availability',
-                !option.canMeetTarget && 'pw-option-card__availability--warning',
-              )}
-            >
-              {availabilityLabel}
-            </span>
+            </div>
           </div>
         </div>
-        <svg className="pw-option-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </div>
-      <div className="pw-option-card__footer">
-        <p className="pw-option-card__detail">
-          {option.estimatedFillTimeSec && ['bridge', 'swap'].includes(option.mode)
-            ? <>Est. fill time {Math.round(option.estimatedFillTimeSec / 60)} min</>
-            : null}
-        </p>
-        <Badge variant="outline" className="pw-option-card__badge">
-          {option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct'}
-        </Badge>
+        <div className="pw-option-card__balance">
+          <span className="pw-option-card__balance-label">Available</span>
+          <span className="pw-option-card__balance-value">{formattedBalance}</span>
+        </div>
+        <div className="pw-option-card__chevron">
+          <ChevronRight aria-hidden />
+        </div>
       </div>
       {!option.canMeetTarget && (
         <p className="pw-option-card__message">

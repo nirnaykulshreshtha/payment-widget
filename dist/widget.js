@@ -14,7 +14,6 @@ import { describeAmount, describeRawAmount } from './widget/utils/formatting';
 import { getOptionKey } from './widget/utils/options';
 import { formatTokenAmount } from './utils/amount-format';
 import { renderPaymentView } from './widget/view-renderers';
-import { WidgetHeader } from './widget/components';
 const LOG_PREFIX = '[payment-widget]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
@@ -1033,47 +1032,6 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             }
         });
     }, [errorMessages]);
-    const viewMeta = useMemo(() => {
-        switch (currentView.name) {
-            case 'loading':
-                return {
-                    title: 'Preparing options',
-                    subtitle: 'Fetching the best ways to complete your payment.',
-                };
-            case 'options':
-                return {
-                    title: 'Choose how to pay',
-                    subtitle: `Goal: ${formattedTargetAmount} ${targetSymbol} on ${targetChainLabel}`,
-                };
-            case 'details':
-                return {
-                    title: 'Option details',
-                    subtitle: selectedOption ? `${selectedOption.displayToken.symbol} -> ${targetSymbol}` : undefined,
-                };
-            case 'history':
-                return {
-                    title: 'Recent activity',
-                    subtitle: 'Review your previous payments.',
-                };
-            case 'tracking':
-                return {
-                    title: 'Payment tracking',
-                    subtitle: 'Follow each step in real time.',
-                };
-            case 'success':
-                return {
-                    title: 'Payment complete',
-                    subtitle: 'Funds are on the receiving network.',
-                };
-            case 'failure':
-                return {
-                    title: 'Payment failed',
-                    subtitle: 'Review the error and try again.',
-                };
-            default:
-                return { title: 'Payment', subtitle: undefined };
-        }
-    }, [currentView.name, formattedTargetAmount, targetSymbol, targetChainLabel, selectedOption?.displayToken.symbol]);
     useEffect(() => {
         refreshPendingHistory();
     }, []);
@@ -1092,7 +1050,17 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         }
     }, []);
     const canGoBack = viewStack.length > 1;
-    const renderView = () => renderPaymentView({
+    const openHistoryView = useCallback(() => {
+        pushView({ name: 'history' });
+    }, [pushView]);
+    const navigation = {
+        canGoBack,
+        onBack: canGoBack ? popView : undefined,
+        onHistory: currentView.name !== 'history' ? openHistoryView : undefined,
+        onRefresh: planner.refresh,
+        isRefreshing: currentView.name === 'options' ? planner.isLoading : false,
+    };
+    const renderedView = renderPaymentView({
         view: currentView,
         planner: {
             stageDefinitions: planner.stageDefinitions,
@@ -1121,7 +1089,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         onExecutePayment: handleExecute,
         onChangeAsset: popView,
         onResetToOptions: resetToOptions,
-        onViewHistory: () => pushView({ name: 'history' }),
+        onViewHistory: openHistoryView,
         accountConnected: Boolean(config.walletClient?.account?.address),
         onOpenTracking: openTrackingView,
         onClearHistory: handleClearHistory,
@@ -1130,8 +1098,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         onRefresh: planner.refresh,
         pushView,
         maxSlippageBps: config.maxSlippageBps,
+        navigation,
     });
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(WidgetHeader, { title: viewMeta.title, subtitle: viewMeta.subtitle, onBack: canGoBack ? popView : undefined, onHistory: currentView.name !== 'history' ? () => pushView({ name: 'history' }) : undefined, onRefresh: currentView.name === 'options' ? planner.refresh : undefined, isRefreshing: planner.isLoading && currentView.name === 'options' }), renderView()] })] }));
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [renderedView.header, renderedView.content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;

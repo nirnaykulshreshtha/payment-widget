@@ -1,21 +1,18 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+/**
+ * @fileoverview Renders a selectable payment option row used in the options
+ * view of the payment widget.
+ */
+import { ChevronRight } from 'lucide-react';
 import { formatTokenAmount } from '../../utils/amount-format';
 import { cn } from '../../lib';
-import { Badge } from '../../ui/primitives';
-import { ChainAvatar } from './avatars/ChainAvatar';
 import { TokenAvatar } from './avatars/TokenAvatar';
-export function OptionRow({ option, targetAmount, targetToken, chainLookup, chainLogos, targetSymbol, isSelected, onSelect }) {
+export function OptionRow({ option, targetAmount: _targetAmount, targetToken: _targetToken, chainLookup, chainLogos, targetSymbol: _targetSymbol, isSelected, onSelect, }) {
     const originChainId = option.route?.originChainId ?? option.swapRoute?.originChainId ?? option.displayToken.chainId;
     const chainLabel = chainLookup.get(originChainId) ?? originChainId;
-    const estimatedOutput = option.mode === 'bridge' && option.quote
-        ? `${formatTokenAmount(option.quote.outputAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-        : option.mode === 'swap' && option.swapQuote
-            ? `${formatTokenAmount(option.swapQuote.expectedOutputAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-            : option.mode === 'direct'
-                ? `${formatTokenAmount(option.quote?.outputAmount ?? targetAmount, targetToken?.decimals ?? option.displayToken.decimals)} ${targetSymbol}`
-                : '—';
-    const availabilityLabel = option.canMeetTarget ? estimatedOutput : 'Not enough balance';
+    const formattedBalance = `${formatTokenAmount(option.balance, option.displayToken.decimals)} ${option.displayToken.symbol}`;
+    const modeLabel = option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct';
     const unavailableMessage = (() => {
         if (!option.unavailabilityReason) {
             return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
@@ -35,8 +32,6 @@ export function OptionRow({ option, targetAmount, targetToken, chainLookup, chai
                 return `Add more ${option.displayToken.symbol} on ${chainLabel} to use this option.`;
         }
     })();
-    return (_jsxs("button", { type: "button", onClick: onSelect, className: cn('pw-option-card', isSelected && 'pw-option-card--active', !option.canMeetTarget && 'pw-option-card--unavailable'), "aria-label": `Select ${option.displayToken.symbol} payment option on ${chainLabel}`, "aria-pressed": isSelected, tabIndex: 0, children: [_jsxs("div", { className: "pw-option-card__header", children: [_jsx(TokenAvatar, { symbol: option.displayToken.symbol, logoUrl: option.displayToken.logoUrl }), _jsxs("div", { className: "pw-option-card__summary", children: [_jsxs("div", { className: "pw-option-card__title-row", children: [_jsx("span", { children: option.displayToken.symbol }), _jsxs("span", { children: [formatTokenAmount(option.balance, option.displayToken.decimals), " ", option.displayToken.symbol] })] }), _jsxs("div", { className: "pw-option-card__meta", children: [_jsxs("span", { className: "pw-option-card__chain", children: [_jsx(ChainAvatar, { name: String(chainLabel), logoUrl: chainLogos.get(originChainId) }), _jsx("span", { children: chainLabel })] }), _jsx("span", { className: cn('pw-option-card__availability', !option.canMeetTarget && 'pw-option-card__availability--warning'), children: availabilityLabel })] })] }), _jsx("svg", { className: "pw-option-card__chevron", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, children: _jsx("polyline", { points: "9 18 15 12 9 6" }) })] }), _jsxs("div", { className: "pw-option-card__footer", children: [_jsx("p", { className: "pw-option-card__detail", children: option.estimatedFillTimeSec && ['bridge', 'swap'].includes(option.mode)
-                            ? _jsxs(_Fragment, { children: ["Est. fill time ", Math.round(option.estimatedFillTimeSec / 60), " min"] })
-                            : null }), _jsx(Badge, { variant: "outline", className: "pw-option-card__badge", children: option.mode === 'bridge' ? 'Bridge' : option.mode === 'swap' ? 'Swap' : 'Direct' })] }), !option.canMeetTarget && (_jsx("p", { className: "pw-option-card__message", children: unavailableMessage }))] }));
+    return (_jsxs("button", { type: "button", onClick: onSelect, className: cn('pw-option-card', 'pw-option-card--checkout', isSelected && 'pw-option-card--active', !option.canMeetTarget && 'pw-option-card--unavailable'), "aria-label": `Select ${option.displayToken.symbol} payment option on ${chainLabel}`, "aria-pressed": isSelected, tabIndex: 0, children: [_jsxs("div", { className: "pw-option-card__grid", children: [_jsxs("div", { className: "pw-option-card__asset", children: [_jsx(TokenAvatar, { symbol: option.displayToken.symbol, logoUrl: option.displayToken.logoUrl }), _jsxs("div", { className: "pw-option-card__asset-meta", children: [_jsx("div", { className: "pw-option-card__symbol-row", children: _jsx("span", { className: "pw-option-card__symbol", children: option.displayToken.symbol }) }), _jsx("div", { className: "pw-option-card__chain", children: _jsx("span", { children: chainLabel }) })] })] }), _jsxs("div", { className: "pw-option-card__balance", children: [_jsx("span", { className: "pw-option-card__balance-label", children: "Available" }), _jsx("span", { className: "pw-option-card__balance-value", children: formattedBalance })] }), _jsx("div", { className: "pw-option-card__chevron", children: _jsx(ChevronRight, { "aria-hidden": true }) })] }), !option.canMeetTarget && (_jsx("p", { className: "pw-option-card__message", children: unavailableMessage }))] }));
 }
 export default OptionRow;

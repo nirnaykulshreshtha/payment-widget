@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Shared type definitions used by the payment widget views and
+ * supporting utilities.
+ */
+import type { ReactNode } from 'react';
 import type { Hex } from 'viem';
 import type { PaymentHistoryStatus, PaymentOption, PaymentOptionMode, TokenConfig } from '../types';
 export declare const STATUS_LABELS: Record<PaymentHistoryStatus, string>;
@@ -67,6 +72,17 @@ export interface PayOptionsViewProps {
     accountConnected: boolean;
     plannerError?: string | null;
 }
+export interface ViewNavigationConfig {
+    canGoBack: boolean;
+    onBack?: () => void;
+    onHistory?: () => void;
+    onRefresh?: () => void;
+    isRefreshing?: boolean;
+}
+export interface RenderedPaymentView {
+    header: ReactNode | null;
+    content: ReactNode;
+}
 export interface PaymentDetailsViewProps {
     option: PaymentOption;
     targetToken: TokenConfig | null;
@@ -123,4 +139,5 @@ export interface WidgetViewRenderConfig {
     onRefresh: () => void;
     pushView: (view: PaymentView) => void;
     maxSlippageBps?: number;
+    navigation: ViewNavigationConfig;
 }

@@ -9,5 +9,5 @@ export interface OptionRowProps {
     isSelected: boolean;
     onSelect: () => void;
 }
-export declare function OptionRow({ option, targetAmount, targetToken, chainLookup, chainLogos, targetSymbol, isSelected, onSelect }: OptionRowProps): import("react/jsx-runtime").JSX.Element;
+export declare function OptionRow({ option, targetAmount: _targetAmount, targetToken: _targetToken, chainLookup, chainLogos, targetSymbol: _targetSymbol, isSelected, onSelect, }: OptionRowProps): import("react/jsx-runtime").JSX.Element;
 export default OptionRow;
