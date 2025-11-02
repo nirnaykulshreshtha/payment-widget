@@ -47,16 +47,7 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
 
       {summary ? (
         <div className="pw-details-card">
-          <DetailRow
-            label="You sent"
-            value={`${formatTokenAmount(summary.input.amount, summary.input.token.decimals)} ${summary.input.token.symbol}`}
-          />
-          {summary.output && (
-            <DetailRow
-              label="You received"
-              value={`${formatTokenAmount(summary.output.amount, summary.output.token?.decimals ?? summary.input.token.decimals)} ${summary.output.token?.symbol ?? summary.input.token.symbol}`}
-            />
-          )}
+          
           {summary.approvalTxHashes && summary.approvalTxHashes.length > 0 && (
             <DetailRow
               label="Approval transactions"
@@ -88,11 +79,11 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
           </Button>
         )}
         {!isSuccess && onRetry && (
-          <Button className="pw-button--full" onClick={onRetry}>
+          <Button variant="primary" className="pw-button--full" onClick={onRetry}>
             Try again
           </Button>
         )}
-        <Button className="pw-button--full" onClick={onClose}>
+        <Button variant="outline" className="pw-button--full" onClick={onClose}>
           Back to options
         </Button>
       </div>

@@ -89,6 +89,8 @@ export interface PaymentDetailsViewProps {
   isExecuting: boolean;
   onExecute: () => void;
   onChangeAsset: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export interface WidgetViewRenderConfig {

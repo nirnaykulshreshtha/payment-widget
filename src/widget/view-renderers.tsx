@@ -124,6 +124,8 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
           isExecuting={isExecuting}
           onExecute={onExecutePayment}
           onChangeAsset={onChangeAsset}
+          onRefresh={onRefresh}
+          isRefreshing={planner.isLoading}
         />
         ),
       };
@@ -145,7 +147,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       return {
         headerConfig: {
           showHistory: true,
-          showRefresh: false,
+          showRefresh: true,
         },
         content: (
           <PaymentTrackingView
