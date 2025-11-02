@@ -543,11 +543,11 @@
 .payment-widget .pw-view {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-lg);
+  gap: var(--pw-space-md);
 }
 
 .payment-widget .pw-view--options {
-  gap: var(--pw-space-lg);
+  gap: var(--pw-space-md);
 }
 
 .payment-widget .pw-target-card {
@@ -563,6 +563,13 @@
   justify-content: space-between;
   gap: var(--pw-space-md);
   box-shadow: var(--pw-shadow-card);
+}
+
+.payment-widget .pw-target-card__primary-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pw-space-sm);
+  min-width: 220px;
 }
 
 .payment-widget .pw-target-card__primary {
@@ -620,6 +627,13 @@
   flex-wrap: wrap;
 }
 
+.payment-widget .pw-target-card__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+}
+
 .payment-widget .pw-target-card__history,
 .payment-widget .pw-target-card__refresh {
   display: inline-flex;
@@ -667,6 +681,11 @@
 }
 
 .payment-widget .pw-target-card__refresh .pw-icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.payment-widget .pw-target-card__back .pw-icon-sm {
   width: 16px;
   height: 16px;
 }

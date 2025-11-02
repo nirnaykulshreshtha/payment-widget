@@ -543,11 +543,11 @@
 .payment-widget .pw-view {
   display: flex;
   flex-direction: column;
-  gap: var(--pw-space-lg);
+  gap: var(--pw-space-md);
 }
 
 .payment-widget .pw-view--options {
-  gap: var(--pw-space-lg);
+  gap: var(--pw-space-md);
 }
 
 .payment-widget .pw-target-card {
