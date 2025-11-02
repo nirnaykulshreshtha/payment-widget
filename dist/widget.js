@@ -1007,17 +1007,22 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         selectedOption,
     ]);
     const targetChainLabel = chainLookup.get(config.targetChainId) ?? config.targetChainId;
-    const sourceChainLabel = useMemo(() => {
-        if (!selectedOption)
-            return null;
+    const targetChainLogoUrl = useMemo(() => chainLogos.get(config.targetChainId), [chainLogos, config.targetChainId]);
+    const { sourceChainLabel, sourceChainLogoUrl } = useMemo(() => {
+        if (!selectedOption) {
+            return { sourceChainLabel: null, sourceChainLogoUrl: undefined };
+        }
         const originChainId = selectedOption.route?.originChainId ??
             selectedOption.swapRoute?.originChainId ??
             selectedOption.displayToken.chainId;
         if (originChainId == null || originChainId === config.targetChainId) {
-            return null;
+            return { sourceChainLabel: null, sourceChainLogoUrl: undefined };
         }
-        return chainLookup.get(originChainId) ?? originChainId;
-    }, [chainLookup, config.targetChainId, selectedOption]);
+        return {
+            sourceChainLabel: chainLookup.get(originChainId) ?? originChainId,
+            sourceChainLogoUrl: chainLogos.get(originChainId),
+        };
+    }, [chainLookup, chainLogos, config.targetChainId, selectedOption]);
     const targetSymbol = targetToken?.symbol ?? 'Token';
     const formattedTargetAmount = useMemo(() => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18), [config.targetAmount, targetToken?.decimals]);
     const errorMessages = useMemo(() => Array.from(new Set([planner.error, executionError, quoteError].filter(Boolean))), [planner.error, executionError, quoteError]);
@@ -1127,7 +1132,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 backButtonLabel = 'Back';
         }
     }
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, sourceChainLabel: sourceChainLabel ?? undefined, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, showPrimary: headerConfig.showPrimary, title: headerConfig.title, showTimestamp: headerConfig.showTimestamp, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, sourceChainLabel: sourceChainLabel ?? undefined, targetChainLogoUrl: targetChainLogoUrl, sourceChainLogoUrl: sourceChainLogoUrl, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, showPrimary: headerConfig.showPrimary, title: headerConfig.title, showTimestamp: headerConfig.showTimestamp, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;

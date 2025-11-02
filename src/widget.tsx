@@ -1163,17 +1163,26 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   ]);
 
   const targetChainLabel = chainLookup.get(config.targetChainId) ?? config.targetChainId;
-  const sourceChainLabel = useMemo(() => {
-    if (!selectedOption) return null;
+  const targetChainLogoUrl = useMemo(
+    () => chainLogos.get(config.targetChainId),
+    [chainLogos, config.targetChainId],
+  );
+  const { sourceChainLabel, sourceChainLogoUrl } = useMemo(() => {
+    if (!selectedOption) {
+      return { sourceChainLabel: null as string | number | null, sourceChainLogoUrl: undefined as string | undefined };
+    }
     const originChainId =
       selectedOption.route?.originChainId ??
       selectedOption.swapRoute?.originChainId ??
       selectedOption.displayToken.chainId;
     if (originChainId == null || originChainId === config.targetChainId) {
-      return null;
+      return { sourceChainLabel: null as string | number | null, sourceChainLogoUrl: undefined as string | undefined };
     }
-    return chainLookup.get(originChainId) ?? originChainId;
-  }, [chainLookup, config.targetChainId, selectedOption]);
+    return {
+      sourceChainLabel: chainLookup.get(originChainId) ?? originChainId,
+      sourceChainLogoUrl: chainLogos.get(originChainId),
+    };
+  }, [chainLookup, chainLogos, config.targetChainId, selectedOption]);
   const targetSymbol = targetToken?.symbol ?? 'Token';
   const formattedTargetAmount = useMemo(
     () => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18),
@@ -1310,6 +1319,8 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           targetSymbol={targetSymbol}
           targetChainLabel={targetChainLabel}
           sourceChainLabel={sourceChainLabel ?? undefined}
+          targetChainLogoUrl={targetChainLogoUrl}
+          sourceChainLogoUrl={sourceChainLogoUrl}
           lastUpdated={planner.lastUpdated}
           onRefresh={planner.refresh}
           isRefreshing={headerConfig.showRefresh ? planner.isLoading : false}

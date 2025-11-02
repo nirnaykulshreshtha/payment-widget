@@ -13,12 +13,15 @@ import { cn } from '../../lib';
 import { Button } from '../../ui/primitives';
 
 import { RelativeTime } from './RelativeTime';
+import { ChainAvatar } from './avatars/ChainAvatar';
 
 export interface PaymentSummaryHeaderProps {
   targetAmountLabel: string;
   targetSymbol: string;
   targetChainLabel: string | number;
   sourceChainLabel?: string | number | null;
+  targetChainLogoUrl?: string;
+  sourceChainLogoUrl?: string;
   lastUpdated: number | null;
   onRefresh: () => void;
   isRefreshing: boolean;
@@ -38,6 +41,8 @@ export function PaymentSummaryHeader({
   targetSymbol,
   targetChainLabel,
   sourceChainLabel,
+  targetChainLogoUrl,
+  sourceChainLogoUrl,
   lastUpdated,
   onRefresh,
   isRefreshing,
@@ -57,6 +62,8 @@ export function PaymentSummaryHeader({
   const hasTitle = Boolean(title);
   const headingId = 'pw-target-card-heading';
   const sectionLabelId = showPrimary || hasTitle ? headingId : undefined;
+  const targetChainText = String(targetChainLabel);
+  const sourceChainText = sourceChainLabel != null ? String(sourceChainLabel) : null;
 
   const handleRefresh = () => {
     log('refresh clicked');
@@ -99,9 +106,34 @@ export function PaymentSummaryHeader({
                   {targetAmountLabel} {targetSymbol}
                 </span>
                 <span className="pw-target-card__chain">
-                  {sourceChainLabel
-                    ? `from ${sourceChainLabel} to ${targetChainLabel}`
-                    : `on ${targetChainLabel}`}
+                  {sourceChainText ? (
+                    <>
+                      <span className="pw-target-card__chain-prefix">from</span>
+                      <ChainAvatar
+                        name={sourceChainText}
+                        logoUrl={sourceChainLogoUrl}
+                        className="pw-target-card__chain-avatar"
+                      />
+                      <span className="pw-target-card__chain-name">{sourceChainText}</span>
+                      <span className="pw-target-card__chain-prefix">to</span>
+                      <ChainAvatar
+                        name={targetChainText}
+                        logoUrl={targetChainLogoUrl}
+                        className="pw-target-card__chain-avatar"
+                      />
+                      <span className="pw-target-card__chain-name">{targetChainText}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="pw-target-card__chain-prefix">on</span>
+                      <ChainAvatar
+                        name={targetChainText}
+                        logoUrl={targetChainLogoUrl}
+                        className="pw-target-card__chain-avatar"
+                      />
+                      <span className="pw-target-card__chain-name">{targetChainText}</span>
+                    </>
+                  )}
                 </span>
               </div>
             </div>
