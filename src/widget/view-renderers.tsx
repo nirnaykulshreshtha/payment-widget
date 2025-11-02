@@ -1,5 +1,3 @@
-import React from 'react';
-
 import type { RenderedPaymentView, WidgetViewRenderConfig } from './types';
 import { LoadingStagesView } from './components/LoadingStagesView';
 import { PayOptionsView } from './components/PayOptionsView';
@@ -8,7 +6,6 @@ import { PaymentHistoryScreen } from './components/PaymentHistoryScreen';
 import { PaymentTrackingView } from './components/PaymentTrackingView';
 import { PaymentResultView } from './components/PaymentResultView';
 import { Button } from '../ui/primitives';
-import { WidgetHeader } from './components/WidgetHeader';
 
 export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPaymentView {
   const {
@@ -41,36 +38,15 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     onRetry,
     onRefresh,
     maxSlippageBps,
-    navigation,
   } = config;
-
-  const baseHeader = (
-    title: string,
-    subtitle?: string,
-    {
-      showHistory = true,
-      showRefresh = false,
-      isRefreshing,
-    }: { showHistory?: boolean; showRefresh?: boolean; isRefreshing?: boolean } = {},
-  ) => (
-    <WidgetHeader
-      title={title}
-      subtitle={subtitle}
-      onBack={navigation.canGoBack ? navigation.onBack : undefined}
-      onHistory={showHistory ? navigation.onHistory : undefined}
-      onRefresh={showRefresh ? navigation.onRefresh : undefined}
-      isRefreshing={isRefreshing ?? navigation.isRefreshing}
-    />
-  );
 
   switch (view.name) {
     case 'loading':
       return {
-        header: baseHeader('Preparing options', 'Fetching the best ways to complete your payment.', {
+        headerConfig: {
           showHistory: false,
           showRefresh: false,
-          isRefreshing: false,
-        }),
+        },
         content: (
           <LoadingStagesView
             stages={planner.stageDefinitions}
@@ -81,7 +57,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       };
     case 'options':
       return {
-        header: null,
+        headerConfig: {
+          showHistory: true,
+          showRefresh: true,
+        },
         content: (
           <PayOptionsView
           options={options}
@@ -106,7 +85,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     case 'details':
       if (!selectedOption) {
         return {
-          header: baseHeader('Option details', undefined, { showRefresh: false }),
+          headerConfig: {
+            showHistory: true,
+            showRefresh: false,
+          },
           content: (
             <div className="pw-empty-state">
               <h3 className="pw-empty-state__title">Pick a payment option</h3>
@@ -123,11 +105,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         };
       }
       return {
-        header: baseHeader(
-          'Option details',
-          `${selectedOption.displayToken.symbol} -> ${targetSymbol}`,
-          { showRefresh: false },
-        ),
+        headerConfig: {
+          showHistory: true,
+          showRefresh: false,
+        },
         content: (
           <PaymentDetailsView
           option={selectedOption}
@@ -148,10 +129,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       };
     case 'history':
       return {
-        header: baseHeader('Recent activity', 'Review your previous payments.', {
+        headerConfig: {
           showHistory: false,
           showRefresh: false,
-        }),
+        },
         content: (
           <PaymentHistoryScreen
           onSelectEntry={(entryId) => onOpenTracking(entryId)}
@@ -162,9 +143,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       };
     case 'tracking':
       return {
-        header: baseHeader('Payment tracking', 'Follow each step in real time.', {
+        headerConfig: {
+          showHistory: true,
           showRefresh: false,
-        }),
+        },
         content: (
           <PaymentTrackingView
           historyId={view.historyId}
@@ -175,9 +157,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       };
     case 'success':
       return {
-        header: baseHeader('Payment complete', 'Funds are on the receiving network.', {
+        headerConfig: {
+          showHistory: true,
           showRefresh: false,
-        }),
+        },
         content: (
           <PaymentResultView
           type="success"
@@ -191,9 +174,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
       };
     case 'failure':
       return {
-        header: baseHeader('Payment failed', 'Review the error and try again.', {
+        headerConfig: {
+          showHistory: true,
           showRefresh: false,
-        }),
+        },
         content: (
           <PaymentResultView
           type="failure"
@@ -206,6 +190,6 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         ),
       };
     default:
-      return { header: null, content: null };
+      return { headerConfig: { showHistory: true, showRefresh: false }, content: null };
   }
 }

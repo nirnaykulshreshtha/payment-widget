@@ -7,12 +7,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { History, RefreshCw, Search } from 'lucide-react';
+import { RefreshCw, Search } from 'lucide-react';
 
 import { cn } from '../../lib';
 import { filterOptionsByPriority } from '../utils/options';
 import { formatErrorForDisplay } from '../utils/error-messages';
-import { RelativeTime } from './RelativeTime';
 
 import { Button } from '../../ui/primitives';
 import type { PayOptionsViewProps } from '../types';
@@ -30,7 +29,6 @@ export function PayOptionsView({
   targetToken,
   chainLookup,
   chainLogos,
-  lastUpdated,
   onRefresh,
   isRefreshing,
   onViewHistory,
@@ -185,16 +183,6 @@ export function PayOptionsView({
 
   return (
     <div className="pw-view pw-view--options">
-      <TargetSummary
-        targetAmountLabel={targetAmountLabel}
-        targetSymbol={targetSymbol}
-        targetChainLabel={targetChainLabel}
-        lastUpdated={lastUpdated}
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-        onViewHistory={onViewHistory}
-      />
-
       <SearchInput
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -254,76 +242,6 @@ export function PayOptionsView({
         View recent activity
       </button> */}
     </div>
-  );
-}
-
-interface TargetSummaryProps {
-  targetAmountLabel: string;
-  targetSymbol: string;
-  targetChainLabel: string | number;
-  lastUpdated: number | null;
-  onRefresh: () => void;
-  isRefreshing: boolean;
-  onViewHistory: () => void;
-}
-
-function TargetSummary({
-  targetAmountLabel,
-  targetSymbol,
-  targetChainLabel,
-  lastUpdated,
-  onRefresh,
-  isRefreshing,
-  onViewHistory,
-}: TargetSummaryProps) {
-  return (
-    <section className="pw-target-card" aria-labelledby="pw-target-card-heading" aria-live="polite">
-      <div className="pw-target-card__primary">
-        <span className="pw-target-card__eyebrow" id="pw-target-card-heading">
-          You need to pay
-        </span>
-        <div className="pw-target-card__amount">
-          <span className="pw-target-card__value">
-            {targetAmountLabel} {targetSymbol}
-          </span>
-          <span className="pw-target-card__chain">on {targetChainLabel}</span>
-        </div>
-      </div>
-      <div className="pw-target-card__meta">
-        <div className="pw-target-card__actions" role="group" aria-label="Payment actions">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onViewHistory}
-            className="pw-target-card__history"
-            aria-label="View payment history"
-          >
-            <History className="pw-icon-sm" aria-hidden />
-            View history
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            size="sm"
-            className="pw-target-card__refresh"
-            aria-label={isRefreshing ? 'Refreshing payment options' : 'Refresh payment options'}
-          >
-            <RefreshCw className={cn('pw-icon-sm', isRefreshing && 'pw-icon--spinning')} />
-            Refresh
-          </Button>
-        </div>
-        <span className="pw-target-card__timestamp">
-          {lastUpdated ? (
-            <>
-              Updated <RelativeTime timestamp={lastUpdated} />
-            </>
-          ) : (
-            'Ready to pay'
-          )}
-        </span>
-      </div>
-    </section>
   );
 }
 

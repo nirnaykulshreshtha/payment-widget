@@ -67,17 +67,12 @@ export interface PayOptionsViewProps {
   plannerError?: string | null;
 }
 
-export interface ViewNavigationConfig {
-  canGoBack: boolean;
-  onBack?: () => void;
-  onHistory?: () => void;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
-}
-
 export interface RenderedPaymentView {
-  header: ReactNode | null;
   content: ReactNode;
+  headerConfig: {
+    showRefresh: boolean;
+    showHistory: boolean;
+  };
 }
 
 export interface PaymentDetailsViewProps {
@@ -134,5 +129,4 @@ export interface WidgetViewRenderConfig {
   onRefresh: () => void;
   pushView: (view: PaymentView) => void;
   maxSlippageBps?: number;
-  navigation: ViewNavigationConfig;
 }

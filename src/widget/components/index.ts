@@ -8,3 +8,4 @@ export { PaymentDetailsView } from './PaymentDetailsView';
 export { PaymentHistoryScreen } from './PaymentHistoryScreen';
 export { PaymentResultView } from './PaymentResultView';
 export { PaymentTrackingView } from './PaymentTrackingView';
+export { PaymentSummaryHeader } from './PaymentSummaryHeader';

@@ -77,7 +77,7 @@ export function LoadingStagesView({ stages, currentStage, completedStages }: Loa
           );
         })}
       </div>
-      <p className="pw-loading__intro">
+      {/* <p className="pw-loading__intro">
         Hang tight while we check prices and your balances so we can show the best options.
       </p>
       <ol className="pw-loading__list">
@@ -103,7 +103,7 @@ export function LoadingStagesView({ stages, currentStage, completedStages }: Loa
             </li>
           );
         })}
-      </ol>
+      </ol> */}
     </div>
   );
 }

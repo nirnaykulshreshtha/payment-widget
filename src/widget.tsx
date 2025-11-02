@@ -40,6 +40,7 @@ import { describeAmount, describeRawAmount } from './widget/utils/formatting';
 import { getOptionKey } from './widget/utils/options';
 import { formatTokenAmount } from './utils/amount-format';
 import { renderPaymentView } from './widget/view-renderers';
+import { PaymentSummaryHeader } from './widget/components';
 import type { PaymentView, PaymentResultSummary } from './widget/types';
 
 const LOG_PREFIX = '[payment-widget]';
@@ -1219,19 +1220,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     }
   }, []);
 
-  const canGoBack = viewStack.length > 1;
-
   const openHistoryView = useCallback(() => {
     pushView({ name: 'history' });
   }, [pushView]);
-
-  const navigation = {
-    canGoBack,
-    onBack: canGoBack ? popView : undefined,
-    onHistory: currentView.name !== 'history' ? openHistoryView : undefined,
-    onRefresh: planner.refresh,
-    isRefreshing: currentView.name === 'options' ? planner.isLoading : false,
-  };
 
   const renderedView = renderPaymentView({
     view: currentView,
@@ -1271,15 +1262,26 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     onRefresh: planner.refresh,
     pushView,
     maxSlippageBps: config.maxSlippageBps,
-    navigation,
   });
+
+  const { headerConfig, content } = renderedView;
 
   return (
     <div className="payment-widget flex-col w-full space-y-6">
       <PaymentToastViewport />
       <div className="payment-widget__layout">
-        {renderedView.header}
-        {renderedView.content}
+        <PaymentSummaryHeader
+          targetAmountLabel={formattedTargetAmount}
+          targetSymbol={targetSymbol}
+          targetChainLabel={targetChainLabel}
+          lastUpdated={planner.lastUpdated}
+          onRefresh={planner.refresh}
+          isRefreshing={headerConfig.showRefresh ? planner.isLoading : false}
+          onViewHistory={openHistoryView}
+          showRefresh={headerConfig.showRefresh}
+          showHistory={headerConfig.showHistory}
+        />
+        {content}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import { describeAmount, describeRawAmount } from './widget/utils/formatting';
 import { getOptionKey } from './widget/utils/options';
 import { formatTokenAmount } from './utils/amount-format';
 import { renderPaymentView } from './widget/view-renderers';
+import { PaymentSummaryHeader } from './widget/components';
 const LOG_PREFIX = '[payment-widget]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
@@ -1049,17 +1050,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             setIsClearingHistory(false);
         }
     }, []);
-    const canGoBack = viewStack.length > 1;
     const openHistoryView = useCallback(() => {
         pushView({ name: 'history' });
     }, [pushView]);
-    const navigation = {
-        canGoBack,
-        onBack: canGoBack ? popView : undefined,
-        onHistory: currentView.name !== 'history' ? openHistoryView : undefined,
-        onRefresh: planner.refresh,
-        isRefreshing: currentView.name === 'options' ? planner.isLoading : false,
-    };
     const renderedView = renderPaymentView({
         view: currentView,
         planner: {
@@ -1098,9 +1091,9 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         onRefresh: planner.refresh,
         pushView,
         maxSlippageBps: config.maxSlippageBps,
-        navigation,
     });
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [renderedView.header, renderedView.content] })] }));
+    const { headerConfig, content } = renderedView;
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory }), content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;
