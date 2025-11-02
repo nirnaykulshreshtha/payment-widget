@@ -47,6 +47,14 @@ Context: Quality-of-life (UX-only) improvements to the payment widget. No logic 
   - Added lightweight skeleton placeholders for amount and hashes while payment is processing.
   - File: `src/widget/components/PaymentTrackingView.tsx`.
 
+- Tracking view header cleanup
+  - Removed the embedded `PaymentStatusHeader` to avoid duplicating the status panel used by the surrounding layout.
+  - File: `src/widget/components/PaymentTrackingView.tsx`.
+
+- Tracking amount copy refresh
+  - Updated the amount section to drop the redundant arrow graphic, rename the second row to "You received", and remove the "Estimated" hint since final amounts are available post-settlement.
+  - File: `src/widget/components/PaymentTrackingView.tsx`.
+
 - Result view skeleton
   - Added skeleton details card when `summary` is not yet available to smooth transitions.
   - File: `src/widget/components/PaymentResultView.tsx`.

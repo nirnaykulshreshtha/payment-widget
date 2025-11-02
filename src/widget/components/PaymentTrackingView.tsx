@@ -1,11 +1,10 @@
-import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
+import { ClockIcon, Loader2 } from 'lucide-react';
 import { Skeleton } from '../../ui/primitives';
 
 import type { PaymentHistoryEntry } from '../../types';
 import { formatAmountWithSymbol } from '../../history/utils';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
-import { PaymentStatusHeader } from './PaymentStatusHeader';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
 import { RelativeTime } from './RelativeTime';
@@ -35,7 +34,6 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }: Paym
 
   return (
     <div className="pw-view pw-view--tracking">
-      <PaymentStatusHeader entry={entry} chainLookup={chainLookup} chainLogos={chainLogos} />
       {isProcessing && (
         <div className="pw-tracking__notice">
           <Loader2 className="pw-tracking__spinner" />
@@ -67,14 +65,12 @@ function AmountSection({ inputLabel, outputLabel }: { inputLabel: string; output
           <div className="pw-history-amount__label">You sent</div>
           <div className="pw-history-amount__value">{inputLabel}</div>
         </div>
-        <ArrowRight className="pw-history-amount__icon" />
       </div>
       <div className="pw-history-amount__row">
         <div className="pw-history-amount__meta">
-          <div className="pw-history-amount__label">Estimated receive</div>
+          <div className="pw-history-amount__label">You received</div>
           <div className="pw-history-amount__value">{outputLabel}</div>
         </div>
-        <div className="pw-history-amount__hint">Est.</div>
       </div>
     </div>
   );

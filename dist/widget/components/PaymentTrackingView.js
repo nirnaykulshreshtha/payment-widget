@@ -1,10 +1,9 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
+import { ClockIcon, Loader2 } from 'lucide-react';
 import { Skeleton } from '../../ui/primitives';
 import { formatAmountWithSymbol } from '../../history/utils';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
-import { PaymentStatusHeader } from './PaymentStatusHeader';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
 import { RelativeTime } from './RelativeTime';
@@ -17,10 +16,10 @@ export function PaymentTrackingView({ historyId, chainLookup, chainLogos }) {
     const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
     const outputLabel = formatAmountWithSymbol(entry.outputAmount ?? 0n, entry.outputToken.decimals, entry.outputToken.symbol);
     const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
-    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [_jsx(PaymentStatusHeader, { entry: entry, chainLookup: chainLookup, chainLogos: chainLogos }), isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), isProcessing ? (_jsx(TrackingSectionSkeleton, {})) : (_jsxs(_Fragment, { children: [_jsx(AmountSection, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(TransactionHashes, { entry: entry })] })), _jsx("div", { className: "pw-tracking__timeline", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
+    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), isProcessing ? (_jsx(TrackingSectionSkeleton, {})) : (_jsxs(_Fragment, { children: [_jsx(AmountSection, { inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(TransactionHashes, { entry: entry })] })), _jsx("div", { className: "pw-tracking__timeline", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
 }
 function AmountSection({ inputLabel, outputLabel }) {
-    return (_jsxs("div", { className: "pw-history-amount", children: [_jsxs("div", { className: "pw-history-amount__row", children: [_jsxs("div", { className: "pw-history-amount__meta", children: [_jsx("div", { className: "pw-history-amount__label", children: "You sent" }), _jsx("div", { className: "pw-history-amount__value", children: inputLabel })] }), _jsx(ArrowRight, { className: "pw-history-amount__icon" })] }), _jsxs("div", { className: "pw-history-amount__row", children: [_jsxs("div", { className: "pw-history-amount__meta", children: [_jsx("div", { className: "pw-history-amount__label", children: "Estimated receive" }), _jsx("div", { className: "pw-history-amount__value", children: outputLabel })] }), _jsx("div", { className: "pw-history-amount__hint", children: "Est." })] })] }));
+    return (_jsxs("div", { className: "pw-history-amount", children: [_jsx("div", { className: "pw-history-amount__row", children: _jsxs("div", { className: "pw-history-amount__meta", children: [_jsx("div", { className: "pw-history-amount__label", children: "You sent" }), _jsx("div", { className: "pw-history-amount__value", children: inputLabel })] }) }), _jsx("div", { className: "pw-history-amount__row", children: _jsxs("div", { className: "pw-history-amount__meta", children: [_jsx("div", { className: "pw-history-amount__label", children: "You received" }), _jsx("div", { className: "pw-history-amount__value", children: outputLabel })] }) })] }));
 }
 function TransactionHashes({ entry }) {
     if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
