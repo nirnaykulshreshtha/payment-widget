@@ -11,6 +11,7 @@ import type {
   ResolvedPaymentWidgetConfig,
   TokenConfig,
 } from '../types';
+import { HISTORY_TIMELINE_STAGE_FLOW } from './constants';
 import { ZERO_ADDRESS, deriveNativeToken } from '../config';
 
 const STORAGE_KEY = 'across-payment-history-v1';
@@ -199,13 +200,16 @@ class PaymentHistoryStore {
 
   markFailed(id: string, errorMessage: string) {
     const now = Date.now();
-    this.updateEntry(id, (entry) => ({
-      ...entry,
-      status: 'failed',
-      errors: [...(entry.errors ?? []), errorMessage],
-      updatedAt: now,
-      timeline: appendTimelineEntries(entry.timeline, [makeTimelineEntry('failed', now, { notes: errorMessage })]),
-    }));
+    this.updateEntry(id, (entry) => {
+      const trimmedTimeline = pruneTimelineBeforeFailure(entry.timeline, entry.mode, entry.status);
+      return {
+        ...entry,
+        status: 'failed',
+        errors: [...(entry.errors ?? []), errorMessage],
+        updatedAt: now,
+        timeline: appendTimelineEntries(trimmedTimeline, [makeTimelineEntry('failed', now, { notes: errorMessage })]),
+      };
+    });
     this.stopPolling(id);
     historyLog('marked entry failed', { id, errorMessage });
   }
@@ -692,6 +696,31 @@ function mergeEntries(current: PaymentHistoryEntry[], remote: PaymentHistoryEntr
   remote.forEach(upsert);
 
   return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+function pruneTimelineBeforeFailure(
+  timeline: PaymentTimelineEntry[] | undefined,
+  mode: PaymentHistoryEntry['mode'],
+  lastRecordedStage: PaymentHistoryStatus,
+): PaymentTimelineEntry[] | undefined {
+  if (!timeline || timeline.length === 0) {
+    return timeline;
+  }
+
+  const flow = HISTORY_TIMELINE_STAGE_FLOW[mode] ?? [];
+  if (!flow.length || !flow.includes(lastRecordedStage)) {
+    return timeline;
+  }
+
+  const lastStageIndex = flow.indexOf(lastRecordedStage);
+  if (lastStageIndex < 0) {
+    return timeline;
+  }
+
+  return timeline.filter((entry) => {
+    const stageIndex = flow.indexOf(entry.stage);
+    return stageIndex === -1 || stageIndex <= lastStageIndex;
+  });
 }
 
 function getEntryKey(entry: PaymentHistoryEntry) {

@@ -52,21 +52,9 @@ export function SiteHeader({ isTestnet, onToggleNetwork, className }: SiteHeader
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* Network Toggle Section */}
           <div className="flex items-center gap-2">
-            <Badge 
-              variant="secondary" 
-              className="hidden text-xs uppercase tracking-wide sm:inline-flex"
-            >
-              {isTestnet ? "Testnet mode" : "Mainnet mode"}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="inline-flex text-xs uppercase tracking-wide sm:hidden"
-            >
-              {isTestnet ? "Test" : "Main"}
-            </Badge>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="hidden text-xs text-muted-foreground sm:inline sm:text-sm">
-                Testnet
+              <span className="text-xs text-muted-foreground sm:text-sm">
+              {isTestnet ? "Testnet" : "Mainnet"}
               </span>
               <Switch 
                 checked={isTestnet} 

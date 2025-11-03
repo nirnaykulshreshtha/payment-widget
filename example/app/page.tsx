@@ -36,35 +36,12 @@ export default function Home() {
           <h1 className="text-3xl font-semibold tracking-tight">
             Payment widget experience
           </h1>
-          <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
-            Explore the different ways the payment widget can be embedded in your
-            product. Toggle between mainnet and testnet to understand how network
-            configuration impacts the available settlement options.
-          </p>
         </section>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Active configuration</CardTitle>
-            <CardDescription>
-              The helpers in <code>example/configs/payment-widget.ts</code> derive both the
-              provider setup and per-widget payment config. Update <code>example/.env</code> to
-              see how overrides flow through in real time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* <PaymentWidgetConfigPreview isTestnet={isTestnet} /> */}
-          </CardContent>
-        </Card>
 
         <div className="grid gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Inline widget</CardTitle>
-              <CardDescription>
-                Always mounted in the page flow and ready for users to complete a
-                transaction.
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <InlineExample />
