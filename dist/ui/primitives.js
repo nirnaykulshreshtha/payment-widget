@@ -1,6 +1,7 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx } from "react/jsx-runtime";
 import { forwardRef } from 'react';
 import { cn } from '../lib/cn';
+import { Notice, PaymentNotice } from './payment-notice';
 export const Card = forwardRef(function Card({ className, ...props }, ref) {
     return (_jsx("div", { ref: ref, className: cn('payment-card', className), ...props }));
 });
@@ -43,13 +44,6 @@ export const Button = forwardRef(function Button({ className, variant = 'primary
 export function Skeleton({ className }) {
     return _jsx("div", { className: cn('payment-skeleton', className) });
 }
-const NOTICE_VARIANTS = {
-    info: 'payment-notice--info',
-    success: 'payment-notice--success',
-    warning: 'payment-notice--warning',
-    destructive: 'payment-notice--destructive',
-};
-export function Notice({ className, variant = 'info', icon: Icon, iconClassName, heading, description, children, role, ...props }) {
-    const resolvedRole = role ?? 'status';
-    return (_jsxs("div", { role: resolvedRole, className: cn('payment-notice', NOTICE_VARIANTS[variant], className), ...props, children: [Icon ? _jsx(Icon, { className: cn('payment-notice__icon', iconClassName), "aria-hidden": true }) : null, _jsxs("div", { className: "payment-notice__body", children: [heading ? _jsx("p", { className: "payment-notice__title", children: heading }) : null, description ? _jsx("p", { className: "payment-notice__description", children: description }) : null, children] })] }));
-}
+// Re-export Notice component for backward compatibility
+// The actual implementation is in ./payment-notice.tsx as the single source of truth
+export { Notice, PaymentNotice };

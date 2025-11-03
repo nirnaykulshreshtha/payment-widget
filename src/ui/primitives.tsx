@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
-import type { ComponentPropsWithoutRef, ElementType, HTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, HTMLAttributes } from 'react';
 import { cn } from '../lib/cn';
+import { Notice, PaymentNotice, type NoticeVariant, type PaymentNoticeProps, type NoticeProps } from './payment-notice';
 
 type DivProps = ComponentPropsWithoutRef<'div'>;
 
@@ -8,7 +9,6 @@ type HeadingProps = ComponentPropsWithoutRef<'h3'>;
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'default' | 'destructive' | 'ghost' | 'link';
 type ButtonSize = 'default' | 'sm' | 'icon' | 'lg';
-type NoticeVariant = 'info' | 'success' | 'warning' | 'destructive';
 
 export const Card = forwardRef<HTMLDivElement, DivProps>(function Card({ className, ...props }, ref) {
   return (
@@ -107,61 +107,6 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('payment-skeleton', className)} />;
 }
 
-const NOTICE_VARIANTS: Record<NoticeVariant, string> = {
-  info: 'payment-notice--info',
-  success: 'payment-notice--success',
-  warning: 'payment-notice--warning',
-  destructive: 'payment-notice--destructive',
-};
-
-interface NoticeProps extends HTMLAttributes<HTMLDivElement> {
-  /**
-   * Visual tone of the notice. Maps to shadcn-inspired alert styles.
-   */
-  variant?: NoticeVariant;
-  /**
-   * Optional leading icon. Receives the standard `className` prop for sizing and color.
-   */
-  icon?: ElementType<{ className?: string }>;
-  /**
-   * Additional class names to apply to the icon element.
-   */
-  iconClassName?: string;
-  /**
-   * Optional heading rendered above the description/body content.
-   */
-  heading?: ReactNode;
-  /**
-   * Description text rendered beneath the title when `children` are not supplied.
-   */
-  description?: ReactNode;
-}
-
-export function Notice({
-  className,
-  variant = 'info',
-  icon: Icon,
-  iconClassName,
-  heading,
-  description,
-  children,
-  role,
-  ...props
-}: NoticeProps) {
-  const resolvedRole = role ?? 'status';
-
-  return (
-    <div
-      role={resolvedRole}
-      className={cn('payment-notice', NOTICE_VARIANTS[variant], className)}
-      {...props}
-    >
-      {Icon ? <Icon className={cn('payment-notice__icon', iconClassName)} aria-hidden /> : null}
-      <div className="payment-notice__body">
-        {heading ? <p className="payment-notice__title">{heading}</p> : null}
-        {description ? <p className="payment-notice__description">{description}</p> : null}
-        {children}
-      </div>
-    </div>
-  );
-}
+// Re-export Notice component for backward compatibility
+// The actual implementation is in ./payment-notice.tsx as the single source of truth
+export { Notice, PaymentNotice, type NoticeVariant, type PaymentNoticeProps, type NoticeProps };
