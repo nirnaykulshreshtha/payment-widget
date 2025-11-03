@@ -590,7 +590,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--pw-accent-strong);
+  color: var(--pw-primary);
   font-weight: 600;
 }
 
@@ -1441,23 +1441,20 @@
   padding: 8px;
   font-size: 1rem;
   font-weight: 600;
-  background: var(--pw-accent-strong);
-  color: var(--pw-color-contrast);
+  background: var(--pw-primary);
+  color: var(--pw-accent);
   border: none;
   border-radius: calc(var(--pw-radius) * 0.9);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
   transition: background-color var(--pw-transition), box-shadow var(--pw-transition), transform var(--pw-transition);
 }
 
 .payment-widget .pw-button--pay-now:not(:disabled):hover {
-  background: var(--pw-accent-strong);
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
+  background: var(--pw-primary);
   transform: translateY(-1px);
 }
 
 .payment-widget .pw-button--pay-now:not(:disabled):active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
 }
 
 .payment-widget .pw-button--pay-now:disabled {

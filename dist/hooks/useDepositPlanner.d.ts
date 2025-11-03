@@ -5,7 +5,7 @@ interface UseDepositPlannerArgs {
     setupConfig: ResolvedSetupConfig;
     paymentConfig: PaymentConfig;
 }
-interface UseDepositPlannerReturn {
+export interface UseDepositPlannerReturn {
     options: PaymentOption[];
     isLoading: boolean;
     error: string | null;

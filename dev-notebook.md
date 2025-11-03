@@ -1,8 +1,120 @@
 ## Developer Notebook
 
+Date: 2025-11-03
+
+Context: Continued cleanup of `PaymentWidget` to reduce coupling and keep the presentation layer thin. Maintained single source of truth and aggressive logging.
+
+---
+
+## Controller Extraction (2025-11-03)
+
+**Motivation:** `src/widget.tsx` still hosted business logic, lifecycle effects, and rendering, making maintenance noisy even after prior hook extractions. We needed a reusable controller layer to encapsulate orchestration while leaving the component focused on layout.
+
+### What Changed
+
+- Added **`usePaymentWidgetController`** (`src/widget/hooks/usePaymentWidgetController.ts`) to coordinate execution state, history sync, quote refinement, and view rendering. The hook returns a compact contract for the UI layer.
+- Slimmed **`src/widget.tsx`** to a declarative shell that consumes the controller hook, forwards header props, and renders the current view. Also wired the optional `className` prop via `cn` so integrators can scope styling.
+- Updated **`src/widget/hooks/index.ts`** barrel to export the new controller.
+
+### Behaviour & Logging
+
+- No behavioural or UX differences; the hook composes the same dependencies and preserves all aggressive logging and toast behaviors.
+- Deduplicated repeated wallet reset/history effects during the extraction to ensure a single source of truth for side effects.
+
+### Follow-up Notes
+
+- Future hooks should follow the controller pattern—compose inside the hook, keep the component declarative.
+- Consider unit tests around `usePaymentWidgetController` selectors when we expand test coverage.
+
+---
+
 Date: 2025-11-02
 
 Context: Quality-of-life (UX-only) improvements to the payment widget. No logic changes; focus on accessibility, keyboard navigation, focus states, and small visual polish. We keep a single source of truth and avoid duplication.
+
+---
+
+## Widget Refactoring (2025-01-XX)
+
+**Motivation:** `widget.tsx` and `view-renderers.tsx` had grown to be cluttered and unoptimized, with `widget.tsx` exceeding 1500 lines. The code needed to be decoupled into smaller, reusable components and hooks while maintaining the same logic and UI/UX.
+
+### Architecture Changes
+
+**Extracted Custom Hooks:**
+1. **`useChainData`** (`src/widget/hooks/useChainData.ts`)
+   - Extracts chain lookup map and chain logos map creation from `config.supportedChains`
+   - Returns `{ chainLookup, chainLogos }` as memoized Maps
+
+2. **`useViewStack`** (`src/widget/hooks/useViewStack.ts`)
+   - Manages view navigation stack state
+   - Provides `pushView`, `popView`, `replaceTopView`, `resetToOptions` functions
+   - Syncs with planner loading state
+
+3. **`useTokenPrefetch`** (`src/widget/hooks/useTokenPrefetch.ts`)
+   - Handles prefetching of target token metadata when planner hasn't loaded it yet
+   - Handles wrapped token lookups and native token derivation
+   - Returns `TokenConfig | null`
+
+4. **`useWalletChain`** (`src/widget/hooks/useWalletChain.ts`)
+   - Encapsulates wallet chain switching logic
+   - Handles chain addition to wallet if not already present
+   - Returns `ensureWalletChain` function
+
+5. **`useQuoteRefinement`** (`src/widget/hooks/useQuoteRefinement.ts`)
+   - Handles bridge quote refinement logic
+   - Manages quote loading and error states
+   - Returns `{ refineBridgeQuote, quoteLoading, quoteError }`
+
+6. **`useExecutionState`** (`src/widget/hooks/useExecutionState.ts`)
+   - Centralizes payment execution state (loading, errors, transaction hashes)
+   - Provides `resetExecutionState` function
+   - Returns all state setters and values
+
+7. **`usePaymentExecution`** (`src/widget/hooks/usePaymentExecution.ts`)
+   - Consolidates direct, bridge, and swap payment execution logic
+   - Handles transaction submission, progress tracking, and history updates
+   - Returns `{ executeDirect, executeBridge, executeSwap }`
+
+8. **`useHeaderConfig`** (`src/widget/hooks/useHeaderConfig.ts`)
+   - Computes dynamic header configuration based on current view and state
+   - Returns header values (amount, symbol, chain labels, etc.) and configuration flags
+
+### File Structure
+
+**New Directory:** `src/widget/hooks/`
+- Contains all extracted custom hooks
+- Exported via `src/widget/hooks/index.ts` for easier imports
+
+### Results
+
+- **`widget.tsx`**: Reduced from ~1531 lines to ~583 lines (62% reduction)
+- **Maintainability**: Logic separated into focused, testable hooks
+- **Reusability**: Hooks can be used independently or in different contexts
+- **Single Source of Truth**: No duplication of logic across hooks
+- **Same Functionality**: All existing logic and UI/UX behavior preserved
+
+### Design Decisions
+
+1. **Hooks over Components**: Chose to extract logic into hooks rather than components to keep the widget component as the orchestrator while moving business logic out.
+
+2. **State Management**: Execution state consolidated into `useExecutionState` to avoid prop drilling and provide a single reset function.
+
+3. **Header Configuration**: Extracted into `useHeaderConfig` hook to keep view rendering simple and header logic centralized.
+
+4. **View Renderer**: Kept `view-renderers.tsx` as a simple router/view factory. It remains focused on mapping views to components without business logic.
+
+### Files Modified
+
+- `src/widget.tsx` - Refactored to use extracted hooks
+- `src/widget/hooks/` - New directory with 8 custom hooks
+- `src/widget/hooks/index.ts` - Barrel export for hooks
+
+### Notes
+
+- All hooks follow the aggressive logging pattern for debugging
+- Hooks are documented with JSDoc comments
+- Dependency arrays are properly maintained for React hooks
+- No breaking changes to public API or component behavior
 
 ### Changes Implemented
 

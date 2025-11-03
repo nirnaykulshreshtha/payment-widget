@@ -1,0 +1,577 @@
+/**
+ * @fileoverview Comprehensive hook for managing all payment execution types (direct, bridge, swap).
+ * Handles transaction execution, history tracking, error management, and success/failure callbacks.
+ */
+import { useCallback } from 'react';
+import { erc20Abi } from 'viem';
+import { ZERO_ADDRESS, ZERO_INTEGRATOR_ID } from '../../config';
+import { completeDirect, failBridge, failDirect, failSwap, recordBridgeInit, recordDirectInit, recordSwapInit, updateBridgeAfterDeposit, updateBridgeAfterWrap, updateBridgeDepositTxHash, updateBridgeFilled, updateDirectTxPending, updateSwapApprovalConfirmed, updateSwapApprovalSubmitted, updateSwapFilled, updateSwapTxConfirmed, updateSwapTxPending, } from '../../history';
+import { describeAmount, describeRawAmount } from '../utils/formatting';
+const LOG_PREFIX = '[usePaymentExecution]';
+const log = (...args) => console.debug(LOG_PREFIX, ...args);
+const logError = (...args) => console.error(LOG_PREFIX, ...args);
+/**
+ * Provides execution functions for direct, bridge, and swap payment types.
+ * Manages all execution state, history tracking, and callbacks.
+ */
+export function usePaymentExecution(params) {
+    const { client, config, targetToken, activeHistoryId, ensureWalletChain, executionState, onSetActiveHistoryId, onSetSelectedOption, onPaymentComplete, onPaymentFailed, onOpenTrackingView, onShowSuccessView, onShowFailureView, } = params;
+    const { setIsExecuting, setExecutionError, setWrapTxHash, setTxHash, setSwapTxHash, setApprovalTxHashes, } = executionState;
+    const executeDirect = useCallback(async (option) => {
+        let historyIdRef = activeHistoryId;
+        try {
+            setIsExecuting(true);
+            setExecutionError(null);
+            setWrapTxHash(null);
+            setTxHash(null);
+            setSwapTxHash(null);
+            setApprovalTxHashes([]);
+            log('executing direct payment', {
+                token: option.displayToken.symbol,
+                amount: config.targetAmount.toString(),
+                recipient: config.targetRecipient,
+                hasContractCall: Boolean(config.targetContractCalls),
+            });
+            const account = config.walletClient.account.address;
+            if (!account) {
+                throw new Error('Connect your wallet to continue');
+            }
+            const activeWalletClient = await ensureWalletChain(config.targetChainId, 'direct');
+            if (!activeWalletClient) {
+                setIsExecuting(false);
+                if (historyIdRef) {
+                    failDirect(historyIdRef, 'Network switch rejected');
+                    historyIdRef = null;
+                    onSetActiveHistoryId(null);
+                }
+                return;
+            }
+            const walletClient = activeWalletClient;
+            const destinationClient = config.publicClients[config.targetChainId];
+            if (!destinationClient) {
+                throw new Error('Missing public client for target chain');
+            }
+            const targetChainConfig = config.supportedChains.find((chain) => chain.chainId === config.targetChainId);
+            if (!targetChainConfig) {
+                throw new Error(`Target chain ${config.targetChainId} is not configured`);
+            }
+            const targetViemChain = config.viemChains.find((chain) => chain.id === config.targetChainId);
+            if (!targetViemChain) {
+                throw new Error(`Missing viem chain configuration for target ${config.targetChainId}`);
+            }
+            if (!historyIdRef) {
+                historyIdRef = recordDirectInit({
+                    depositor: account,
+                    inputToken: option.displayToken,
+                    outputToken: targetToken ?? option.displayToken,
+                    chainId: config.targetChainId,
+                    amountIn: option.quote?.inputAmount ?? option.balance,
+                    amountOut: option.quote?.outputAmount ?? config.targetAmount,
+                });
+                onSetActiveHistoryId(historyIdRef);
+            }
+            let hash = '0x';
+            if (config.targetContractCalls) {
+                for (let i = 0; i < config.targetContractCalls.length; i++) {
+                    const targetContractCall = config.targetContractCalls[i];
+                    hash = await walletClient.sendTransaction({
+                        account,
+                        to: targetContractCall.target,
+                        data: targetContractCall.callData,
+                        value: BigInt(targetContractCall.value ?? 0),
+                        chain: targetViemChain,
+                    });
+                }
+            }
+            else if (config.targetRecipient) {
+                if (option.displayToken.address === ZERO_ADDRESS) {
+                    hash = await walletClient.sendTransaction({
+                        account,
+                        to: config.targetRecipient,
+                        value: config.targetAmount,
+                        chain: targetViemChain,
+                    });
+                }
+                else {
+                    hash = await walletClient.writeContract({
+                        account,
+                        address: option.displayToken.address,
+                        abi: erc20Abi,
+                        functionName: 'transfer',
+                        args: [config.targetRecipient, config.targetAmount],
+                        chain: targetViemChain,
+                    });
+                }
+            }
+            else {
+                throw new Error('No direct payment handler configured (recipient or contract call required)');
+            }
+            setTxHash(hash);
+            if (historyIdRef) {
+                updateDirectTxPending(historyIdRef, hash);
+            }
+            await destinationClient.waitForTransactionReceipt({ hash });
+            onPaymentComplete?.(hash);
+            log('direct payment completed', { hash });
+            if (historyIdRef) {
+                completeDirect(historyIdRef, hash);
+            }
+            const summary = {
+                mode: 'direct',
+                input: {
+                    amount: option.quote?.inputAmount ?? config.targetAmount,
+                    token: option.displayToken,
+                },
+                output: {
+                    amount: option.quote?.outputAmount ?? config.targetAmount,
+                    token: targetToken ?? option.displayToken,
+                },
+                depositTxHash: hash,
+                originChainId: config.targetChainId,
+                destinationChainId: config.targetChainId,
+            };
+            onShowSuccessView({ reference: hash, historyId: historyIdRef ?? undefined, summary });
+            onSetSelectedOption(null);
+            historyIdRef = null;
+            onSetActiveHistoryId(null);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Payment failed';
+            setExecutionError(message);
+            onPaymentFailed?.(message);
+            logError('direct payment failed', { error: message });
+            const failureHistoryId = historyIdRef;
+            if (historyIdRef) {
+                failDirect(historyIdRef, message);
+                historyIdRef = null;
+            }
+            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            onSetSelectedOption(null);
+            if (!failureHistoryId) {
+                onSetActiveHistoryId(null);
+            }
+        }
+        finally {
+            setIsExecuting(false);
+        }
+    }, [
+        activeHistoryId,
+        config,
+        ensureWalletChain,
+        targetToken,
+        setIsExecuting,
+        setExecutionError,
+        setWrapTxHash,
+        setTxHash,
+        setSwapTxHash,
+        setApprovalTxHashes,
+        onSetActiveHistoryId,
+        onSetSelectedOption,
+        onPaymentComplete,
+        onPaymentFailed,
+        onShowSuccessView,
+        onShowFailureView,
+    ]);
+    const executeBridge = useCallback(async (option) => {
+        if (!client || !option.route || !option.quote) {
+            setExecutionError('Missing quote for this bridge payment');
+            return;
+        }
+        let historyIdRef = activeHistoryId;
+        const route = option.route;
+        const quote = option.quote;
+        try {
+            setIsExecuting(true);
+            setExecutionError(null);
+            setWrapTxHash(null);
+            setTxHash(null);
+            setSwapTxHash(null);
+            setApprovalTxHashes([]);
+            log('executing bridge payment', {
+                id: option.id,
+                route,
+                inputAmount: describeRawAmount(quote.inputAmount, option.displayToken.decimals, option.displayToken.symbol),
+                outputAmount: describeAmount(quote.outputAmount, targetToken ?? option.displayToken, option.displayToken.decimals, option.displayToken.symbol),
+            });
+            const walletClientWithChain = await ensureWalletChain(route.originChainId, 'bridge-origin');
+            if (!walletClientWithChain) {
+                setIsExecuting(false);
+                if (historyIdRef) {
+                    failBridge(historyIdRef, 'Network switch rejected');
+                    historyIdRef = null;
+                    onSetActiveHistoryId(null);
+                }
+                return;
+            }
+            const account = config.walletClient?.account?.address;
+            const recipient = (config.targetRecipient || account);
+            if (!account) {
+                throw new Error('Connect your wallet to continue');
+            }
+            if (!recipient) {
+                throw new Error('Missing recipient configuration');
+            }
+            const originClient = config.publicClients[route.originChainId];
+            const destinationClient = config.publicClients[route.destinationChainId];
+            if (!originClient || !destinationClient) {
+                throw new Error('Missing public client for one of the required chains');
+            }
+            const originChainConfig = config.supportedChains.find((chain) => chain.chainId === route.originChainId);
+            const destinationChainConfig = config.supportedChains.find((chain) => chain.chainId === route.destinationChainId);
+            if (!originChainConfig || !destinationChainConfig) {
+                throw new Error('Missing chain configuration for origin or destination');
+            }
+            const originViemChain = config.viemChains.find((chain) => chain.id === route.originChainId);
+            if (!originViemChain) {
+                throw new Error(`Missing viem chain configuration for origin ${route.originChainId}`);
+            }
+            const destinationSpokePoolAddress = await client.getSpokePoolAddress(route.destinationChainId);
+            const originSpokePoolAddress = await client.getSpokePoolAddress(route.originChainId);
+            if (!historyIdRef) {
+                historyIdRef = recordBridgeInit({
+                    depositor: account,
+                    recipient,
+                    inputToken: option.displayToken,
+                    outputToken: targetToken ?? option.displayToken,
+                    originChainId: route.originChainId,
+                    destinationChainId: route.destinationChainId,
+                    inputAmount: quote.inputAmount,
+                    outputAmount: quote.outputAmount,
+                    requiresWrap: option.requiresWrap ?? false,
+                    originSpokePoolAddress,
+                    destinationSpokePoolAddress,
+                    depositMessage: quote.raw.deposit?.message,
+                });
+                onSetActiveHistoryId(historyIdRef);
+            }
+            if (historyIdRef) {
+                onOpenTrackingView(historyIdRef);
+            }
+            let wrapHash = null;
+            if (option.requiresWrap && option.wrappedToken) {
+                const hash = (await walletClientWithChain.writeContract({
+                    address: option.wrappedToken.address,
+                    abi: [
+                        {
+                            name: 'deposit',
+                            type: 'function',
+                            stateMutability: 'payable',
+                            inputs: [],
+                            outputs: [],
+                        },
+                    ],
+                    functionName: 'deposit',
+                    account,
+                    value: quote.inputAmount,
+                    chain: originViemChain,
+                }));
+                wrapHash = hash;
+                setWrapTxHash(hash);
+                await originClient.waitForTransactionReceipt({ hash });
+                log('wrap transaction confirmed', { hash });
+                if (historyIdRef) {
+                    updateBridgeAfterWrap(historyIdRef, hash);
+                }
+            }
+            const result = await client.executeQuote({
+                integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
+                deposit: quote.raw.deposit,
+                walletClient: walletClientWithChain,
+                originClient,
+                destinationClient,
+                onProgress: (progress) => {
+                    if (!historyIdRef) {
+                        return;
+                    }
+                    if (progress.step === 'deposit') {
+                        if (progress.status === 'txPending') {
+                            if ('txHash' in progress && progress.txHash) {
+                                const pendingHash = progress.txHash;
+                                setTxHash(pendingHash);
+                                updateBridgeDepositTxHash(historyIdRef, pendingHash);
+                            }
+                            log('bridge progress update', progress);
+                        }
+                        if (progress.status === 'txSuccess') {
+                            const txHash = progress.txReceipt?.transactionHash;
+                            if (txHash) {
+                                const depositIdValue = typeof progress.depositId === 'string' || typeof progress.depositId === 'number'
+                                    ? BigInt(progress.depositId)
+                                    : undefined;
+                                updateBridgeAfterDeposit(historyIdRef, depositIdValue, txHash, quote.outputAmount);
+                                setTxHash(txHash);
+                            }
+                        }
+                    }
+                    if (progress.step === 'fill' && progress.status === 'txSuccess' && progress.txReceipt?.transactionHash) {
+                        updateBridgeFilled(historyIdRef, progress.txReceipt.transactionHash);
+                    }
+                },
+            });
+            if (result.error) {
+                throw result.error;
+            }
+            if (historyIdRef && result.depositTxReceipt) {
+                const depositIdValue = result.depositId !== undefined && result.depositId !== null ? BigInt(result.depositId) : undefined;
+                updateBridgeAfterDeposit(historyIdRef, depositIdValue, result.depositTxReceipt.transactionHash, quote.outputAmount);
+            }
+            if (historyIdRef && result.fillTxReceipt) {
+                updateBridgeFilled(historyIdRef, result.fillTxReceipt.transactionHash);
+            }
+            onPaymentComplete?.(result.depositId ? result.depositId.toString() : '');
+            log('bridge payment completed', {
+                depositId: result.depositId?.toString(),
+                depositTxReceipt: result.depositTxReceipt?.transactionHash,
+                fillTxReceipt: result.fillTxReceipt?.transactionHash,
+            });
+            const successHistoryId = historyIdRef;
+            const summary = {
+                mode: 'bridge',
+                input: {
+                    amount: quote.inputAmount,
+                    token: option.displayToken,
+                },
+                output: {
+                    amount: quote.outputAmount,
+                    token: targetToken ?? option.displayToken,
+                },
+                depositTxHash: result.depositTxReceipt?.transactionHash,
+                fillTxHash: result.fillTxReceipt?.transactionHash,
+                wrapTxHash: wrapHash,
+                originChainId: route.originChainId,
+                destinationChainId: route.destinationChainId,
+            };
+            onShowSuccessView({
+                reference: result.depositId ? result.depositId.toString() : undefined,
+                historyId: successHistoryId ?? undefined,
+                summary,
+            });
+            onSetSelectedOption(null);
+            historyIdRef = null;
+            onSetActiveHistoryId(null);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Payment failed';
+            setExecutionError(message);
+            onPaymentFailed?.(message);
+            logError('bridge payment failed', { error: message, original: err });
+            const failureHistoryId = historyIdRef;
+            if (historyIdRef) {
+                failBridge(historyIdRef, message);
+                historyIdRef = null;
+            }
+            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            onSetSelectedOption(null);
+            if (!failureHistoryId) {
+                onSetActiveHistoryId(null);
+            }
+        }
+        finally {
+            setIsExecuting(false);
+        }
+    }, [
+        activeHistoryId,
+        client,
+        config,
+        ensureWalletChain,
+        targetToken,
+        setIsExecuting,
+        setExecutionError,
+        setWrapTxHash,
+        setTxHash,
+        setSwapTxHash,
+        setApprovalTxHashes,
+        onSetActiveHistoryId,
+        onSetSelectedOption,
+        onPaymentComplete,
+        onPaymentFailed,
+        onOpenTrackingView,
+        onShowSuccessView,
+        onShowFailureView,
+    ]);
+    const executeSwap = useCallback(async (option) => {
+        if (!client || !option.swapRoute || !option.swapQuote) {
+            setExecutionError('Missing swap quote for this payment');
+            return;
+        }
+        let historyIdRef = activeHistoryId;
+        const swapRoute = option.swapRoute;
+        const swapQuote = option.swapQuote;
+        try {
+            setIsExecuting(true);
+            setExecutionError(null);
+            setWrapTxHash(null);
+            setTxHash(null);
+            setSwapTxHash(null);
+            setApprovalTxHashes([]);
+            log('executing swap payment', {
+                id: option.id,
+                route: swapRoute,
+                inputAmount: describeRawAmount(swapQuote.inputAmount, option.displayToken.decimals, option.displayToken.symbol),
+                expectedOutputAmount: describeAmount(swapQuote.expectedOutputAmount, targetToken ?? option.displayToken, option.displayToken.decimals, option.displayToken.symbol),
+                approvals: swapQuote.approvalTxns.length,
+            });
+            const walletClientWithChain = await ensureWalletChain(swapRoute.originChainId, 'swap-origin');
+            if (!walletClientWithChain) {
+                setIsExecuting(false);
+                if (historyIdRef) {
+                    failSwap(historyIdRef, 'Network switch rejected');
+                    historyIdRef = null;
+                    onSetActiveHistoryId(null);
+                }
+                return;
+            }
+            const account = config.walletClient?.account?.address;
+            const recipient = (config.targetRecipient || account);
+            if (!account) {
+                throw new Error('Connect your wallet to continue');
+            }
+            if (!recipient) {
+                throw new Error('Missing recipient configuration');
+            }
+            const originClient = config.publicClients[swapRoute.originChainId];
+            const destinationClient = config.publicClients[swapRoute.destinationChainId];
+            if (!originClient || !destinationClient) {
+                throw new Error('Missing public client for swap route');
+            }
+            const destinationSpokePoolAddress = await client.getSpokePoolAddress(swapRoute.destinationChainId);
+            if (!historyIdRef) {
+                historyIdRef = recordSwapInit({
+                    depositor: account,
+                    recipient,
+                    inputToken: option.displayToken,
+                    outputToken: targetToken ?? option.displayToken,
+                    originChainId: swapRoute.originChainId,
+                    destinationChainId: swapRoute.destinationChainId,
+                    inputAmount: swapQuote.inputAmount,
+                    outputAmount: swapQuote.expectedOutputAmount,
+                    approvalCount: swapQuote.approvalTxns.length,
+                });
+                onSetActiveHistoryId(historyIdRef);
+            }
+            if (historyIdRef) {
+                onOpenTrackingView(historyIdRef);
+            }
+            const collectedApprovalHashes = [];
+            const result = await client.executeSwapQuote({
+                integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
+                swapQuote: swapQuote.raw,
+                walletClient: walletClientWithChain,
+                originClient,
+                destinationClient,
+                destinationSpokePoolAddress,
+                onProgress: (progress) => {
+                    if (!historyIdRef)
+                        return;
+                    if (progress.step === 'approve') {
+                        if (progress.status === 'txPending' && progress.txHash) {
+                            const hash = progress.txHash;
+                            collectedApprovalHashes.push(hash);
+                            setApprovalTxHashes((prev) => (prev.includes(hash) ? prev : [...prev, hash]));
+                            updateSwapApprovalSubmitted(historyIdRef, hash);
+                        }
+                        if (progress.status === 'txSuccess' && progress.txReceipt) {
+                            updateSwapApprovalConfirmed(historyIdRef, progress.txReceipt.transactionHash);
+                        }
+                    }
+                    if (progress.step === 'swap') {
+                        if (progress.status === 'txPending' && progress.txHash) {
+                            const hash = progress.txHash;
+                            setSwapTxHash(hash);
+                            setTxHash(hash);
+                            updateSwapTxPending(historyIdRef, hash);
+                        }
+                        if (progress.status === 'txSuccess' && progress.txReceipt) {
+                            const hash = progress.txReceipt.transactionHash;
+                            setSwapTxHash(hash);
+                            setTxHash(hash);
+                            const depositId = progress.depositId ? BigInt(progress.depositId) : null;
+                            updateSwapTxConfirmed(historyIdRef, hash, depositId, swapQuote.expectedOutputAmount);
+                        }
+                    }
+                    if (progress.step === 'fill' && progress.status === 'txSuccess' && progress.txReceipt) {
+                        updateSwapFilled(historyIdRef, progress.txReceipt.transactionHash);
+                    }
+                },
+            });
+            if (historyIdRef && result.fillTxReceipt) {
+                updateSwapFilled(historyIdRef, result.fillTxReceipt.transactionHash);
+            }
+            const summary = {
+                mode: 'swap',
+                input: {
+                    amount: swapQuote.inputAmount,
+                    token: option.displayToken,
+                },
+                output: {
+                    amount: swapQuote.expectedOutputAmount,
+                    token: targetToken ?? option.displayToken,
+                },
+                approvalTxHashes: collectedApprovalHashes,
+                swapTxHash: result.swapTxReceipt?.transactionHash,
+                depositTxHash: result.swapTxReceipt?.transactionHash,
+                fillTxHash: result.fillTxReceipt?.transactionHash,
+                originChainId: swapRoute.originChainId,
+                destinationChainId: swapRoute.destinationChainId,
+            };
+            onPaymentComplete?.(result.depositId ? result.depositId.toString() : '');
+            log('swap payment completed', {
+                depositId: result.depositId?.toString(),
+                swapTxHash: result.swapTxReceipt?.transactionHash,
+                fillTxHash: result.fillTxReceipt?.transactionHash,
+            });
+            const successHistoryId = historyIdRef;
+            onShowSuccessView({
+                reference: result.depositId ? result.depositId.toString() : undefined,
+                historyId: successHistoryId ?? undefined,
+                summary,
+            });
+            onSetSelectedOption(null);
+            historyIdRef = null;
+            onSetActiveHistoryId(null);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Payment failed';
+            setExecutionError(message);
+            onPaymentFailed?.(message);
+            logError('swap payment failed', { error: message, original: err });
+            const failureHistoryId = historyIdRef;
+            if (historyIdRef) {
+                failSwap(historyIdRef, message);
+                historyIdRef = null;
+            }
+            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            onSetSelectedOption(null);
+            if (!failureHistoryId) {
+                onSetActiveHistoryId(null);
+            }
+        }
+        finally {
+            setIsExecuting(false);
+        }
+    }, [
+        activeHistoryId,
+        client,
+        config,
+        ensureWalletChain,
+        targetToken,
+        setIsExecuting,
+        setExecutionError,
+        setWrapTxHash,
+        setTxHash,
+        setSwapTxHash,
+        setApprovalTxHashes,
+        onSetActiveHistoryId,
+        onSetSelectedOption,
+        onPaymentComplete,
+        onPaymentFailed,
+        onOpenTrackingView,
+        onShowSuccessView,
+        onShowFailureView,
+    ]);
+    return {
+        executeDirect,
+        executeBridge,
+        executeSwap,
+    };
+}
