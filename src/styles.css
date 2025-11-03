@@ -57,7 +57,6 @@
   color: var(--pw-color-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  background-color: var(--pw-background);
   display: flex;
   flex-direction: column;
   gap: var(--pw-space-xl);
@@ -905,6 +904,7 @@
   gap: var(--pw-space-md);
   padding-right: 6px;
   padding-top: 6px;
+  padding-bottom: 6px;
   scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: var(--pw-border-soft) transparent;
@@ -1164,7 +1164,6 @@
 
 .payment-widget .pw-option-card--active {
   border-color: var(--pw-brand-border-strong);
-  box-shadow: 0 0 0 3px var(--pw-brand-focus-ring), var(--pw-shadow-hover);
 }
 
 .payment-widget .pw-option-card--unavailable {
@@ -1979,6 +1978,7 @@
   overflow-y: auto;
   padding-right: 6px;
   padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .payment-widget .pw-scroll-area::-webkit-scrollbar {
