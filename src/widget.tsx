@@ -9,7 +9,7 @@ import { cn, summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
 
 import {ZERO_ADDRESS, ZERO_INTEGRATOR_ID} from './config';
-import type { PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig } from './types';
+import type { PaymentHistoryEntry, PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig } from './types';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import {
@@ -34,6 +34,7 @@ import {
   failSwap,
   refreshPendingHistory,
 } from './history';
+import { usePaymentHistoryStore } from './history/store';
 import { clonePaymentOption } from './widget/utils/clone-option';
 import { computeTargetWithSlippage } from './widget/utils/slippage';
 import { describeAmount, describeRawAmount } from './widget/utils/formatting';
@@ -1167,7 +1168,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     () => chainLogos.get(config.targetChainId),
     [chainLogos, config.targetChainId],
   );
-  const { sourceChainLabel, sourceChainLogoUrl } = useMemo(() => {
+  const { sourceChainLabel: defaultSourceChainLabel, sourceChainLogoUrl: defaultSourceChainLogoUrl } = useMemo(() => {
     if (!selectedOption) {
       return { sourceChainLabel: null as string | number | null, sourceChainLogoUrl: undefined as string | undefined };
     }
@@ -1188,6 +1189,26 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     () => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18),
     [config.targetAmount, targetToken?.decimals],
   );
+  const historySnapshot = usePaymentHistoryStore();
+  const historyEntries = historySnapshot.entries;
+
+  const latestHistoryEntry = useMemo(() => {
+    if (!historyEntries.length) {
+      return null;
+    }
+    let latest: PaymentHistoryEntry | null = null;
+    for (const entry of historyEntries) {
+      if (!latest || entry.updatedAt > latest.updatedAt) {
+        latest = entry;
+      }
+    }
+    return latest;
+  }, [historyEntries]);
+
+  const trackingEntry =
+    currentView.name === 'tracking'
+      ? historyEntries.find((entry) => entry.id === currentView.historyId) ?? null
+      : null;
 
   const errorMessages = useMemo(
     () => Array.from(new Set([planner.error, executionError, quoteError].filter(Boolean) as string[])),
@@ -1289,7 +1310,44 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     maxSlippageBps: config.maxSlippageBps,
   });
 
-  const { headerConfig, content } = renderedView;
+  const content = renderedView.content;
+  const headerConfig = { ...renderedView.headerConfig };
+  if (currentView.name === 'history') {
+    headerConfig.title = historyEntries.length
+      ? `Recent Activity (${historyEntries.length})`
+      : headerConfig.title ?? 'Recent Activity';
+  }
+
+  const headerEntry =
+    currentView.name === 'tracking'
+      ? trackingEntry
+      : currentView.name === 'history'
+        ? latestHistoryEntry
+        : null;
+
+  let headerAmountLabel = formattedTargetAmount;
+  let headerSymbol = targetSymbol;
+  let headerSourceChainLabel: string | number | undefined = defaultSourceChainLabel ?? undefined;
+  let headerSourceChainLogoUrl: string | undefined = defaultSourceChainLogoUrl;
+  let headerTargetChainLabel: string | number = targetChainLabel;
+  let headerTargetChainLogoUrl: string | undefined = targetChainLogoUrl;
+  let headerLastUpdated = planner.lastUpdated;
+  let primaryEyebrowLabel: string | undefined;
+
+  if (headerEntry) {
+    const useOutput = headerEntry.outputAmount > 0n;
+    const token = useOutput ? headerEntry.outputToken : headerEntry.inputToken;
+    const amountValue = useOutput ? headerEntry.outputAmount : headerEntry.inputAmount;
+    headerAmountLabel = formatTokenAmount(amountValue, token.decimals);
+    headerSymbol = token.symbol;
+    headerSourceChainLabel = chainLookup.get(headerEntry.originChainId) ?? headerEntry.originChainId;
+    headerSourceChainLogoUrl = chainLogos.get(headerEntry.originChainId);
+    headerTargetChainLabel = chainLookup.get(headerEntry.destinationChainId) ?? headerEntry.destinationChainId;
+    headerTargetChainLogoUrl = chainLogos.get(headerEntry.destinationChainId);
+    headerLastUpdated = headerEntry.updatedAt;
+    primaryEyebrowLabel = currentView.name === 'tracking' ? 'TRACKING PAYMENT' : 'RECENT PAYMENT';
+  }
+
   const canGoBack = viewStack.length > 1;
   const previousViewName = canGoBack ? viewStack[viewStack.length - 2]?.name ?? null : null;
   let backButtonLabel: string | undefined;
@@ -1315,13 +1373,13 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
       <PaymentToastViewport />
       <div className="payment-widget__layout">
         <PaymentSummaryHeader
-          targetAmountLabel={formattedTargetAmount}
-          targetSymbol={targetSymbol}
-          targetChainLabel={targetChainLabel}
-          sourceChainLabel={sourceChainLabel ?? undefined}
-          targetChainLogoUrl={targetChainLogoUrl}
-          sourceChainLogoUrl={sourceChainLogoUrl}
-          lastUpdated={planner.lastUpdated}
+          targetAmountLabel={headerAmountLabel}
+          targetSymbol={headerSymbol}
+          targetChainLabel={headerTargetChainLabel}
+          sourceChainLabel={headerSourceChainLabel}
+          targetChainLogoUrl={headerTargetChainLogoUrl}
+          sourceChainLogoUrl={headerSourceChainLogoUrl}
+          lastUpdated={headerLastUpdated}
           onRefresh={planner.refresh}
           isRefreshing={headerConfig.showRefresh ? planner.isLoading : false}
           onViewHistory={openHistoryView}
@@ -1333,6 +1391,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           onBack={canGoBack ? popView : undefined}
           showBack={canGoBack}
           backLabel={backButtonLabel}
+          primaryEyebrowLabel={primaryEyebrowLabel}
         />
         {content}
       </div>
