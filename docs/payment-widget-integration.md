@@ -195,7 +195,7 @@ type PaymentTheme = {
 - `onPaymentFailed(error: string)` – summarised error message.
 - `className`, `historyOnly`.
 
-Internally the widget surfaces errors through toast notifications (`paymentToast`). To customise global error handling, wrap callbacks in your own logic and/or inspect logs (prefixed with `[payment-widget]`, `[payment-planner]`, etc.).
+Internally the widget can surface errors through toast notifications. To integrate with your application's toast system, provide a `toastHandler` in your `SetupConfig`. The handler should implement the `ToastHandler` interface with methods for `error`, `success`, `info`, `dismiss`, and `dismissAll`. If no handler is provided, toast notifications will be silently ignored. To customise global error handling, wrap callbacks in your own logic and/or inspect logs (prefixed with `[payment-widget]`, `[payment-planner]`, etc.).
 
 ---
 

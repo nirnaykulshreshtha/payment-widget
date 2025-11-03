@@ -22,7 +22,7 @@ import type {
   ResolvedPaymentWidgetConfig,
 } from '../../types';
 import { formatTokenAmount } from '../../utils/amount-format';
-import { paymentToast } from '../../ui/payment-toast';
+import { createToastAPI } from '../../ui/toast-handler';
 import { renderPaymentView } from '../view-renderers';
 import type { PaymentResultSummary } from '../types';
 import { useChainData } from './useChainData';
@@ -70,6 +70,8 @@ export function usePaymentWidgetController(
     }),
     [setupConfig, paymentConfig],
   );
+
+  const toast = useMemo(() => createToastAPI(config.toastHandler), [config.toastHandler]);
 
   const client = acrossClient;
   const clientError = acrossClientError;
@@ -216,14 +218,14 @@ export function usePaymentWidgetController(
   const showFailureView = useCallback(
     ({ reason, historyId }: { reason: string; historyId?: string }) => {
       logError('showFailureView', { reason, historyId });
-      paymentToast.error(summarizeError(reason));
+      toast.error(summarizeError(reason));
       if (historyId) {
         openTrackingView(historyId);
         return;
       }
       resetToOptions();
     },
-    [openTrackingView, resetToOptions],
+    [toast, openTrackingView, resetToOptions],
   );
 
   const { executeDirect, executeBridge, executeSwap } = usePaymentExecution({
@@ -387,7 +389,7 @@ export function usePaymentWidgetController(
 
   useEffect(() => {
     if (!errorMessages.length) {
-      errorToastIds.current.forEach((id) => paymentToast.dismiss(id));
+      errorToastIds.current.forEach((id) => toast.dismiss(id));
       errorToastIds.current.clear();
       return;
     }
@@ -398,7 +400,7 @@ export function usePaymentWidgetController(
     errorMessages.forEach((message) => {
       if (!message || ids.has(message)) return;
       const summary = summarizeError(message);
-      const toastId = paymentToast.error(summary, 9000);
+      const toastId = toast.error(summary, 9000);
       if (toastId) {
         ids.set(message, toastId);
       }
@@ -408,12 +410,12 @@ export function usePaymentWidgetController(
       if (!activeMessages.has(message)) {
         const toastId = ids.get(message);
         if (toastId) {
-          paymentToast.dismiss(toastId);
+          toast.dismiss(toastId);
         }
         ids.delete(message);
       }
     });
-  }, [errorMessages]);
+  }, [errorMessages, toast]);
 
   useEffect(() => {
     refreshPendingHistory();

@@ -541,35 +541,6 @@
 .payment-widget .pw-option-card:nth-child(5) { animation-delay: 0.25s; }
 .payment-widget .pw-option-card:nth-child(n+6) { animation-delay: 0.3s; }
 
-.payment-widget-toaster {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.payment-widget-toaster .sonner-toaster {
-  pointer-events: none;
-}
-
-.payment-widget-toaster .sonner-toast.payment-widget-toast {
-  pointer-events: auto;
-}
-
-.sonner-toast.payment-widget-toast {
-  display: none !important;
-}
-
-.payment-widget-toaster .sonner-toast.payment-widget-toast {
-  display: flex !important;
-  border-radius: calc(var(--pw-radius) * 0.9);
-  border: 1px solid var(--pw-border-regular);
-  background: var(--pw-card-bg);
-  color: var(--pw-card-text);
-  box-shadow: var(--pw-shadow-card);
-  padding: 16px 18px;
-}
-
 .payment-widget .pw-header {
   display: flex;
   align-items: flex-start;
@@ -2688,7 +2659,6 @@
   top: 10px;
   bottom: 10px;
   border-left: 2px solid var(--pw-border-line);
-  z-index: 0;
 }
 
 .payment-widget .pw-timeline__entries {
@@ -2704,82 +2674,6 @@
   position: relative;
   padding: 4px 0;
   align-items: start;
-}
-
-/* Connecting line between timeline items */
-.payment-widget .pw-timeline__connector {
-  position: absolute;
-  left: 13px;
-  top: -16px;
-  width: 2px;
-  height: calc(var(--pw-space-md) + 12px);
-  background-color: var(--pw-border-line);
-  z-index: 1;
-  transition: background-color 0.6s ease, box-shadow 0.6s ease;
-  pointer-events: none;
-  transform-origin: top;
-}
-
-.payment-widget .pw-timeline__connector--success {
-  background: var(--pw-success-border);
-  box-shadow: 
-    0 0 6px color-mix(in srgb, var(--pw-color-success) 40%, transparent),
-    0 0 2px color-mix(in srgb, var(--pw-color-success) 20%, transparent);
-  animation: pw-timeline-connector-success 1.5s ease-in-out;
-}
-
-.payment-widget .pw-timeline__connector--failure {
-  background: var(--pw-danger-border);
-  box-shadow: 
-    0 0 6px color-mix(in srgb, var(--pw-color-danger) 40%, transparent),
-    0 0 2px color-mix(in srgb, var(--pw-color-danger) 20%, transparent);
-  animation: pw-timeline-connector-failure 1.5s ease-in-out;
-}
-
-@keyframes pw-timeline-connector-success {
-  0% {
-    opacity: 0;
-    transform: scaleY(0);
-    transform-origin: top;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-}
-
-@keyframes pw-timeline-connector-failure {
-  0% {
-    opacity: 0;
-    transform: scaleY(0);
-    transform-origin: top;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-}
-
-@supports not (color-mix(in srgb, var(--pw-success-border) 90%, transparent)) {
-  .payment-widget .pw-timeline__connector--success {
-    background: rgba(34, 197, 94, 0.6);
-    box-shadow: 
-      0 0 6px rgba(34, 197, 94, 0.3),
-      0 0 2px rgba(34, 197, 94, 0.15);
-  }
-  
-  .payment-widget .pw-timeline__connector--failure {
-    background: rgba(239, 68, 68, 0.6);
-    box-shadow: 
-      0 0 6px rgba(239, 68, 68, 0.3),
-      0 0 2px rgba(239, 68, 68, 0.15);
-  }
 }
 
 .payment-widget .pw-timeline__bullet {
@@ -2988,11 +2882,6 @@
   .payment-widget .pw-timeline__ripple {
     animation: none !important;
     opacity: 0.3;
-  }
-  
-  .payment-widget .pw-timeline__connector--success,
-  .payment-widget .pw-timeline__connector--failure {
-    animation: none !important;
   }
 }
 

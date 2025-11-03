@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { WagmiProvider } from "@/components/providers/wagmi-provider";
 import { PaymentWidgetProvider } from "@/components/providers/payment-widget-provider";
 import { LazyMotionProvider } from "@/components/providers/LazyMotionProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
             >
               <LazyMotionProvider>
                 {children}
+                <Toaster />
               </LazyMotionProvider>
             </ThemeProvider>
           </PaymentWidgetProvider>

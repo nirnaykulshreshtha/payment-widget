@@ -22,6 +22,7 @@ import { PaymentWidgetProvider as BasePaymentWidgetProvider } from "@matching-pl
 import type { SetupConfig } from "@matching-platform/payment-widget"
 
 import { logger } from "@/lib/logger"
+import { createSonnerToastHandler } from "@/lib/payment-widget-toast-handler"
 import {
   buildSetupConfig,
   presetSummaryForMode,
@@ -56,16 +57,22 @@ export function PaymentWidgetProvider({
       : resolveDemoMode(process.env.NEXT_PUBLIC_IS_TESTNET === "true"))
 
   const setupConfig = useMemo(() => {
+    const toastHandler = createSonnerToastHandler()
+    
     if (setupConfigOverride) {
       logger.info("payment-widget:provider:config:override", {
         ...presetSummaryForMode(mode),
         hasWalletClient: Boolean(setupConfigOverride.walletClient),
         walletAddress: setupConfigOverride.walletClient?.account?.address ?? address,
       })
-      return setupConfigOverride
+      // Merge toast handler with override config
+      return { ...setupConfigOverride, toastHandler }
     }
 
     const config = buildSetupConfig({ mode, walletClient: walletClient || undefined })
+    
+    // Add toast handler to the config
+    const configWithToast = { ...config, toastHandler }
 
     logger.info("payment-widget:provider:config", {
       ...presetSummaryForMode(mode),
@@ -73,7 +80,7 @@ export function PaymentWidgetProvider({
       walletAddress: address,
     })
 
-    return config
+    return configWithToast
   }, [setupConfigOverride, walletClient, address, mode])
 
   return (

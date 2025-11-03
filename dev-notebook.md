@@ -6,6 +6,61 @@ Context: Continued cleanup of `PaymentWidget` to reduce coupling and keep the pr
 
 ---
 
+## Toast System Removal and Integration (2025-11-03)
+
+**Motivation:** Remove internal toast implementation (Sonner) and integrate with host application's toast system to avoid duplication and ensure consistent UX.
+
+### What Changed
+
+- **Removed internal toast system:**
+  - Deleted `src/ui/payment-toast.tsx` (Sonner-based implementation)
+  - Removed `PaymentToastViewport` component from `src/widget.tsx`
+  - Removed `sonner` dependency from `package.json`
+  - Removed toast-related CSS from `src/styles.css`
+
+- **Added toast integration interface:**
+  - Created `ToastHandler` interface in `src/types.ts` for host applications to implement
+  - Added `toastHandler?: ToastHandler` to `SetupConfig` interface
+  - Created `src/ui/toast-handler.ts` utility that wraps the provided handler with safe fallbacks
+
+- **Updated controller to use new system:**
+  - Replaced all `paymentToast` calls in `src/widget/hooks/usePaymentWidgetController.ts` with calls to the new toast API
+  - Toast API is created from `config.toastHandler` via `createToastAPI()` helper
+  - If no handler is provided, toast operations silently no-op
+
+### Integration Pattern
+
+Host applications can now provide their toast system via `SetupConfig`:
+
+```typescript
+import type { ToastHandler } from '@matching-platform/payment-widget';
+
+const toastHandler: ToastHandler = {
+  error: (message, duration) => {
+    // Use your toast system (e.g., react-hot-toast, shadcn/ui toast, etc.)
+    return toast.error(message, { duration });
+  },
+  success: (message, duration) => toast.success(message, { duration }),
+  info: (message, duration) => toast.info(message, { duration }),
+  dismiss: (id) => toast.dismiss(id),
+  dismissAll: () => toast.dismiss(),
+};
+
+// Pass to PaymentWidgetProvider
+<PaymentWidgetProvider setupConfig={{ ...otherConfig, toastHandler }}>
+  <PaymentWidget ... />
+</PaymentWidgetProvider>
+```
+
+### Notes
+
+- If no `toastHandler` is provided, all toast calls silently no-op (no errors thrown)
+- All toast operations are wrapped in try-catch to prevent host application errors from breaking the widget
+- The `ToastHandler` interface is exported from the package so host applications can type-check their implementations
+- Documentation updated in `docs/payment-widget-integration.md`
+
+---
+
 ## Button Variant System (2025-11-03)
 
 **Motivation:** Align button styling with the shadcn design language while keeping the widget themeable and preventing style duplication. Legacy rules mixed structural and visual properties, making hover/active states inconsistent across variants.

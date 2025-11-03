@@ -541,35 +541,6 @@
 .payment-widget .pw-option-card:nth-child(5) { animation-delay: 0.25s; }
 .payment-widget .pw-option-card:nth-child(n+6) { animation-delay: 0.3s; }
 
-.payment-widget-toaster {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.payment-widget-toaster .sonner-toaster {
-  pointer-events: none;
-}
-
-.payment-widget-toaster .sonner-toast.payment-widget-toast {
-  pointer-events: auto;
-}
-
-.sonner-toast.payment-widget-toast {
-  display: none !important;
-}
-
-.payment-widget-toaster .sonner-toast.payment-widget-toast {
-  display: flex !important;
-  border-radius: calc(var(--pw-radius) * 0.9);
-  border: 1px solid var(--pw-border-regular);
-  background: var(--pw-card-bg);
-  color: var(--pw-card-text);
-  box-shadow: var(--pw-shadow-card);
-  padding: 16px 18px;
-}
-
 .payment-widget .pw-header {
   display: flex;
   align-items: flex-start;

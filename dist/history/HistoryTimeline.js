@@ -130,34 +130,6 @@ export function HistoryTimeline({ timeline, entry }) {
         completedStages.add('initial');
     }
     return (_jsx("div", { className: "pw-timeline", children: _jsx("div", { className: "pw-timeline__entries", children: steps.map((step, index) => {
-                // Track previous step's completed state for connector styling
-                let prevStepCompleted = false;
-                let prevStepIsFailure = false;
-                if (index > 0) {
-                    const prevStep = steps[index - 1];
-                    prevStepIsFailure = HISTORY_FAILURE_STAGES.has(prevStep.stage);
-                    // For deposit sub-steps, check if previous sub-step was completed
-                    if (prevStep.stage === 'deposit_pending' && prevStep.synthetic && step.stage === 'deposit_pending' && step.synthetic) {
-                        const depositSubSteps = steps.filter((s) => s.stage === 'deposit_pending' && s.synthetic);
-                        const prevSubIndex = depositSubSteps.findIndex((s) => s.label === prevStep.label);
-                        const currentSubIndex = depositSubSteps.findIndex((s) => s.label === step.label);
-                        // Previous sub-step is completed if it comes before current in the sequence
-                        prevStepCompleted = prevSubIndex >= 0 && prevSubIndex < currentSubIndex;
-                    }
-                    else if (!prevStepIsFailure) {
-                        // Check if previous step should be considered completed (using same logic as isCompleted)
-                        if (resolved && index - 1 <= resolvedActiveIndex) {
-                            prevStepCompleted = true;
-                        }
-                        else if (!resolved && activeFlowIndex >= 0 && flow.length > 0) {
-                            const prevStepFlowIndex = flow.indexOf(prevStep.stage);
-                            prevStepCompleted = prevStepFlowIndex >= 0 && prevStepFlowIndex < activeFlowIndex;
-                        }
-                        else if (!resolved && activeDisplayIndex >= 0 && index - 1 < activeDisplayIndex) {
-                            prevStepCompleted = true;
-                        }
-                    }
-                }
                 const isFailure = HISTORY_FAILURE_STAGES.has(step.stage);
                 const isCompletedStage = completedStages.has(step.stage);
                 // Special handling for expanded deposit_pending sub-steps
@@ -295,12 +267,7 @@ export function HistoryTimeline({ timeline, entry }) {
                     // Use Dot for pending/incomplete stages
                     Icon = Dot;
                 }
-                // Determine connecting line color based on current and previous step status
-                // Show success color if both previous and current steps are completed (green between successes)
-                // Show failure color if previous was completed and current is failure (red from success to failure)
-                const shouldShowSuccessLine = index > 0 && prevStepCompleted && isCompleted && !isFailure;
-                const shouldShowFailureLine = index > 0 && isFailure && prevStepCompleted && !prevStepIsFailure;
-                return (_jsxs("div", { className: "pw-timeline__item", children: [index > 0 && (_jsx("div", { className: cn('pw-timeline__connector', shouldShowSuccessLine && 'pw-timeline__connector--success', shouldShowFailureLine && 'pw-timeline__connector--failure') })), _jsxs("div", { className: cn('pw-timeline__bullet', isCompleted && !isFailure && 'pw-timeline__bullet--completed', isFailure && 'pw-timeline__bullet--failure', isActive && 'pw-timeline__bullet--active'), children: [isActive && _jsx("span", { className: "pw-timeline__ripple", "aria-hidden": "true" }), _jsx(Icon, { className: cn('pw-timeline__icon', isActive && 'pw-timeline__icon--spinning', isActive && 'pw-timeline__icon--active') })] }), _jsxs("div", { className: "pw-timeline__content", children: [_jsxs("div", { className: "pw-timeline__header", children: [_jsxs("div", { className: "pw-timeline__header-left", children: [_jsx("div", { className: cn('pw-timeline__title', isActive && 'pw-timeline__title--active'), children: label }), step.txHash ? (_jsx("div", { className: "pw-timeline__hash", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })) : null] }), _jsx("div", { className: "pw-timeline__meta", children: _jsx("time", { className: "pw-timeline__time", children: formatTimestamp(step.timestamp) }) })] }), !isFailure && step.notes ? (_jsx("p", { className: "pw-timeline__note", children: step.notes })) : null, isFailure && entry?.errors && entry.errors.length > 0 ? (_jsx("div", { className: "pw-timeline__errors", children: entry.errors.map((error, errorIndex) => (_jsx("p", { children: formatErrorMessage(error) }, errorIndex))) })) : null, isActive && !isFailure ? (_jsx("p", { className: "pw-timeline__status", children: "In progress" })) : null] })] }, `${step.stage}-${step.timestamp}`));
+                return (_jsxs("div", { className: "pw-timeline__item", children: [_jsxs("div", { className: cn('pw-timeline__bullet', isCompleted && !isFailure && 'pw-timeline__bullet--completed', isFailure && 'pw-timeline__bullet--failure', isActive && 'pw-timeline__bullet--active'), children: [isActive && _jsx("span", { className: "pw-timeline__ripple", "aria-hidden": "true" }), _jsx(Icon, { className: cn('pw-timeline__icon', isActive && 'pw-timeline__icon--spinning', isActive && 'pw-timeline__icon--active') })] }), _jsxs("div", { className: "pw-timeline__content", children: [_jsxs("div", { className: "pw-timeline__header", children: [_jsxs("div", { className: "pw-timeline__header-left", children: [_jsx("div", { className: cn('pw-timeline__title', isActive && 'pw-timeline__title--active'), children: label }), step.txHash ? (_jsx("div", { className: "pw-timeline__hash", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })) : null] }), _jsx("div", { className: "pw-timeline__meta", children: _jsx("time", { className: "pw-timeline__time", children: formatTimestamp(step.timestamp) }) })] }), !isFailure && step.notes ? (_jsx("p", { className: "pw-timeline__note", children: step.notes })) : null, isFailure && entry?.errors && entry.errors.length > 0 ? (_jsx("div", { className: "pw-timeline__errors", children: entry.errors.map((error, errorIndex) => (_jsx("p", { children: formatErrorMessage(error) }, errorIndex))) })) : null, isActive && !isFailure ? (_jsx("p", { className: "pw-timeline__status", children: "In progress" })) : null] })] }, `${step.stage}-${step.timestamp}`));
             }) }) }));
 }
 /**

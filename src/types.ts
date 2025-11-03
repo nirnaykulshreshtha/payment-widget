@@ -15,6 +15,47 @@ import type {
  * describes per-widget payment targets.
  */
 
+/**
+ * Toast handler interface for integrating with host application's toast system.
+ * Host applications can provide their own toast implementation via SetupConfig.
+ */
+export interface ToastHandler {
+  /**
+   * Show an error toast notification.
+   * @param message - The error message to display
+   * @param duration - Optional duration in milliseconds (default: 9000)
+   * @returns A toast ID that can be used to dismiss the toast, or undefined
+   */
+  error?: (message: string, duration?: number) => string | undefined;
+  
+  /**
+   * Show a success toast notification.
+   * @param message - The success message to display
+   * @param duration - Optional duration in milliseconds (default: 9000)
+   * @returns A toast ID that can be used to dismiss the toast, or undefined
+   */
+  success?: (message: string, duration?: number) => string | undefined;
+  
+  /**
+   * Show an info toast notification.
+   * @param message - The info message to display
+   * @param duration - Optional duration in milliseconds (default: 9000)
+   * @returns A toast ID that can be used to dismiss the toast, or undefined
+   */
+  info?: (message: string, duration?: number) => string | undefined;
+  
+  /**
+   * Dismiss a specific toast by ID.
+   * @param id - The toast ID returned from error/success/info
+   */
+  dismiss?: (id: string | undefined) => void;
+  
+  /**
+   * Dismiss all toasts.
+   */
+  dismissAll?: () => void;
+}
+
 export interface ChainConfig {
   chainId: number;
   name: string;
@@ -52,6 +93,11 @@ export interface SetupConfig {
   tokenPricesUsd?: Record<number, Record<string, number>>;
   showUnavailableOptions?: boolean;
   maxSwapQuoteOptions?: number;
+  /**
+   * Optional toast handler for integrating with host application's toast system.
+   * If not provided, toast notifications will be silently ignored.
+   */
+  toastHandler?: ToastHandler;
 }
 
 export interface ResolvedSetupConfig extends SetupConfig {

@@ -2,7 +2,6 @@
 
 import { cn } from './lib';
 import type { PaymentWidgetProps } from './types';
-import { PaymentToastViewport } from './ui/payment-toast';
 import { PaymentSummaryHeader } from './widget/components';
 import { usePaymentWidgetController } from './widget/hooks';
 
@@ -22,7 +21,6 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
   return (
     <div className={cn('payment-widget flex-col w-full space-y-6', className)}>
-      <PaymentToastViewport />
       <div className="payment-widget__layout">
         <PaymentSummaryHeader
           targetAmountLabel={headerConfigValues.headerAmountLabel}
