@@ -56,8 +56,8 @@ export function renderPaymentView(config) {
         case 'tracking':
             return {
                 headerConfig: {
-                    showHistory: true,
-                    showRefresh: true,
+                    showHistory: false,
+                    showRefresh: false,
                     showPrimary: true,
                     showTimestamp: true,
                 },

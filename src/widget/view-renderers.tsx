@@ -151,8 +151,8 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     case 'tracking':
       return {
         headerConfig: {
-          showHistory: true,
-          showRefresh: true,
+          showHistory: false,
+          showRefresh: false,
           showPrimary: true,
           showTimestamp: true,
         },
