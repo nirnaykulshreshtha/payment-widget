@@ -1,74 +1,58 @@
 .payment-widget {
-  --pw-font-family: var(
-    --payment-font-family,
-    var(--font-sans, "Inter", "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, sans-serif)
-  );
-  --pw-radius: var(--payment-radius, var(--radius-lg, var(--radius, 16px)));
-  --pw-brand: var(--payment-brand, var(--primary, #4f46e5));
-  --pw-accent: var(--payment-accent, var(--accent, #f97316));
-  --pw-background: var(--payment-background, var(--background, #ffffff));
-  --pw-color-text: var(--payment-text, var(--foreground, #0f172a));
-  --pw-color-contrast: var(--payment-text-contrast, var(--primary-foreground, #ffffff));
-  --pw-card-bg: var(--payment-card-bg, var(--card, var(--background, #ffffff)));
-  --pw-card-text: var(--payment-card-text, var(--card-foreground, var(--pw-color-text)));
-  --pw-card-border: var(--payment-card-border, var(--border, #e2e8f0));
-  --pw-color-muted: var(--muted-foreground, rgba(15, 23, 42, 0.55));
-  --pw-color-muted-strong: var(--muted-foreground, rgba(15, 23, 42, 0.75));
-  --pw-border-soft: var(--border, rgba(226, 232, 240, 0.6));
-  --pw-border-regular: var(--border, rgba(226, 232, 240, 0.85));
-  --pw-surface-soft: var(--muted, rgba(255, 255, 255, 0.94));
-  --pw-surface-subtle: var(--muted, rgba(255, 255, 255, 0.88));
-  --pw-shadow-card: var(--shadow-lg, 0 16px 40px rgba(15, 23, 42, 0.08));
-  --pw-shadow-hover: var(--shadow-xl, 0 18px 44px rgba(15, 23, 42, 0.12));
-  --pw-shadow-button: var(--shadow-md, 0 10px 24px rgba(79, 70, 229, 0.25));
+  --pw-font-family: var(--font-sans);
+  --pw-radius: var(--radius);
+  --pw-brand: var(--primary);
+  --pw-accent: var(--accent);
+  --pw-background: var(--background);
+  --pw-color-text: var(--foreground);
+  --pw-color-contrast: var(--primary-foreground);
+  --pw-card-bg: var(--card);
+  --pw-card-text: var(--card-foreground);
+  --pw-card-border: var(--border);
+  --pw-color-muted: var(--muted-foreground);
+  --pw-color-muted-strong: var(--muted-foreground);
+  --pw-border-soft: var(--border);
+  --pw-border-regular: var(--border);
+  --pw-surface-soft: var(--muted);
+  --pw-surface-subtle: var(--secondary);
+  --pw-shadow-card: var(--shadow-lg);
+  --pw-shadow-hover: var(--shadow-xl);
+  --pw-shadow-button: var(--shadow-md);
   --pw-space-xs: 4px;
   --pw-space-sm: 8px;
   --pw-space-md: 12px;
   --pw-space-lg: 20px;
   --pw-space-xl: 28px;
   --pw-transition: 0.2s ease;
-  --pw-color-success: var(--payment-success, var(--chart-2, #059669));
-  --pw-color-warning: var(--payment-warning, var(--chart-4, #d97706));
-  --pw-color-danger: var(--payment-danger, var(--destructive, #dc2626));
-  --pw-brand-soft: var(--payment-brand-soft, var(--primary), rgba(79, 70, 229, 0.16));
-  --pw-brand-strong: var(--payment-brand-strong, var(--primary), rgba(79, 70, 229, 0.95));
-  --pw-brand-soft-strong: var(--payment-brand-soft-strong, var(--primary), rgba(79, 70, 229, 0.35));
-  --pw-brand-border: var(--payment-brand-border, var(--primary), rgba(79, 70, 229, 0.45));
-  --pw-brand-border-strong: var(--payment-brand-border-strong, var(--primary), rgba(79, 70, 229, 0.65));
-  --pw-brand-focus-ring: var(--payment-brand-focus-ring, rgba(79, 70, 229, 0.18));
-  --pw-accent-soft: var(--payment-accent-soft, rgba(249, 115, 22, 0.18));
-  --pw-accent-strong: var(--payment-accent-strong, rgba(249, 115, 22, 0.92));
-  --pw-accent-border: var(--payment-accent-border, rgba(249, 115, 22, 0.5));
-  --pw-danger-soft: var(--payment-danger-soft, rgba(220, 38, 38, 0.18));
-  --pw-danger-border: var(--payment-danger-border, rgba(220, 38, 38, 0.45));
-  --pw-warning-soft: var(--payment-warning-soft, rgba(217, 119, 6, 0.18));
-  --pw-warning-border: var(--payment-warning-border, rgba(217, 119, 6, 0.45));
-  --pw-danger-focus-ring: var(--payment-danger-focus-ring, rgba(220, 38, 38, 0.18));
-  --pw-success-soft: var(--payment-success-soft, rgba(5, 150, 105, 0.18));
-  --pw-success-border: var(--payment-success-border, rgba(5, 150, 105, 0.45));
-  --pw-success-text: var(--payment-success-text, rgba(5, 150, 105, 0.75));
-  --pw-danger-text: var(--payment-danger-text, rgba(220, 38, 38, 0.75));
-  --pw-warning-text: var(--payment-warning-text, rgba(217, 119, 6, 0.7));
-  --pw-border-strong: var(--payment-border-strong, var(--border, rgba(226, 232, 240, 0.95)));
-  --pw-surface-strong: var(--payment-surface-strong, var(--card, rgba(255, 255, 255, 0.96)));
-  --pw-surface-muted: var(--payment-surface-muted, var(--muted, rgba(255, 255, 255, 0.92)));
-  --pw-border-line: var(--payment-border-line, var(--input, #e3e9f7));
-  --pw-brand-gradient: var(
-    --payment-brand-gradient,
-    linear-gradient(135deg, var(--pw-brand) 0%, var(--pw-brand) 100%)
-  );
-  --pw-danger-gradient: var(
-    --payment-danger-gradient,
-    linear-gradient(135deg, var(--pw-color-danger) 0%, var(--pw-color-danger) 100%)
-  );
-  --pw-muted-gradient: var(
-    --payment-muted-gradient,
-    linear-gradient(
-      135deg,
-      var(--muted, rgba(226, 232, 240, 0.6)) 0%,
-      var(--muted, rgba(226, 232, 240, 0.6)) 100%
-    )
-  );
+  --pw-color-success: var(--chart-2);
+  --pw-color-warning: var(--chart-4);
+  --pw-color-danger: var(--destructive);
+  --pw-brand-soft: var(--primary);
+  --pw-brand-strong: var(--primary);
+  --pw-brand-soft-strong: var(--primary);
+  --pw-brand-border: var(--primary);
+  --pw-brand-border-strong: var(--primary);
+  --pw-brand-focus-ring: var(--ring);
+  --pw-accent-soft: var(--accent);
+  --pw-accent-strong: var(--accent);
+  --pw-accent-border: var(--accent);
+  --pw-danger-soft: var(--destructive);
+  --pw-danger-border: var(--destructive);
+  --pw-warning-soft: var(--chart-4);
+  --pw-warning-border: var(--chart-4);
+  --pw-danger-focus-ring: var(--destructive);
+  --pw-success-soft: var(--chart-2);
+  --pw-success-border: var(--chart-2);
+  --pw-success-text: var(--chart-2);
+  --pw-danger-text: var(--destructive);
+  --pw-warning-text: var(--chart-4);
+  --pw-border-strong: var(--border);
+  --pw-surface-strong: var(--card);
+  --pw-surface-muted: var(--muted);
+  --pw-border-line: var(--input);
+  --pw-brand-gradient: linear-gradient(135deg, var(--pw-brand) 0%, var(--pw-brand) 100%);
+  --pw-danger-gradient: linear-gradient(135deg, var(--pw-color-danger) 0%, var(--pw-color-danger) 100%);
+  --pw-muted-gradient: linear-gradient(135deg, var(--muted) 0%, var(--muted) 100%);
   font-family: var(--pw-font-family);
   color: var(--pw-color-text);
   line-height: 1.5;
@@ -82,7 +66,7 @@
   animation: pw-fade-in 0.4s ease;
 }
 
-@supports (color-mix(in srgb, #000 50%, transparent)) {
+@supports (color-mix(in srgb, black 50%, transparent)) {
   .payment-widget {
     --pw-color-muted: color-mix(in srgb, var(--pw-color-text) 55%, transparent 45%);
     --pw-color-muted-strong: color-mix(in srgb, var(--pw-color-text) 75%, transparent 25%);
@@ -115,18 +99,18 @@
     --pw-border-line: color-mix(in srgb, var(--pw-card-border) 75%, transparent 25%);
     --pw-brand-gradient: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--pw-brand) 88%, white 12%) 0%,
+      color-mix(in srgb, var(--pw-brand) 88%, var(--pw-background) 12%) 0%,
       var(--pw-brand) 100%
     );
     --pw-danger-gradient: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--pw-color-danger) 88%, white 12%) 0%,
+      color-mix(in srgb, var(--pw-color-danger) 88%, var(--pw-background) 12%) 0%,
       var(--pw-color-danger) 100%
     );
     --pw-muted-gradient: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--muted, rgba(226, 232, 240, 0.6)) 88%, white 12%) 0%,
-      var(--muted, rgba(226, 232, 240, 0.6)) 100%
+      color-mix(in srgb, var(--pw-surface-muted) 88%, var(--pw-background) 12%) 0%,
+      var(--pw-surface-muted) 100%
     );
   }
 }
@@ -247,23 +231,50 @@
   color: var(--pw-color-danger);
 }
 
+/*-----------------------------------------------------------------------------
+  Button System
+  -----------------------------------------------------------------------------
+  Shadcn-inspired button variants built on top of the payment widget theme.
+  All visual states (base, hover, active, focus) pull from CSS custom
+  properties so that each variant can override only what it needs while the
+  structural styles stay consistent.
+-----------------------------------------------------------------------------*/
 .payment-widget .payment-button {
+  --pw-button-bg: var(--pw-card-bg);
+  --pw-button-border: var(--pw-border-regular);
+  --pw-button-color: var(--pw-color-text);
+  --pw-button-shadow: var(--shadow-xs);
+  --pw-button-bg-hover: var(--pw-surface-soft);
+  --pw-button-border-hover: var(--pw-border-strong);
+  --pw-button-color-hover: var(--pw-button-color);
+  --pw-button-bg-active: var(--pw-surface-subtle);
+  --pw-button-border-active: var(--pw-border-regular);
+  --pw-button-color-active: var(--pw-button-color-hover);
+  --pw-button-shadow-hover: var(--shadow-sm);
+  --pw-button-shadow-active: var(--shadow-xs);
+  --pw-button-translate-hover: 0;
+  --pw-button-translate-active: 0;
+  --pw-button-padding-x: 20px;
+  --pw-button-min-height: 44px;
+  --pw-button-font-size: 0.85rem;
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border-radius: calc(var(--pw-radius) * 0.75);
-  border: 1px solid transparent;
-  padding: 0 20px;
-  min-height: 44px;
+  border: 1px solid var(--pw-button-border);
+  padding: 0 var(--pw-button-padding-x);
+  min-height: var(--pw-button-min-height);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--pw-button-font-size);
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  background: transparent;
-  color: var(--pw-color-text);
+  transition: transform var(--pw-transition), box-shadow var(--pw-transition), background-color var(--pw-transition), color var(--pw-transition), border-color var(--pw-transition);
+  background: var(--pw-button-bg);
+  color: var(--pw-button-color);
+  box-shadow: var(--pw-button-shadow);
+  transform: translateY(0);
 }
 
 .payment-widget .payment-button:focus-visible {
@@ -278,21 +289,135 @@
   box-shadow: none;
 }
 
+.payment-widget .payment-button:not(:disabled):hover {
+  background: var(--pw-button-bg-hover);
+  color: var(--pw-button-color-hover);
+  border-color: var(--pw-button-border-hover);
+  box-shadow: var(--pw-button-shadow-hover);
+  transform: translateY(var(--pw-button-translate-hover));
+}
+
+.payment-widget .payment-button:not(:disabled):active {
+  background: var(--pw-button-bg-active);
+  color: var(--pw-button-color-active);
+  border-color: var(--pw-button-border-active);
+  box-shadow: var(--pw-button-shadow-active);
+  transform: translateY(var(--pw-button-translate-active));
+}
+
+.payment-widget .payment-button--default {
+  --pw-button-bg: var(--pw-card-bg);
+  --pw-button-border: var(--pw-border-regular);
+  --pw-button-shadow: var(--shadow-xs);
+  --pw-button-bg-hover: var(--pw-surface-soft);
+  --pw-button-border-hover: var(--pw-border-strong);
+  --pw-button-shadow-hover: var(--shadow-sm);
+  --pw-button-bg-active: var(--pw-surface-subtle);
+  --pw-button-border-active: var(--pw-border-regular);
+  --pw-button-shadow-active: var(--shadow-xs);
+}
+
 .payment-widget .payment-button--primary {
-  background-color: var(--pw-brand);
-  color: var(--pw-color-contrast);
-  border-color: var(--pw-brand-border-strong);
-  box-shadow: var(--pw-shadow-button);
+  --pw-button-bg: var(--pw-brand);
+  --pw-button-border: var(--pw-brand-border-strong);
+  --pw-button-color: var(--pw-color-contrast);
+  --pw-button-shadow: var(--pw-shadow-button);
+  --pw-button-bg-hover: var(--pw-brand-strong);
+  --pw-button-border-hover: var(--pw-brand-border-strong);
+  --pw-button-shadow-hover: var(--pw-shadow-hover);
+  --pw-button-bg-active: var(--pw-brand-strong);
+  --pw-button-border-active: var(--pw-brand-border-strong);
+  --pw-button-shadow-active: var(--pw-shadow-button);
+  --pw-button-translate-hover: -1px;
+  --pw-button-translate-active: 0;
 }
 
-.payment-widget .payment-button--primary:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 32px rgba(79, 70, 229, 0.32);
+
+.payment-widget .payment-button--secondary {
+  --pw-button-bg: var(--pw-accent-strong);
+  --pw-button-border: var(--pw-accent-border);
+  --pw-button-color: var(--pw-color-contrast);
+  --pw-button-shadow: var(--shadow-md);
+  --pw-button-bg-hover: var(--pw-accent-strong);
+  --pw-button-border-hover: var(--pw-accent-border);
+  --pw-button-shadow-hover: var(--shadow-lg);
+  --pw-button-bg-active: var(--pw-accent-strong);
+  --pw-button-border-active: var(--pw-accent-border);
+  --pw-button-shadow-active: var(--shadow-md);
+  --pw-button-translate-hover: -1px;
+  --pw-button-translate-active: 0;
 }
 
-.payment-widget .payment-button--primary:not(:disabled):active {
-  transform: translateY(0);
-  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
+.payment-widget .payment-button--destructive {
+  --pw-button-bg: var(--pw-color-danger);
+  --pw-button-border: var(--pw-danger-border);
+  --pw-button-color: var(--pw-color-contrast);
+  --pw-button-shadow: var(--shadow-md);
+  --pw-button-bg-hover: var(--pw-color-danger);
+  --pw-button-border-hover: var(--pw-danger-border);
+  --pw-button-shadow-hover: var(--shadow-lg);
+  --pw-button-bg-active: var(--pw-color-danger);
+  --pw-button-border-active: var(--pw-danger-border);
+  --pw-button-shadow-active: var(--shadow-md);
+  --pw-button-translate-hover: -1px;
+  --pw-button-translate-active: 0;
+}
+
+.payment-widget .payment-button--outline {
+  --pw-button-bg: var(--pw-card-bg);
+  --pw-button-border: var(--pw-border-regular);
+  --pw-button-shadow: none;
+  --pw-button-bg-hover: var(--pw-surface-soft);
+  --pw-button-border-hover: var(--pw-brand-border);
+  --pw-button-bg-active: var(--pw-surface-subtle);
+  --pw-button-border-active: var(--pw-brand-border-strong);
+  --pw-button-shadow-hover: none;
+  --pw-button-shadow-active: none;
+}
+
+.payment-widget .payment-button--ghost {
+  --pw-button-bg: transparent;
+  --pw-button-border: transparent;
+  --pw-button-color: var(--pw-brand);
+  --pw-button-shadow: none;
+  --pw-button-bg-hover: var(--pw-surface-soft);
+  --pw-button-border-hover: transparent;
+  --pw-button-color-hover: var(--pw-brand);
+  --pw-button-bg-active: var(--pw-surface-subtle);
+  --pw-button-border-active: transparent;
+  --pw-button-color-active: var(--pw-brand);
+  --pw-button-shadow-hover: none;
+  --pw-button-shadow-active: none;
+}
+
+.payment-widget .payment-button--link {
+  --pw-button-bg: transparent;
+  --pw-button-border: transparent;
+  --pw-button-color: var(--pw-brand);
+  --pw-button-shadow: none;
+  --pw-button-bg-hover: transparent;
+  --pw-button-border-hover: transparent;
+  --pw-button-color-hover: var(--pw-brand);
+  --pw-button-bg-active: transparent;
+  --pw-button-border-active: transparent;
+  --pw-button-color-active: var(--pw-brand);
+  --pw-button-shadow-hover: none;
+  --pw-button-shadow-active: none;
+  --pw-button-padding-x: 0;
+  --pw-button-min-height: auto;
+  --pw-button-font-size: inherit;
+  --pw-button-translate-hover: 0;
+  --pw-button-translate-active: 0;
+}
+
+.payment-widget .payment-button--link {
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.payment-widget .payment-button--link:not(:disabled):hover,
+.payment-widget .payment-button--link:not(:disabled):active {
+  text-decoration: underline;
 }
 
 .payment-widget .pw-button__content {
@@ -310,45 +435,47 @@
   animation: payment-widget-spin 0.6s linear infinite;
 }
 
-.payment-widget .payment-button--secondary {
-  background-color: var(--pw-accent-strong);
-  color: var(--pw-color-contrast);
-  border-color: var(--pw-accent-border);
-  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.25);
-}
-
-.payment-widget .payment-button--secondary:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(249, 115, 22, 0.32);
-}
-
-.payment-widget .payment-button--outline {
-  background-color: var(--pw-card-bg);
-  color: var(--pw-color-text);
-  border-color: var(--pw-border-regular);
-}
-
-.payment-widget .payment-button--outline:not(:disabled):hover {
-  border-color: var(--pw-brand-border);
-  background-color: var(--pw-surface-soft);
-}
-
 .payment-widget .payment-button--size-default {
-  min-height: 36px;
-  padding: 0 20px;
-  font-size: 0.85rem;
+  --pw-button-min-height: 40px;
+  --pw-button-padding-x: 20px;
+  --pw-button-font-size: 0.85rem;
 }
 
 .payment-widget .payment-button--size-sm {
-  min-height: 30px;
-  padding: 0 16px;
-  font-size: 0.75rem;
+  --pw-button-min-height: 32px;
+  --pw-button-padding-x: 16px;
+  --pw-button-font-size: 0.75rem;
+}
+
+.payment-widget .payment-button--size-lg {
+  --pw-button-min-height: 48px;
+  --pw-button-padding-x: 24px;
+  --pw-button-font-size: 0.95rem;
 }
 
 .payment-widget .payment-button--size-icon {
-  min-height: 30px;
-  width: 30px;
+  --pw-button-min-height: 32px;
+  --pw-button-padding-x: 0;
+  --pw-button-font-size: 0.85rem;
+  width: var(--pw-button-min-height);
   padding: 0;
+}
+
+@supports (color-mix(in srgb, white 10%, transparent)) {
+  .payment-widget .payment-button--primary {
+    --pw-button-bg-hover: color-mix(in srgb, var(--pw-brand) 88%, var(--pw-background) 12%);
+    --pw-button-bg-active: color-mix(in srgb, var(--pw-brand) 80%, var(--pw-background) 20%);
+  }
+
+  .payment-widget .payment-button--secondary {
+    --pw-button-bg-hover: color-mix(in srgb, var(--pw-accent-strong) 88%, var(--pw-background) 12%);
+    --pw-button-bg-active: color-mix(in srgb, var(--pw-accent-strong) 80%, var(--pw-background) 20%);
+  }
+
+  .payment-widget .payment-button--destructive {
+    --pw-button-bg-hover: color-mix(in srgb, var(--pw-color-danger) 88%, var(--pw-background) 12%);
+    --pw-button-bg-active: color-mix(in srgb, var(--pw-color-danger) 80%, var(--pw-background) 20%);
+  }
 }
 
 .payment-widget .payment-skeleton {
@@ -590,7 +717,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--pw-primary);
+  color: var(--pw-brand);
   font-weight: 600;
 }
 
@@ -637,7 +764,7 @@
 
 .payment-widget .pw-target-card__timestamp {
   color: var(--pw-color-muted);
-  color: color-mix(in srgb, var(--pw-color-muted) 90%, white 10%);
+  color: color-mix(in srgb, var(--pw-color-muted) 90%, var(--pw-background) 10%);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -736,7 +863,7 @@
   border: 1px solid var(--pw-border-soft);
   background: var(--pw-card-bg);
   padding: 10px 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pw-color-contrast) 40%, transparent 60%);
 }
 
 .payment-widget .pw-search__icon {
@@ -1438,30 +1565,11 @@
 
 .payment-widget .pw-button--pay-now {
   margin-top: var(--pw-space-sm);
-  padding: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  background: var(--pw-primary);
-  color: var(--pw-accent);
-  border: none;
-  border-radius: calc(var(--pw-radius) * 0.9);
-  transition: background-color var(--pw-transition), box-shadow var(--pw-transition), transform var(--pw-transition);
-}
-
-.payment-widget .pw-button--pay-now:not(:disabled):hover {
-  background: var(--pw-primary);
-  transform: translateY(-1px);
-}
-
-.payment-widget .pw-button--pay-now:not(:disabled):active {
-  transform: translateY(0);
-}
-
-.payment-widget .pw-button--pay-now:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  --pw-button-padding-x: var(--pw-space-lg);
+  --pw-button-font-size: 1rem;
+  --pw-button-min-height: 48px;
+  --pw-button-translate-hover: -1px;
+  --pw-button-translate-active: 0;
 }
 
 .payment-widget .pw-transaction-group {
@@ -1720,13 +1828,100 @@
 }
 
 .payment-widget .pw-status__badge--neutral {
-  background-color: rgba(148, 163, 184, 0.18);
+  background-color: color-mix(in srgb, var(--pw-color-muted-strong) 18%, transparent 82%);
   border-color: var(--pw-border-regular);
   color: var(--pw-color-muted-strong);
 }
 
 .payment-widget .pw-status__badge--custom {
   letter-spacing: 0.16em;
+}
+
+.payment-widget .payment-notice {
+  --pw-notice-bg: var(--pw-surface-soft);
+  --pw-notice-border: var(--pw-border-regular);
+  --pw-notice-color: var(--pw-color-text);
+  --pw-notice-icon: var(--pw-notice-color);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pw-space-sm);
+  border-radius: calc(var(--pw-radius) * 0.8);
+  border: 1px solid var(--pw-notice-border);
+  background-color: var(--pw-notice-bg);
+  color: var(--pw-notice-color);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  box-shadow: var(--shadow-xs);
+}
+
+.payment-widget .payment-notice__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--pw-notice-icon);
+  flex-shrink: 0;
+}
+
+.payment-widget .payment-notice__icon.is-spinning {
+  animation: payment-widget-spin 1s linear infinite;
+}
+
+.payment-widget .payment-notice__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-widget .payment-notice__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pw-notice-color);
+}
+
+.payment-widget .payment-notice__description {
+  font-size: 0.78rem;
+  color: var(--pw-notice-color);
+}
+
+@supports (color-mix(in srgb, var(--pw-notice-color) 80%, transparent)) {
+  .payment-widget .payment-notice__description {
+    color: color-mix(in srgb, var(--pw-notice-color) 80%, transparent);
+  }
+}
+
+.payment-widget .payment-notice--info {
+  --pw-notice-bg: var(--pw-surface-soft);
+  --pw-notice-border: var(--pw-brand-border);
+  --pw-notice-color: var(--pw-brand-strong);
+  --pw-notice-icon: var(--pw-brand);
+}
+
+.payment-widget .payment-notice--success {
+  --pw-notice-bg: var(--pw-success-soft);
+  --pw-notice-border: var(--pw-success-border);
+  --pw-notice-color: var(--pw-success-text);
+  --pw-notice-icon: var(--pw-success-border);
+}
+
+.payment-widget .payment-notice--warning {
+  --pw-notice-bg: var(--pw-warning-soft);
+  --pw-notice-border: var(--pw-warning-border);
+  --pw-notice-color: var(--pw-warning-text);
+  --pw-notice-icon: var(--pw-warning-border);
+}
+
+.payment-widget .payment-notice--destructive {
+  --pw-notice-bg: var(--pw-danger-soft);
+  --pw-notice-border: var(--pw-danger-border);
+  --pw-notice-color: var(--pw-danger-text);
+  --pw-notice-icon: var(--pw-danger-border);
+}
+
+@supports (color-mix(in srgb, var(--pw-brand) 14%, transparent)) {
+  .payment-widget .payment-notice--info {
+    --pw-notice-bg: color-mix(in srgb, var(--pw-brand) 14%, var(--pw-background) 86%);
+    --pw-notice-color: color-mix(in srgb, var(--pw-brand) 65%, var(--pw-color-text) 35%);
+  }
 }
 
 .payment-widget .pw-alert {
@@ -1832,13 +2027,13 @@
 .payment-widget .pw-history-card--interactive:hover {
   transform: translateY(-2px);
   border-color: var(--pw-brand-border);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-lg);
 }
 
 .payment-widget .pw-history-card--interactive:focus-visible {
   outline: none;
   border-color: var(--pw-brand-border-strong);
-  box-shadow: 0 0 0 3px var(--pw-brand-focus-ring), 0 12px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 0 0 3px var(--pw-brand-focus-ring), var(--shadow-lg);
 }
 
 .payment-widget .pw-history-card__layout {
@@ -1867,7 +2062,7 @@
 }
 
 .payment-widget .pw-history-card__status .pw-status__badge {
-  --pw-history-status-color: color-mix(in srgb, var(--pw-color-muted-strong, #94a3b8) 92%, transparent 8%);
+  --pw-history-status-color: color-mix(in srgb, var(--pw-color-muted-strong) 92%, transparent 8%);
   padding: 6px 18px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -1889,11 +2084,11 @@
 }
 
 .payment-widget .pw-history-card__status .pw-status__badge--warning {
-  --pw-history-status-color: color-mix(in srgb, var(--pw-card-bg) 20%, var(--pw-color-warning, #d97706) 80%);
+  --pw-history-status-color: color-mix(in srgb, var(--pw-card-bg) 20%, var(--pw-color-warning) 80%);
 }
 
 .payment-widget .pw-history-card__status .pw-status__badge--neutral {
-  --pw-history-status-color: color-mix(in srgb, var(--pw-card-bg) 28%, var(--pw-color-muted-strong, #94a3b8) 72%);
+  --pw-history-status-color: color-mix(in srgb, var(--pw-card-bg) 28%, var(--pw-color-muted-strong) 72%);
 }
 
 .payment-widget .pw-history-card__chains {
@@ -1944,7 +2139,7 @@
 
 .payment-widget .pw-history-card__updated-time {
   font-weight: 500;
-  color: color-mix(in srgb, var(--pw-color-muted) 85%, white 15%);
+  color: color-mix(in srgb, var(--pw-color-muted) 85%, var(--pw-background) 15%);
 }
 
 .payment-widget .pw-history-card__amount-skeleton {
@@ -2154,22 +2349,13 @@
 }
 
 .payment-widget .pw-tracking__notice {
-  display: flex;
+  margin-bottom: var(--pw-space-md);
   align-items: center;
-  gap: var(--pw-space-sm);
-  border-radius: calc(var(--pw-radius) * 0.7);
-  border: 1px solid var(--pw-border-regular);
-  background-color: var(--pw-brand-soft);
-  padding: 10px 14px;
-  font-size: 0.75rem;
-  color: var(--pw-color-muted-strong);
 }
 
-.payment-widget .pw-tracking__spinner {
-  width: 16px;
-  height: 16px;
-  color: var(--pw-brand);
-  animation: payment-widget-spin 1s linear infinite;
+.payment-widget .pw-tracking__notice .payment-notice__icon {
+  width: 20px;
+  height: 20px;
 }
 
 .payment-widget .pw-tracking-timeline {

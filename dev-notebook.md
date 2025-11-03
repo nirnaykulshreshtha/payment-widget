@@ -6,6 +6,42 @@ Context: Continued cleanup of `PaymentWidget` to reduce coupling and keep the pr
 
 ---
 
+## Button Variant System (2025-11-03)
+
+**Motivation:** Align button styling with the shadcn design language while keeping the widget themeable and preventing style duplication. Legacy rules mixed structural and visual properties, making hover/active states inconsistent across variants.
+
+### What Changed
+
+- Refactored `src/styles.css` to drive all button visuals through a CSS custom property system, ensuring base layout styles stay centralized.
+- Added explicit shadcn-style variants (`default`, `primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`) plus shared interaction tokens for hover/active/focus states, including graceful fallbacks when `color-mix` is unavailable.
+- Expanded size modifiers to use CSS variables and included a `size-lg` option for parity with shadcn components.
+- Updated `src/ui/primitives.tsx` button typings/mappings so the React primitive exposes the full variant and size surface area without duplicating class logic.
+
+### Notes
+
+- Theme tokens such as `--pw-brand` remain the single source of truth; variants simply remap those tokens, keeping the system reusable for downstream consumers.
+- Link and ghost variants intentionally suppress padding/min-height via variables rather than overrides, preserving composability with future size tokens.
+
+---
+
+## Shadcn Theme Mapping (2025-11-03)
+
+**Motivation:** Ensure the widget consumes the host application's shadcn tokens directly so theming stays consistent and there is a single source of truth for surface, border, and color definitions.
+
+### What Changed
+
+- Rebound the `:root`-scoped widget variables in `src/styles.css` to reference shadcn CSS custom properties (e.g. `--primary`, `--background`, `--border`) instead of local fallbacks.
+- Preserved advanced styling (`color-mix` fallbacks, gradients, focus rings) using the same tokens so light/dark modes inherit palette adjustments automatically.
+- Swept the stylesheet for literal color and shadow values, replacing them with the derived `--pw-*` tokens so every rule now inherits from the shadcn theme.
+- Introduced a reusable `Notice` primitive plus supporting styles so status banners (e.g. payment tracking) borrow shadcn alert semantics instead of ad-hoc markup.
+
+### Notes
+
+- This change removes default color literals; integrators must provide the shadcn theme tokens, but that already aligns with our runtime contract.
+- Future palette tweaks now only require updating the upstream shadcn theme, and the widget will track them without further overrides.
+
+---
+
 ## Controller Extraction (2025-11-03)
 
 **Motivation:** `src/widget.tsx` still hosted business logic, lifecycle effects, and rendering, making maintenance noisy even after prior hook extractions. We needed a reusable controller layer to encapsulate orchestration while leaving the component focused on layout.

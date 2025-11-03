@@ -9,6 +9,7 @@ import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS } from '../../history/constants';
 import { RelativeTime } from './RelativeTime';
 import { ExpandableSection } from './ExpandableSection';
+import { Notice } from '../../ui/primitives';
 
 export interface PaymentTrackingViewProps {
   historyId: string;
@@ -32,10 +33,13 @@ export function PaymentTrackingView({ historyId }: PaymentTrackingViewProps) {
   return (
     <div className="pw-view pw-view--tracking">
       {isProcessing && (
-        <div className="pw-tracking__notice">
-          <Loader2 className="pw-tracking__spinner" />
-          <span>Still delivering your payment. Sit tight while we update the timeline.</span>
-        </div>
+        <Notice
+          variant="info"
+          icon={Loader2}
+          iconClassName="is-spinning"
+          className="pw-tracking__notice"
+          description="Still delivering your payment. Sit tight while we update the timeline."
+        />
       )}
       <TimelineSection entry={entry} />
     </div>

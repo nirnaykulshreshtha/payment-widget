@@ -7,6 +7,7 @@ import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS } from '../../history/constants';
 import { RelativeTime } from './RelativeTime';
 import { ExpandableSection } from './ExpandableSection';
+import { Notice } from '../../ui/primitives';
 export function PaymentTrackingView({ historyId }) {
     const snapshot = usePaymentHistoryStore();
     const entry = snapshot.entries.find((item) => item.id === historyId);
@@ -14,7 +15,7 @@ export function PaymentTrackingView({ historyId }) {
         return (_jsx(EmptyStateView, { title: "Payment not found", description: "We couldn't find that payment in your history. Try refreshing your history view." }));
     }
     const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
-    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry })] }));
+    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsx(Notice, { variant: "info", icon: Loader2, iconClassName: "is-spinning", className: "pw-tracking__notice", description: "Still delivering your payment. Sit tight while we update the timeline." })), _jsx(TimelineSection, { entry: entry })] }));
 }
 function TimelineSection({ entry }) {
     const latestStep = useMemo(() => {
