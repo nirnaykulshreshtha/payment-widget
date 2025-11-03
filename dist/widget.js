@@ -8,6 +8,7 @@ import { ZERO_ADDRESS, ZERO_INTEGRATOR_ID } from './config';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import { clearPaymentHistory, completeDirect, failBridge, failDirect, initializePaymentHistory, recordBridgeInit, recordDirectInit, recordSwapInit, updateBridgeAfterDeposit, updateBridgeAfterWrap, updateBridgeFilled, updateBridgeDepositTxHash, updateDirectTxPending, updateSwapApprovalConfirmed, updateSwapApprovalSubmitted, updateSwapFilled, updateSwapTxConfirmed, updateSwapTxPending, failSwap, refreshPendingHistory, } from './history';
+import { usePaymentHistoryStore } from './history/store';
 import { clonePaymentOption } from './widget/utils/clone-option';
 import { computeTargetWithSlippage } from './widget/utils/slippage';
 import { describeAmount, describeRawAmount } from './widget/utils/formatting';
@@ -1008,7 +1009,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     ]);
     const targetChainLabel = chainLookup.get(config.targetChainId) ?? config.targetChainId;
     const targetChainLogoUrl = useMemo(() => chainLogos.get(config.targetChainId), [chainLogos, config.targetChainId]);
-    const { sourceChainLabel, sourceChainLogoUrl } = useMemo(() => {
+    const { sourceChainLabel: defaultSourceChainLabel, sourceChainLogoUrl: defaultSourceChainLogoUrl } = useMemo(() => {
         if (!selectedOption) {
             return { sourceChainLabel: null, sourceChainLogoUrl: undefined };
         }
@@ -1025,6 +1026,23 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     }, [chainLookup, chainLogos, config.targetChainId, selectedOption]);
     const targetSymbol = targetToken?.symbol ?? 'Token';
     const formattedTargetAmount = useMemo(() => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18), [config.targetAmount, targetToken?.decimals]);
+    const historySnapshot = usePaymentHistoryStore();
+    const historyEntries = historySnapshot.entries;
+    const latestHistoryEntry = useMemo(() => {
+        if (!historyEntries.length) {
+            return null;
+        }
+        let latest = null;
+        for (const entry of historyEntries) {
+            if (!latest || entry.updatedAt > latest.updatedAt) {
+                latest = entry;
+            }
+        }
+        return latest;
+    }, [historyEntries]);
+    const trackingEntry = currentView.name === 'tracking'
+        ? historyEntries.find((entry) => entry.id === currentView.historyId) ?? null
+        : null;
     const errorMessages = useMemo(() => Array.from(new Set([planner.error, executionError, quoteError].filter(Boolean))), [planner.error, executionError, quoteError]);
     const errorToastIds = useRef(new Map());
     useEffect(() => {
@@ -1113,7 +1131,39 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
         pushView,
         maxSlippageBps: config.maxSlippageBps,
     });
-    const { headerConfig, content } = renderedView;
+    const content = renderedView.content;
+    const headerConfig = { ...renderedView.headerConfig };
+    if (currentView.name === 'history') {
+        headerConfig.title = historyEntries.length
+            ? `Recent Activity (${historyEntries.length})`
+            : headerConfig.title ?? 'Recent Activity';
+    }
+    const headerEntry = currentView.name === 'tracking'
+        ? trackingEntry
+        : currentView.name === 'history'
+            ? latestHistoryEntry
+            : null;
+    let headerAmountLabel = formattedTargetAmount;
+    let headerSymbol = targetSymbol;
+    let headerSourceChainLabel = defaultSourceChainLabel ?? undefined;
+    let headerSourceChainLogoUrl = defaultSourceChainLogoUrl;
+    let headerTargetChainLabel = targetChainLabel;
+    let headerTargetChainLogoUrl = targetChainLogoUrl;
+    let headerLastUpdated = planner.lastUpdated;
+    let primaryEyebrowLabel;
+    if (headerEntry) {
+        const useOutput = headerEntry.outputAmount > 0n;
+        const token = useOutput ? headerEntry.outputToken : headerEntry.inputToken;
+        const amountValue = useOutput ? headerEntry.outputAmount : headerEntry.inputAmount;
+        headerAmountLabel = formatTokenAmount(amountValue, token.decimals);
+        headerSymbol = token.symbol;
+        headerSourceChainLabel = chainLookup.get(headerEntry.originChainId) ?? headerEntry.originChainId;
+        headerSourceChainLogoUrl = chainLogos.get(headerEntry.originChainId);
+        headerTargetChainLabel = chainLookup.get(headerEntry.destinationChainId) ?? headerEntry.destinationChainId;
+        headerTargetChainLogoUrl = chainLogos.get(headerEntry.destinationChainId);
+        headerLastUpdated = headerEntry.updatedAt;
+        primaryEyebrowLabel = currentView.name === 'tracking' ? 'TRACKING PAYMENT' : 'RECENT PAYMENT';
+    }
     const canGoBack = viewStack.length > 1;
     const previousViewName = canGoBack ? viewStack[viewStack.length - 2]?.name ?? null : null;
     let backButtonLabel;
@@ -1132,7 +1182,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
                 backButtonLabel = 'Back';
         }
     }
-    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: formattedTargetAmount, targetSymbol: targetSymbol, targetChainLabel: targetChainLabel, sourceChainLabel: sourceChainLabel ?? undefined, targetChainLogoUrl: targetChainLogoUrl, sourceChainLogoUrl: sourceChainLogoUrl, lastUpdated: planner.lastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, showPrimary: headerConfig.showPrimary, title: headerConfig.title, showTimestamp: headerConfig.showTimestamp, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel }), content] })] }));
+    return (_jsxs("div", { className: "payment-widget flex-col w-full space-y-6", children: [_jsx(PaymentToastViewport, {}), _jsxs("div", { className: "payment-widget__layout", children: [_jsx(PaymentSummaryHeader, { targetAmountLabel: headerAmountLabel, targetSymbol: headerSymbol, targetChainLabel: headerTargetChainLabel, sourceChainLabel: headerSourceChainLabel, targetChainLogoUrl: headerTargetChainLogoUrl, sourceChainLogoUrl: headerSourceChainLogoUrl, lastUpdated: headerLastUpdated, onRefresh: planner.refresh, isRefreshing: headerConfig.showRefresh ? planner.isLoading : false, onViewHistory: openHistoryView, showRefresh: headerConfig.showRefresh, showHistory: headerConfig.showHistory, showPrimary: headerConfig.showPrimary, title: headerConfig.title, showTimestamp: headerConfig.showTimestamp, onBack: canGoBack ? popView : undefined, showBack: canGoBack, backLabel: backButtonLabel, primaryEyebrowLabel: primaryEyebrowLabel }), content] })] }));
 }
 export { PaymentWidget as CrossChainDeposit };
 export default PaymentWidget;

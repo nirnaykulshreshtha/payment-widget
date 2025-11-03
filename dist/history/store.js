@@ -73,6 +73,7 @@ class PaymentHistoryStore {
         };
     };
     getSnapshot = () => this.state;
+    getServerSnapshot = () => this.state;
     emit() {
         for (const listener of this.listeners) {
             listener();
@@ -681,7 +682,7 @@ function deserializeEntry(entry) {
 }
 const store = new PaymentHistoryStore();
 export function usePaymentHistoryStore() {
-    return useSyncExternalStore(store.subscribe, store.getSnapshot);
+    return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
 }
 export function initializePaymentHistory(account, env) {
     store.initialize(account ?? undefined, env);

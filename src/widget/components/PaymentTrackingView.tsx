@@ -1,21 +1,21 @@
-import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
-import { Skeleton } from '../../ui/primitives';
+import { useMemo } from 'react';
+import { ClockIcon, Loader2 } from 'lucide-react';
 
-import type { PaymentHistoryEntry } from '../../types';
-import { formatAmountWithSymbol } from '../../history/utils';
+import type { PaymentHistoryEntry, PaymentHistoryStatus } from '../../types';
+import { cn } from '../../lib';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
+import { StatusDisplay } from '../../components/StatusDisplay';
 import { RelativeTime } from './RelativeTime';
-import { TokenAvatar } from './avatars/TokenAvatar';
+import { ExpandableSection } from './ExpandableSection';
 
 export interface PaymentTrackingViewProps {
   historyId: string;
-  chainLookup: Map<number, string | number>;
 }
 
-export function PaymentTrackingView({ historyId, chainLookup }: PaymentTrackingViewProps) {
+export function PaymentTrackingView({ historyId }: PaymentTrackingViewProps) {
   const snapshot = usePaymentHistoryStore();
   const entry = snapshot.entries.find((item) => item.id === historyId);
 
@@ -28,8 +28,6 @@ export function PaymentTrackingView({ historyId, chainLookup }: PaymentTrackingV
     );
   }
 
-  const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
-  const outputLabel = formatAmountWithSymbol(entry.outputAmount ?? 0n, entry.outputToken.decimals, entry.outputToken.symbol);
   const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
 
   return (
@@ -40,86 +38,71 @@ export function PaymentTrackingView({ historyId, chainLookup }: PaymentTrackingV
           <span>Still delivering your payment. Sit tight while we update the timeline.</span>
         </div>
       )}
-      {isProcessing ? (
-        <TrackingSectionSkeleton />
-      ) : (
-        <>
-          <ReceiptSummary
-            entry={entry}
-            chainLookup={chainLookup}
-            inputLabel={inputLabel}
-            outputLabel={outputLabel}
-          />
-          <TransactionHashes entry={entry} />
-        </>
-      )}
-      <div className="pw-tracking__timeline">
-        <HistoryTimeline timeline={entry.timeline} entry={entry} />
-      </div>
+      <TimelineSection entry={entry} />
+      <TransactionHashes entry={entry} />
       <UpdatedFooter updatedAt={entry.updatedAt} />
     </div>
   );
 }
 
+function TimelineSection({ entry }: { entry: PaymentHistoryEntry }) {
+  const latestStep = useMemo(() => {
+    if (!entry.timeline?.length) {
+      return {
+        stage: entry.status,
+        timestamp: entry.updatedAt ?? Date.now(),
+      };
+    }
 
-function ReceiptSummary({
-  entry,
-  chainLookup,
-  inputLabel,
-  outputLabel,
-}: {
-  entry: PaymentHistoryEntry;
-  chainLookup: Map<number, string | number>;
-  inputLabel: string;
-  outputLabel: string;
-}) {
-  const originChainLabel = chainLookup.get(entry.originChainId) ?? entry.originChainId;
-  const destinationChainLabel = chainLookup.get(entry.destinationChainId) ?? entry.destinationChainId;
-  const transferLabel =
-    entry.mode === 'direct'
-      ? 'Direct payment'
-      : entry.mode === 'swap'
-        ? 'Swap & send'
-        : 'Cross-network payment';
+    const sorted = [...entry.timeline].sort((a, b) => {
+      if (a.timestamp === b.timestamp) return 0;
+      return a.timestamp < b.timestamp ? -1 : 1;
+    });
+    const mostRecent = sorted[sorted.length - 1];
+    return {
+      stage: mostRecent.stage ?? entry.status,
+      timestamp: mostRecent.timestamp ?? entry.updatedAt ?? Date.now(),
+    };
+  }, [entry.status, entry.timeline, entry.updatedAt]);
 
   return (
-    <div className="pw-receipt">
-      <div className="pw-receipt__card">
-        <span className="pw-receipt__label">You sent</span>
-        <div className="pw-receipt__asset">
-          <TokenAvatar
-            symbol={entry.inputToken.symbol}
-            logoUrl={entry.inputToken.logoUrl}
-            className="pw-receipt__avatar"
-          />
-          <div className="pw-receipt__details">
-            <span className="pw-receipt__amount">{inputLabel}</span>
-            <span className="pw-receipt__token">
-              {entry.inputToken.symbol} · {originChainLabel}
-            </span>
-          </div>
+    <ExpandableSection
+      key={entry.id}
+      className="pw-tracking-timeline"
+      summary={(expanded) => (
+        <div className={cn('pw-tracking-timeline__summary', expanded && 'is-open')}>
+          <span className="pw-tracking-timeline__eyebrow">Latest status</span>
+          <AnimatedStatus status={latestStep.stage} />
+          <span className="pw-tracking-timeline__timestamp">
+            Updated <RelativeTime timestamp={latestStep.timestamp} />
+          </span>
         </div>
-      </div>
-      <div className="pw-receipt__divider">
-        <ArrowRight className="pw-receipt__icon" aria-hidden />
-        <span className="pw-receipt__mode">{transferLabel}</span>
-      </div>
-      <div className="pw-receipt__card">
-        <span className="pw-receipt__label">You receive</span>
-        <div className="pw-receipt__asset">
-          <TokenAvatar
-            symbol={entry.outputToken.symbol}
-            logoUrl={entry.outputToken.logoUrl}
-            className="pw-receipt__avatar"
+      )}
+      collapsedAriaLabel="Show payment timeline"
+      expandedAriaLabel="Hide payment timeline"
+      defaultExpanded
+      toggleClassName="pw-tracking-timeline__toggle"
+      chevronClassName="pw-tracking-timeline__chevron"
+      contentClassName="pw-tracking-timeline__content"
+    >
+      <HistoryTimeline timeline={entry.timeline} entry={entry} />
+    </ExpandableSection>
+  );
+}
+
+function AnimatedStatus({ status }: { status: PaymentHistoryStatus }) {
+  return (
+    <div className="pw-tracking-timeline__status-outer">
+      {[status].map((value) => (
+        <div className="pw-tracking-timeline__status" key={value}>
+          <StatusDisplay
+            status={value}
+            showSimplifiedStatus={false}
+            className="pw-tracking-timeline__status-display"
+            originalStatusClassName="pw-tracking-timeline__status-text"
           />
-          <div className="pw-receipt__details">
-            <span className="pw-receipt__amount">{outputLabel}</span>
-            <span className="pw-receipt__token">
-              {entry.outputToken.symbol} · {destinationChainLabel}
-            </span>
-          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -179,22 +162,6 @@ function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
     </div>
   );
 }
-
-function TrackingSectionSkeleton() {
-  return (
-    <div className="pw-tracking-skeleton">
-      <div className="pw-receipt">
-        <Skeleton className="payment-skeleton pw-receipt__skeleton" />
-        <Skeleton className="payment-skeleton pw-receipt__skeleton" />
-      </div>
-      <div className="pw-history-hashes">
-        <Skeleton className="payment-skeleton" />
-      </div>
-    </div>
-  );
-}
-
-
 
 function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
   return (

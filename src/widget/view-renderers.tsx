@@ -135,33 +135,31 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
           showHistory: false,
           showRefresh: false,
           showPrimary: false,
-          showTimestamp: false,
+          showTimestamp: true,
           title: 'Recent Activity',
         },
         content: (
           <PaymentHistoryScreen
-          onSelectEntry={(entryId) => onOpenTracking(entryId)}
-          onClearHistory={onClearHistory}
-          isClearing={isClearingHistory}
-          chainLookup={chainLookup}
-          chainLogos={chainLogos}
-        />
+            onSelectEntry={(entryId) => onOpenTracking(entryId)}
+            onClearHistory={onClearHistory}
+            isClearing={isClearingHistory}
+            chainLookup={chainLookup}
+            chainLogos={chainLogos}
+          />
         ),
       };
     case 'tracking':
       return {
         headerConfig: {
-          showHistory: false,
-          showRefresh: false,
-          showPrimary: false,
-          showTimestamp: false,
-          title: 'Payment Tracking',
+          showHistory: true,
+          showRefresh: true,
+          showPrimary: true,
+          showTimestamp: true,
         },
         content: (
           <PaymentTrackingView
-          historyId={view.historyId}
-          chainLookup={chainLookup}
-        />
+            historyId={view.historyId}
+          />
         ),
       };
     case 'success':

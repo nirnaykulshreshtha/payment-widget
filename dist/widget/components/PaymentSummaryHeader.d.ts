@@ -17,5 +17,6 @@ export interface PaymentSummaryHeaderProps {
     showPrimary?: boolean;
     title?: string;
     showTimestamp?: boolean;
+    primaryEyebrowLabel?: string;
 }
-export declare function PaymentSummaryHeader({ targetAmountLabel, targetSymbol, targetChainLabel, sourceChainLabel, targetChainLogoUrl, sourceChainLogoUrl, lastUpdated, onRefresh, isRefreshing, onViewHistory, onBack, showRefresh, showHistory, showBack, backLabel, showPrimary, showTimestamp, title, }: PaymentSummaryHeaderProps): import("react/jsx-runtime").JSX.Element;
+export declare function PaymentSummaryHeader({ targetAmountLabel, targetSymbol, targetChainLabel, sourceChainLabel, targetChainLogoUrl, sourceChainLogoUrl, lastUpdated, onRefresh, isRefreshing, onViewHistory, onBack, showRefresh, showHistory, showBack, backLabel, showPrimary, showTimestamp, title, primaryEyebrowLabel, }: PaymentSummaryHeaderProps): import("react/jsx-runtime").JSX.Element;

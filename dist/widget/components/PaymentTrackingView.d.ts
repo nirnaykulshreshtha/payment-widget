@@ -1,5 +1,4 @@
 export interface PaymentTrackingViewProps {
     historyId: string;
-    chainLookup: Map<number, string | number>;
 }
-export declare function PaymentTrackingView({ historyId, chainLookup }: PaymentTrackingViewProps): import("react/jsx-runtime").JSX.Element;
+export declare function PaymentTrackingView({ historyId }: PaymentTrackingViewProps): import("react/jsx-runtime").JSX.Element;

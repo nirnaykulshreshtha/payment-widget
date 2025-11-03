@@ -48,7 +48,7 @@ export function renderPaymentView(config) {
                     showHistory: false,
                     showRefresh: false,
                     showPrimary: false,
-                    showTimestamp: false,
+                    showTimestamp: true,
                     title: 'Recent Activity',
                 },
                 content: (_jsx(PaymentHistoryScreen, { onSelectEntry: (entryId) => onOpenTracking(entryId), onClearHistory: onClearHistory, isClearing: isClearingHistory, chainLookup: chainLookup, chainLogos: chainLogos })),
@@ -56,13 +56,12 @@ export function renderPaymentView(config) {
         case 'tracking':
             return {
                 headerConfig: {
-                    showHistory: false,
-                    showRefresh: false,
-                    showPrimary: false,
-                    showTimestamp: false,
-                    title: 'Payment Tracking',
+                    showHistory: true,
+                    showRefresh: true,
+                    showPrimary: true,
+                    showTimestamp: true,
                 },
-                content: (_jsx(PaymentTrackingView, { historyId: view.historyId, chainLookup: chainLookup })),
+                content: (_jsx(PaymentTrackingView, { historyId: view.historyId })),
             };
         case 'success':
             return {

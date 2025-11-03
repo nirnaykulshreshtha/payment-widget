@@ -1,42 +1,52 @@
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { ArrowRight, ClockIcon, Loader2 } from 'lucide-react';
-import { Skeleton } from '../../ui/primitives';
-import { formatAmountWithSymbol } from '../../history/utils';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useMemo } from 'react';
+import { ClockIcon, Loader2 } from 'lucide-react';
+import { cn } from '../../lib';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
 import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
 import { TransactionGroup } from '../../components/TransactionGroup';
+import { StatusDisplay } from '../../components/StatusDisplay';
 import { RelativeTime } from './RelativeTime';
-import { TokenAvatar } from './avatars/TokenAvatar';
-export function PaymentTrackingView({ historyId, chainLookup }) {
+import { ExpandableSection } from './ExpandableSection';
+export function PaymentTrackingView({ historyId }) {
     const snapshot = usePaymentHistoryStore();
     const entry = snapshot.entries.find((item) => item.id === historyId);
     if (!entry) {
         return (_jsx(EmptyStateView, { title: "Payment not found", description: "We couldn't find that payment in your history. Try refreshing your history view." }));
     }
-    const inputLabel = formatAmountWithSymbol(entry.inputAmount, entry.inputToken.decimals, entry.inputToken.symbol);
-    const outputLabel = formatAmountWithSymbol(entry.outputAmount ?? 0n, entry.outputToken.decimals, entry.outputToken.symbol);
     const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
-    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), isProcessing ? (_jsx(TrackingSectionSkeleton, {})) : (_jsxs(_Fragment, { children: [_jsx(ReceiptSummary, { entry: entry, chainLookup: chainLookup, inputLabel: inputLabel, outputLabel: outputLabel }), _jsx(TransactionHashes, { entry: entry })] })), _jsx("div", { className: "pw-tracking__timeline", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
+    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry }), _jsx(TransactionHashes, { entry: entry }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
 }
-function ReceiptSummary({ entry, chainLookup, inputLabel, outputLabel, }) {
-    const originChainLabel = chainLookup.get(entry.originChainId) ?? entry.originChainId;
-    const destinationChainLabel = chainLookup.get(entry.destinationChainId) ?? entry.destinationChainId;
-    const transferLabel = entry.mode === 'direct'
-        ? 'Direct payment'
-        : entry.mode === 'swap'
-            ? 'Swap & send'
-            : 'Cross-network payment';
-    return (_jsxs("div", { className: "pw-receipt", children: [_jsxs("div", { className: "pw-receipt__card", children: [_jsx("span", { className: "pw-receipt__label", children: "You sent" }), _jsxs("div", { className: "pw-receipt__asset", children: [_jsx(TokenAvatar, { symbol: entry.inputToken.symbol, logoUrl: entry.inputToken.logoUrl, className: "pw-receipt__avatar" }), _jsxs("div", { className: "pw-receipt__details", children: [_jsx("span", { className: "pw-receipt__amount", children: inputLabel }), _jsxs("span", { className: "pw-receipt__token", children: [entry.inputToken.symbol, " \u00B7 ", originChainLabel] })] })] })] }), _jsxs("div", { className: "pw-receipt__divider", children: [_jsx(ArrowRight, { className: "pw-receipt__icon", "aria-hidden": true }), _jsx("span", { className: "pw-receipt__mode", children: transferLabel })] }), _jsxs("div", { className: "pw-receipt__card", children: [_jsx("span", { className: "pw-receipt__label", children: "You receive" }), _jsxs("div", { className: "pw-receipt__asset", children: [_jsx(TokenAvatar, { symbol: entry.outputToken.symbol, logoUrl: entry.outputToken.logoUrl, className: "pw-receipt__avatar" }), _jsxs("div", { className: "pw-receipt__details", children: [_jsx("span", { className: "pw-receipt__amount", children: outputLabel }), _jsxs("span", { className: "pw-receipt__token", children: [entry.outputToken.symbol, " \u00B7 ", destinationChainLabel] })] })] })] })] }));
+function TimelineSection({ entry }) {
+    const latestStep = useMemo(() => {
+        if (!entry.timeline?.length) {
+            return {
+                stage: entry.status,
+                timestamp: entry.updatedAt ?? Date.now(),
+            };
+        }
+        const sorted = [...entry.timeline].sort((a, b) => {
+            if (a.timestamp === b.timestamp)
+                return 0;
+            return a.timestamp < b.timestamp ? -1 : 1;
+        });
+        const mostRecent = sorted[sorted.length - 1];
+        return {
+            stage: mostRecent.stage ?? entry.status,
+            timestamp: mostRecent.timestamp ?? entry.updatedAt ?? Date.now(),
+        };
+    }, [entry.status, entry.timeline, entry.updatedAt]);
+    return (_jsx(ExpandableSection, { className: "pw-tracking-timeline", summary: (expanded) => (_jsxs("div", { className: cn('pw-tracking-timeline__summary', expanded && 'is-open'), children: [_jsx("span", { className: "pw-tracking-timeline__eyebrow", children: "Latest status" }), _jsx(AnimatedStatus, { status: latestStep.stage }), _jsxs("span", { className: "pw-tracking-timeline__timestamp", children: ["Updated ", _jsx(RelativeTime, { timestamp: latestStep.timestamp })] })] })), collapsedAriaLabel: "Show payment timeline", expandedAriaLabel: "Hide payment timeline", defaultExpanded: true, toggleClassName: "pw-tracking-timeline__toggle", chevronClassName: "pw-tracking-timeline__chevron", contentClassName: "pw-tracking-timeline__content", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }, entry.id));
+}
+function AnimatedStatus({ status }) {
+    return (_jsx("div", { className: "pw-tracking-timeline__status-outer", children: [status].map((value) => (_jsx("div", { className: "pw-tracking-timeline__status", children: _jsx(StatusDisplay, { status: value, showSimplifiedStatus: false, className: "pw-tracking-timeline__status-display", originalStatusClassName: "pw-tracking-timeline__status-text" }) }, value))) }));
 }
 function TransactionHashes({ entry }) {
     if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
         return null;
     }
     return (_jsxs("div", { className: "pw-history-hashes", children: [entry.approvalTxHashes?.length ? (_jsx(TransactionGroup, { title: "Wallet approval", indicatorColor: "var(--pw-color-warning)", hashes: entry.approvalTxHashes, chainId: entry.originChainId, variant: "compact" })) : null, entry.depositTxHash ? (_jsx(TransactionGroup, { title: "Deposit sent", indicatorColor: "var(--pw-brand)", hashes: [entry.depositTxHash], chainId: entry.originChainId, variant: "compact" })) : null, entry.swapTxHash ? (_jsx(TransactionGroup, { title: "Swap sent", indicatorColor: "var(--pw-color-success)", hashes: [entry.swapTxHash], chainId: entry.originChainId, variant: "compact" })) : null, entry.fillTxHash ? (_jsx(TransactionGroup, { title: "Funds delivered", indicatorColor: "var(--pw-brand-strong)", hashes: [entry.fillTxHash], chainId: entry.destinationChainId, variant: "compact" })) : null, entry.wrapTxHash ? (_jsx(TransactionGroup, { title: "Wrap step", indicatorColor: "var(--pw-accent-strong)", hashes: [entry.wrapTxHash], chainId: entry.originChainId, variant: "compact" })) : null] }));
-}
-function TrackingSectionSkeleton() {
-    return (_jsxs("div", { className: "pw-tracking-skeleton", children: [_jsxs("div", { className: "pw-receipt", children: [_jsx(Skeleton, { className: "payment-skeleton pw-receipt__skeleton" }), _jsx(Skeleton, { className: "payment-skeleton pw-receipt__skeleton" })] }), _jsx("div", { className: "pw-history-hashes", children: _jsx(Skeleton, { className: "payment-skeleton" }) })] }));
 }
 function UpdatedFooter({ updatedAt }) {
     return (_jsxs("div", { className: "pw-history-updated", children: [_jsxs("div", { className: "pw-history-updated__meta", children: [_jsx(ClockIcon, { className: "pw-history-updated__icon" }), _jsx("span", { className: "pw-history-updated__label", children: "Last updated" })] }), _jsx(RelativeTime, { timestamp: updatedAt, className: "pw-history-updated__time" })] }));

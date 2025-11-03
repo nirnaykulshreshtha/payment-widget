@@ -2175,11 +2175,122 @@
   animation: payment-widget-spin 1s linear infinite;
 }
 
-.payment-widget .pw-tracking__timeline {
+.payment-widget .pw-tracking-timeline {
   border-radius: calc(var(--pw-radius) * 0.9);
   border: 1px solid var(--pw-border-regular);
   background: var(--pw-card-bg);
-  padding: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--pw-space-md);
+}
+
+.payment-widget .pw-tracking-timeline:first-child {
+  margin-top: var(--pw-space-sm);
+}
+
+.payment-widget .pw-tracking-timeline__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pw-space-sm);
+  width: 100%;
+  padding: 18px 20px;
+  border: none;
+  border-bottom: 1px solid var(--pw-border-line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--pw-transition);
+}
+
+.payment-widget .pw-tracking-timeline__toggle:hover {
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-tracking-timeline__toggle:focus-visible {
+  outline: 2px solid var(--pw-brand-focus-ring);
+  outline-offset: -2px;
+}
+
+.payment-widget .pw-tracking-timeline__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.payment-widget .pw-tracking-timeline__eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pw-color-muted);
+}
+
+.payment-widget .pw-tracking-timeline__status-outer {
+  min-height: 22px;
+}
+
+.payment-widget .pw-tracking-timeline__status {
+  animation: pw-status-fade 220ms ease;
+  animation-fill-mode: both;
+}
+
+.payment-widget .pw-tracking-timeline__status-display {
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.payment-widget .pw-tracking-timeline__status-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pw-color-text);
+  text-align: left;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.payment-widget .pw-tracking-timeline__timestamp {
+  font-size: 0.72rem;
+  color: var(--pw-color-muted-strong);
+}
+
+.payment-widget .pw-tracking-timeline__chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--pw-color-muted);
+  transition: transform var(--pw-transition);
+  flex-shrink: 0;
+}
+
+.payment-widget .pw-tracking-timeline__chevron.is-open {
+  transform: rotate(180deg);
+  color: var(--pw-brand);
+}
+
+.payment-widget .pw-tracking-timeline__content {
+  padding: 0 20px;
+}
+
+.payment-widget .pw-tracking-timeline__content.is-open {
+  padding: 16px 20px 20px;
+}
+
+.payment-widget .pw-tracking-timeline__content.is-open > .pw-timeline {
+  animation: pw-fade-in 0.35s ease;
+  animation-fill-mode: both;
+}
+
+@keyframes pw-status-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .payment-widget .pw-timeline {

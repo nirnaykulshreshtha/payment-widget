@@ -6,14 +6,10 @@
  * Redesigned to match payment gateway UI patterns with clear visual hierarchy.
  */
 
-import { useMemo, useState, useEffect } from 'react';
-import { useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useMemo } from 'react';
 
 const LOG_PREFIX = '[payment-details]';
 const log = (...args: unknown[]) => console.debug(LOG_PREFIX, ...args);
-
-import { cn } from '../../lib';
 
 import type { PaymentOption, TokenConfig } from '../../types';
 import type { PaymentDetailsViewProps } from '../types';
@@ -21,6 +17,7 @@ import { computeTargetWithSlippage } from '../utils/slippage';
 import { formatTokenAmount } from '../../utils/amount-format';
 import { renderHashLink } from '../utils/hash-link';
 import { Button } from '../../ui/primitives';
+import { ExpandableSection } from './ExpandableSection';
 
 export function PaymentDetailsView(props: PaymentDetailsViewProps) {
   const {
@@ -47,63 +44,6 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
     [option, targetAmount, targetToken, maxSlippageBps],
   );
 
-  const [isBreakdownExpanded, setIsBreakdownExpanded] = useState(false);
-  const breakdownContentId = useMemo(() => `pw-breakdown-${option.id}`, [option.id]);
-  const breakdownRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    // Reset expansion when option changes
-    setIsBreakdownExpanded(false);
-    log('reset breakdown expanded state on option change', { optionId: option.id });
-  }, [option.id]);
-
-  const animateOpen = () => {
-    const el = breakdownRef.current;
-    if (!el) return;
-    // Prepare for animation
-    el.style.display = 'block';
-    el.style.overflow = 'hidden';
-    el.style.maxHeight = '0px';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
-    // Force reflow
-    void el.offsetHeight;
-    const targetHeight = el.scrollHeight;
-    el.style.transition = 'max-height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease, transform 320ms ease';
-    el.style.maxHeight = `${targetHeight}px`;
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-    const onEnd = (e: TransitionEvent) => {
-      if (e.propertyName !== 'max-height') return;
-      el.style.maxHeight = 'none';
-      el.removeEventListener('transitionend', onEnd as EventListener);
-    };
-    el.addEventListener('transitionend', onEnd as EventListener);
-  };
-
-  const animateClose = () => {
-    const el = breakdownRef.current;
-    if (!el) return;
-    el.style.overflow = 'hidden';
-    const currentHeight = el.scrollHeight;
-    el.style.maxHeight = `${currentHeight}px`;
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-    // Force reflow
-    void el.offsetHeight;
-    el.style.transition = 'max-height 280ms ease, opacity 160ms ease, transform 280ms ease';
-    el.style.maxHeight = '0px';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
-  };
-
-  const handleToggleBreakdown = () => {
-    const next = !isBreakdownExpanded;
-    log('toggle breakdown', { optionId: option.id, expanded: next });
-    if (next) animateOpen(); else animateClose();
-    setIsBreakdownExpanded(next);
-  };
-
   const hasBreakdownDetails =
     (option.mode === 'bridge' && option.quote) ||
     (option.mode === 'swap' && option.swapQuote) ||
@@ -116,56 +56,42 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
     <div className="pw-view pw-view--details">
       {/* Expandable Breakdown Section */}
       {hasBreakdownDetails && (
-        <div className="pw-details-card">
-          <button
-            type="button"
-            className={cn('pw-breakdown-toggle', isBreakdownExpanded && 'is-open')}
-            onClick={handleToggleBreakdown}
-            aria-expanded={isBreakdownExpanded}
-            aria-controls={breakdownContentId}
-            aria-label={isBreakdownExpanded ? 'Hide details' : 'Show details'}
-          >
-            <span className="pw-breakdown-toggle__label">Details</span>
-            <span className={cn('pw-breakdown-toggle__chevron', isBreakdownExpanded && 'is-open')} aria-hidden>
-              <ChevronDown className="pw-icon-sm" />
-            </span>
-          </button>
-
-          <div
-            ref={breakdownRef}
-            className={cn('pw-breakdown-content-animated', isBreakdownExpanded ? 'is-open' : 'is-closed')}
-            id={breakdownContentId}
-            aria-hidden={!isBreakdownExpanded}
-          >
-            {option.mode === 'bridge' && option.quote && (
-              <>
-                <DetailRow
-                  label="Service fee"
-                  value={`${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}`}
-                />
-                <DetailRow
-                  label="Guaranteed minimum"
-                  value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
-                />
-              </>
-            )}
-            {option.mode === 'swap' && option.swapQuote && (
-              <>
-                <DetailRow
-                  label="Guaranteed minimum"
-                  value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
-                />
-              </>
-            )}
-            {wrapTxHash && <DetailRow label="Wrap transaction" value={renderHashLink(wrapTxHash, originChainId)} />}
-            {option.mode !== 'swap' && depositTxHash && (
-              <DetailRow label={option.mode === 'bridge' ? 'Deposit transaction' : 'Payment transaction'} value={renderHashLink(depositTxHash as string, originChainId)} />
-            )}
-            {option.mode === 'swap' && swapTxHash && (
-              <DetailRow label="Swap transaction" value={renderHashLink(swapTxHash as string, option.swapRoute?.originChainId ?? originChainId)} />
-            )}
-          </div>
-        </div>
+        <ExpandableSection
+          key={option.id}
+          className="pw-details-card"
+          summary={<span className="pw-breakdown-toggle__label">Details</span>}
+          collapsedAriaLabel="Show details"
+          expandedAriaLabel="Hide details"
+          onToggle={(expanded) => log('toggle breakdown', { optionId: option.id, expanded })}
+        >
+          {option.mode === 'bridge' && option.quote && (
+            <>
+              <DetailRow
+                label="Service fee"
+                value={`${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}`}
+              />
+              <DetailRow
+                label="Guaranteed minimum"
+                value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
+              />
+            </>
+          )}
+          {option.mode === 'swap' && option.swapQuote && (
+            <>
+              <DetailRow
+                label="Guaranteed minimum"
+                value={`${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`}
+              />
+            </>
+          )}
+          {wrapTxHash && <DetailRow label="Wrap transaction" value={renderHashLink(wrapTxHash, originChainId)} />}
+          {option.mode !== 'swap' && depositTxHash && (
+            <DetailRow label={option.mode === 'bridge' ? 'Deposit transaction' : 'Payment transaction'} value={renderHashLink(depositTxHash as string, originChainId)} />
+          )}
+          {option.mode === 'swap' && swapTxHash && (
+            <DetailRow label="Swap transaction" value={renderHashLink(swapTxHash as string, option.swapRoute?.originChainId ?? originChainId)} />
+          )}
+        </ExpandableSection>
       )}
 
       {/* Pay Now Button */}

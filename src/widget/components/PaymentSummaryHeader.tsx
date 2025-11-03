@@ -34,6 +34,7 @@ export interface PaymentSummaryHeaderProps {
   showPrimary?: boolean;
   title?: string;
   showTimestamp?: boolean;
+  primaryEyebrowLabel?: string;
 }
 
 export function PaymentSummaryHeader({
@@ -55,13 +56,18 @@ export function PaymentSummaryHeader({
   showPrimary = true,
   showTimestamp = true,
   title,
+  primaryEyebrowLabel = 'YOU NEED TO PAY',
 }: PaymentSummaryHeaderProps) {
   const hasActions = showHistory || showRefresh;
   const showBackButton = Boolean(showBack && onBack);
   const resolvedBackLabel = backLabel ?? 'Back';
   const hasTitle = Boolean(title);
-  const headingId = 'pw-target-card-heading';
-  const sectionLabelId = showPrimary || hasTitle ? headingId : undefined;
+  const primaryHeadingId = 'pw-target-card-heading';
+  const titleHeadingId = 'pw-target-card-title';
+  const sectionLabelSegments = [];
+  if (showPrimary) sectionLabelSegments.push(primaryHeadingId);
+  if (hasTitle) sectionLabelSegments.push(titleHeadingId);
+  const sectionLabelId = sectionLabelSegments.length ? sectionLabelSegments.join(' ') : undefined;
   const targetChainText = String(targetChainLabel);
   const sourceChainText = sourceChainLabel != null ? String(sourceChainLabel) : null;
 
@@ -98,8 +104,8 @@ export function PaymentSummaryHeader({
           )}
           {showPrimary && (
             <div className="pw-target-card__primary">
-              <span className="pw-target-card__eyebrow" id={headingId}>
-                YOU NEED TO PAY
+              <span className="pw-target-card__eyebrow" id={primaryHeadingId}>
+                {primaryEyebrowLabel}
               </span>
               <div className="pw-target-card__amount">
                 <span className="pw-target-card__value">
@@ -138,8 +144,8 @@ export function PaymentSummaryHeader({
               </div>
             </div>
           )}
-          {!showPrimary && title && (
-            <div className="pw-target-card__title" id={headingId}>
+          {title && (
+            <div className="pw-target-card__title" id={titleHeadingId}>
               {title}
             </div>
           )}
