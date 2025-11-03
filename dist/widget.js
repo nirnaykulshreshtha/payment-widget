@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { erc20Abi } from 'viem';
 import { summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
-import { ZERO_ADDRESS, ZERO_INTEGRATOR_ID } from './config';
+import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_ADDRESS, ZERO_INTEGRATOR_ID, deriveNativeToken } from './config';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import { clearPaymentHistory, completeDirect, failBridge, failDirect, initializePaymentHistory, recordBridgeInit, recordDirectInit, recordSwapInit, updateBridgeAfterDeposit, updateBridgeAfterWrap, updateBridgeFilled, updateBridgeDepositTxHash, updateDirectTxPending, updateSwapApprovalConfirmed, updateSwapApprovalSubmitted, updateSwapFilled, updateSwapTxConfirmed, updateSwapTxPending, failSwap, refreshPendingHistory, } from './history';
@@ -33,6 +33,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     const clientError = acrossClientError;
     const planner = useDepositPlanner({ client, setupConfig, paymentConfig });
     const targetToken = planner.targetToken;
+    const [prefetchedTargetToken, setPrefetchedTargetToken] = useState(null);
     const [viewStack, setViewStack] = useState([{ name: 'loading' }]);
     const currentView = viewStack[viewStack.length - 1];
     const [selectedOption, setSelectedOption] = useState(null);
@@ -46,6 +47,118 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     const [quoteError, setQuoteError] = useState(null);
     const [activeHistoryId, setActiveHistoryId] = useState(null);
     const [isClearingHistory, setIsClearingHistory] = useState(false);
+    useEffect(() => {
+        let cancelled = false;
+        const address = config.targetTokenAddress;
+        const chainId = config.targetChainId;
+        const addressLower = address.toLowerCase();
+        const setCandidate = (candidate) => {
+            if (cancelled || !candidate)
+                return;
+            setPrefetchedTargetToken((previous) => {
+                if (previous && previous.address.toLowerCase() === candidate.address.toLowerCase() && previous.chainId === candidate.chainId) {
+                    return previous;
+                }
+                return candidate;
+            });
+        };
+        const wrappedSources = [DEFAULT_WRAPPED_TOKEN_MAP, config.wrappedTokenMap].filter(Boolean);
+        const lookupWrappedToken = () => {
+            for (const source of wrappedSources) {
+                const chainEntry = source[chainId];
+                if (!chainEntry)
+                    continue;
+                for (const entry of Object.values(chainEntry)) {
+                    if (entry.native.address.toLowerCase() === addressLower) {
+                        return entry.native;
+                    }
+                    if (entry.wrapped.address.toLowerCase() === addressLower) {
+                        return entry.wrapped;
+                    }
+                }
+            }
+            return null;
+        };
+        if (addressLower === ZERO_ADDRESS.toLowerCase()) {
+            const native = deriveNativeToken(chainId, config.supportedChains);
+            if (native) {
+                setCandidate(native);
+            }
+            return () => {
+                cancelled = true;
+            };
+        }
+        const wrappedMatch = lookupWrappedToken();
+        if (wrappedMatch) {
+            setCandidate(wrappedMatch);
+            return () => {
+                cancelled = true;
+            };
+        }
+        const client = config.webSocketClients?.[chainId] ??
+            config.publicClients?.[chainId];
+        if (!client || typeof client.readContract !== 'function') {
+            return () => {
+                cancelled = true;
+            };
+        }
+        const resolve = async () => {
+            try {
+                const [symbol, decimals] = await Promise.all([
+                    client.readContract({
+                        address,
+                        abi: erc20Abi,
+                        functionName: 'symbol',
+                    }),
+                    client.readContract({
+                        address,
+                        abi: erc20Abi,
+                        functionName: 'decimals',
+                    }),
+                ]);
+                if (!cancelled) {
+                    setCandidate({
+                        address,
+                        chainId,
+                        symbol,
+                        decimals: Number(decimals ?? 18),
+                    });
+                }
+            }
+            catch (error) {
+                log('[payment-widget] failed to prefetch target token metadata, using fallback', { error });
+                if (!cancelled) {
+                    setCandidate({
+                        address,
+                        chainId,
+                        symbol: 'Token',
+                        decimals: 18,
+                    });
+                }
+            }
+        };
+        resolve();
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        config.targetTokenAddress,
+        config.targetChainId,
+        config.supportedChains,
+        config.publicClients,
+        config.webSocketClients,
+        config.wrappedTokenMap,
+    ]);
+    useEffect(() => {
+        if (!targetToken)
+            return;
+        setPrefetchedTargetToken((previous) => {
+            if (previous && previous.address.toLowerCase() === targetToken.address.toLowerCase() && previous.chainId === targetToken.chainId) {
+                return previous;
+            }
+            return targetToken;
+        });
+    }, [targetToken]);
     const pushView = useCallback((view) => {
         setViewStack((prev) => [...prev, view]);
     }, []);
@@ -1024,25 +1137,17 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             sourceChainLogoUrl: chainLogos.get(originChainId),
         };
     }, [chainLookup, chainLogos, config.targetChainId, selectedOption]);
-    const targetSymbol = targetToken?.symbol ?? 'Token';
-    const formattedTargetAmount = useMemo(() => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18), [config.targetAmount, targetToken?.decimals]);
+    const displayTargetToken = targetToken ?? prefetchedTargetToken;
+    const targetSymbol = displayTargetToken?.symbol ?? 'Token';
+    const formattedTargetAmount = useMemo(() => formatTokenAmount(config.targetAmount, displayTargetToken?.decimals ?? 18), [config.targetAmount, displayTargetToken?.decimals]);
     const historySnapshot = usePaymentHistoryStore();
     const historyEntries = historySnapshot.entries;
-    const latestHistoryEntry = useMemo(() => {
-        if (!historyEntries.length) {
+    const trackingEntry = useMemo(() => {
+        if (currentView.name !== 'tracking') {
             return null;
         }
-        let latest = null;
-        for (const entry of historyEntries) {
-            if (!latest || entry.updatedAt > latest.updatedAt) {
-                latest = entry;
-            }
-        }
-        return latest;
-    }, [historyEntries]);
-    const trackingEntry = currentView.name === 'tracking'
-        ? historyEntries.find((entry) => entry.id === currentView.historyId) ?? null
-        : null;
+        return historyEntries.find((entry) => entry.id === currentView.historyId) ?? null;
+    }, [currentView, historyEntries]);
     const errorMessages = useMemo(() => Array.from(new Set([planner.error, executionError, quoteError].filter(Boolean))), [planner.error, executionError, quoteError]);
     const errorToastIds = useRef(new Map());
     useEffect(() => {
@@ -1138,11 +1243,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
             ? `Recent Activity (${historyEntries.length})`
             : headerConfig.title ?? 'Recent Activity';
     }
-    const headerEntry = currentView.name === 'tracking'
-        ? trackingEntry
-        : currentView.name === 'history'
-            ? latestHistoryEntry
-            : null;
+    const headerEntry = currentView.name === 'tracking' ? trackingEntry : null;
     let headerAmountLabel = formattedTargetAmount;
     let headerSymbol = targetSymbol;
     let headerSourceChainLabel = defaultSourceChainLabel ?? undefined;

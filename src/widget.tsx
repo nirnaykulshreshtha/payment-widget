@@ -8,8 +8,8 @@ import type { ConfiguredPublicClient, ConfiguredWalletClient } from '@across-pro
 import { cn, summarizeError } from './lib';
 import { paymentToast, PaymentToastViewport } from './ui/payment-toast';
 
-import {ZERO_ADDRESS, ZERO_INTEGRATOR_ID} from './config';
-import type { PaymentHistoryEntry, PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig } from './types';
+import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_ADDRESS, ZERO_INTEGRATOR_ID, deriveNativeToken } from './config';
+import type { PaymentHistoryEntry, PaymentOption, PaymentWidgetProps, ResolvedPaymentWidgetConfig, TokenConfig } from './types';
 import { useDepositPlanner } from './hooks/useDepositPlanner';
 import { usePaymentSetup } from './hooks/usePaymentSetup';
 import {
@@ -67,6 +67,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
   const planner = useDepositPlanner({ client, setupConfig, paymentConfig });
   const targetToken = planner.targetToken;
+  const [prefetchedTargetToken, setPrefetchedTargetToken] = useState<TokenConfig | null>(null);
 
   const [viewStack, setViewStack] = useState<PaymentView[]>([{ name: 'loading' }]);
   const currentView = viewStack[viewStack.length - 1];
@@ -82,6 +83,129 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
   const [isClearingHistory, setIsClearingHistory] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const address = config.targetTokenAddress;
+    const chainId = config.targetChainId;
+    const addressLower = address.toLowerCase();
+
+    const setCandidate = (candidate: TokenConfig | null) => {
+      if (cancelled || !candidate) return;
+      setPrefetchedTargetToken((previous) => {
+        if (previous && previous.address.toLowerCase() === candidate.address.toLowerCase() && previous.chainId === candidate.chainId) {
+          return previous;
+        }
+        return candidate;
+      });
+    };
+
+    const wrappedSources = [DEFAULT_WRAPPED_TOKEN_MAP, config.wrappedTokenMap].filter(Boolean) as Array<
+      Record<number, Record<string, { native: TokenConfig; wrapped: TokenConfig }>>
+    >;
+
+    const lookupWrappedToken = () => {
+      for (const source of wrappedSources) {
+        const chainEntry = source[chainId];
+        if (!chainEntry) continue;
+        for (const entry of Object.values(chainEntry)) {
+          if (entry.native.address.toLowerCase() === addressLower) {
+            return entry.native;
+          }
+          if (entry.wrapped.address.toLowerCase() === addressLower) {
+            return entry.wrapped;
+          }
+        }
+      }
+      return null;
+    };
+
+    if (addressLower === ZERO_ADDRESS.toLowerCase()) {
+      const native = deriveNativeToken(chainId, config.supportedChains);
+      if (native) {
+        setCandidate(native);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const wrappedMatch = lookupWrappedToken();
+    if (wrappedMatch) {
+      setCandidate(wrappedMatch);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const client =
+      config.webSocketClients?.[chainId] ??
+      config.publicClients?.[chainId];
+
+    if (!client || typeof (client as { readContract?: unknown }).readContract !== 'function') {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const resolve = async () => {
+      try {
+        const [symbol, decimals] = await Promise.all([
+          (client as ConfiguredPublicClient).readContract({
+            address,
+            abi: erc20Abi,
+            functionName: 'symbol',
+          }) as Promise<string>,
+          (client as ConfiguredPublicClient).readContract({
+            address,
+            abi: erc20Abi,
+            functionName: 'decimals',
+          }) as Promise<number>,
+        ]);
+        if (!cancelled) {
+          setCandidate({
+            address,
+            chainId,
+            symbol,
+            decimals: Number(decimals ?? 18),
+          });
+        }
+      } catch (error) {
+        log('[payment-widget] failed to prefetch target token metadata, using fallback', { error });
+        if (!cancelled) {
+          setCandidate({
+            address,
+            chainId,
+            symbol: 'Token',
+            decimals: 18,
+          });
+        }
+      }
+    };
+
+    resolve();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    config.targetTokenAddress,
+    config.targetChainId,
+    config.supportedChains,
+    config.publicClients,
+    config.webSocketClients,
+    config.wrappedTokenMap,
+  ]);
+
+  useEffect(() => {
+    if (!targetToken) return;
+    setPrefetchedTargetToken((previous) => {
+      if (previous && previous.address.toLowerCase() === targetToken.address.toLowerCase() && previous.chainId === targetToken.chainId) {
+        return previous;
+      }
+      return targetToken;
+    });
+  }, [targetToken]);
 
   const pushView = useCallback((view: PaymentView) => {
     setViewStack((prev) => [...prev, view]);
@@ -1184,31 +1308,21 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
       sourceChainLogoUrl: chainLogos.get(originChainId),
     };
   }, [chainLookup, chainLogos, config.targetChainId, selectedOption]);
-  const targetSymbol = targetToken?.symbol ?? 'Token';
+  const displayTargetToken = targetToken ?? prefetchedTargetToken;
+  const targetSymbol = displayTargetToken?.symbol ?? 'Token';
   const formattedTargetAmount = useMemo(
-    () => formatTokenAmount(config.targetAmount, targetToken?.decimals ?? 18),
-    [config.targetAmount, targetToken?.decimals],
+    () => formatTokenAmount(config.targetAmount, displayTargetToken?.decimals ?? 18),
+    [config.targetAmount, displayTargetToken?.decimals],
   );
   const historySnapshot = usePaymentHistoryStore();
   const historyEntries = historySnapshot.entries;
 
-  const latestHistoryEntry = useMemo(() => {
-    if (!historyEntries.length) {
+  const trackingEntry = useMemo<PaymentHistoryEntry | null>(() => {
+    if (currentView.name !== 'tracking') {
       return null;
     }
-    let latest: PaymentHistoryEntry | null = null;
-    for (const entry of historyEntries) {
-      if (!latest || entry.updatedAt > latest.updatedAt) {
-        latest = entry;
-      }
-    }
-    return latest;
-  }, [historyEntries]);
-
-  const trackingEntry =
-    currentView.name === 'tracking'
-      ? historyEntries.find((entry) => entry.id === currentView.historyId) ?? null
-      : null;
+    return historyEntries.find((entry) => entry.id === currentView.historyId) ?? null;
+  }, [currentView, historyEntries]);
 
   const errorMessages = useMemo(
     () => Array.from(new Set([planner.error, executionError, quoteError].filter(Boolean) as string[])),
@@ -1318,12 +1432,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
       : headerConfig.title ?? 'Recent Activity';
   }
 
-  const headerEntry =
-    currentView.name === 'tracking'
-      ? trackingEntry
-      : currentView.name === 'history'
-        ? latestHistoryEntry
-        : null;
+  const headerEntry = currentView.name === 'tracking' ? trackingEntry : null;
 
   let headerAmountLabel = formattedTargetAmount;
   let headerSymbol = targetSymbol;
