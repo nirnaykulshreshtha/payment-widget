@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo } from 'react';
-import { ClockIcon, Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { cn } from '../../lib';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
@@ -14,7 +14,7 @@ export function PaymentTrackingView({ historyId }) {
         return (_jsx(EmptyStateView, { title: "Payment not found", description: "We couldn't find that payment in your history. Try refreshing your history view." }));
     }
     const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
-    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
+    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry })] }));
 }
 function TimelineSection({ entry }) {
     const latestStep = useMemo(() => {
@@ -37,9 +37,6 @@ function TimelineSection({ entry }) {
     }, [entry.status, entry.timeline, entry.updatedAt]);
     const statusAppearance = useMemo(() => getStatusAppearance(latestStep.stage), [latestStep.stage]);
     return (_jsx(ExpandableSection, { className: "pw-tracking-timeline", summary: (expanded) => (_jsxs("div", { className: cn('pw-tracking-timeline__summary', expanded && 'is-open'), children: [_jsxs("span", { className: cn('pw-status-pill', `pw-status-pill--${statusAppearance.tone}`), children: [_jsx(statusAppearance.Icon, { className: cn('pw-status-pill__icon', statusAppearance.animate && 'is-spinning'), "aria-hidden": true }), _jsx("span", { className: "pw-status-pill__label", children: statusAppearance.label })] }), _jsxs("span", { className: "sr-only", children: ["Updated ", _jsx(RelativeTime, { timestamp: latestStep.timestamp })] })] })), collapsedAriaLabel: "Show payment timeline", expandedAriaLabel: "Hide payment timeline", toggleClassName: "pw-tracking-timeline__toggle", chevronClassName: "pw-tracking-timeline__chevron", contentClassName: "pw-tracking-timeline__content", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }, entry.id));
-}
-function UpdatedFooter({ updatedAt }) {
-    return (_jsxs("div", { className: "pw-history-updated", children: [_jsxs("div", { className: "pw-history-updated__meta", children: [_jsx(ClockIcon, { className: "pw-history-updated__icon" }), _jsx("span", { className: "pw-history-updated__label", children: "Last updated" })] }), _jsx(RelativeTime, { timestamp: updatedAt, className: "pw-history-updated__time" })] }));
 }
 function EmptyStateView({ title, description }) {
     return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("h3", { className: "pw-empty-state__title", children: title }), description && _jsx("p", { className: "pw-empty-state__description", children: description })] }));

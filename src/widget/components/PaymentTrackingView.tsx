@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { ClockIcon, Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
 
 import type { PaymentHistoryEntry, PaymentHistoryStatus } from '../../types';
 import { cn } from '../../lib';
@@ -38,7 +38,6 @@ export function PaymentTrackingView({ historyId }: PaymentTrackingViewProps) {
         </div>
       )}
       <TimelineSection entry={entry} />
-      <UpdatedFooter updatedAt={entry.updatedAt} />
     </div>
   );
 }
@@ -99,18 +98,6 @@ function TimelineSection({ entry }: { entry: PaymentHistoryEntry }) {
     >
       <HistoryTimeline timeline={entry.timeline} entry={entry} />
     </ExpandableSection>
-  );
-}
-
-function UpdatedFooter({ updatedAt }: { updatedAt: number }) {
-  return (
-    <div className="pw-history-updated">
-      <div className="pw-history-updated__meta">
-        <ClockIcon className="pw-history-updated__icon" />
-        <span className="pw-history-updated__label">Last updated</span>
-      </div>
-      <RelativeTime timestamp={updatedAt} className="pw-history-updated__time" />
-    </div>
   );
 }
 
