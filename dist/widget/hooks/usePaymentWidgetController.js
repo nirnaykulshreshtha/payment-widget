@@ -61,7 +61,7 @@ export function usePaymentWidgetController(options) {
     const [isClearingHistory, setIsClearingHistory] = useState(false);
     const executionState = useExecutionState();
     const { isExecuting, setExecutionError, executionError, setWrapTxHash, wrapTxHash, setTxHash, txHash, swapTxHash, approvalTxHashes, setApprovalTxHashes, resetExecutionState, } = executionState;
-    const { chainLookup, chainLogos } = useChainData(config.supportedChains);
+    const { chainLookup, chainLogos } = useChainData(config);
     const uniqueOptions = useMemo(() => {
         const seen = new Map();
         planner.options.forEach((option) => {

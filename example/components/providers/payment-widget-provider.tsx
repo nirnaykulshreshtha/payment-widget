@@ -23,6 +23,7 @@ import type { SetupConfig } from "@matching-platform/payment-widget"
 
 import { logger } from "@/lib/logger"
 import { createSonnerToastHandler } from "@/lib/payment-widget-toast-handler"
+import { useTheme, type ThemeMode } from "@/hooks/use-theme"
 import {
   buildSetupConfig,
   presetSummaryForMode,
@@ -49,6 +50,12 @@ export function PaymentWidgetProvider({
 
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
+  const { mode: themeMode, mounted: themeMounted } = useTheme()
+  const DEFAULT_THEME_MODE: ThemeMode = "dark"
+
+  const overrideAppearanceMode = setupConfigOverride?.appearance?.mode as ThemeMode | undefined
+  const themeModeFromHook = themeMounted ? themeMode : undefined
+  const effectiveThemeMode = overrideAppearanceMode ?? themeModeFromHook ?? DEFAULT_THEME_MODE
 
   const mode =
     modeOverride ??
@@ -59,29 +66,64 @@ export function PaymentWidgetProvider({
   const setupConfig = useMemo(() => {
     const toastHandler = createSonnerToastHandler()
     
+    // Prepare appearance config with theme mode for theme-aware assets (e.g., chain logos)
+    // Respect override mode when provided; otherwise use effective theme mode for consistency
+    const appearance = (() => {
+      if (setupConfigOverride?.appearance) {
+        const override = setupConfigOverride.appearance
+        if (override.mode) {
+          return override
+        }
+        return effectiveThemeMode
+          ? {
+              ...override,
+              mode: effectiveThemeMode,
+            }
+          : override
+      }
+      return effectiveThemeMode ? { mode: effectiveThemeMode } : undefined
+    })()
+    
     if (setupConfigOverride) {
       logger.info("payment-widget:provider:config:override", {
         ...presetSummaryForMode(mode),
         hasWalletClient: Boolean(setupConfigOverride.walletClient),
         walletAddress: setupConfigOverride.walletClient?.account?.address ?? address,
+        themeMode: effectiveThemeMode,
+        themeMounted,
       })
-      // Merge toast handler with override config
-      return { ...setupConfigOverride, toastHandler }
+      // Merge toast handler and appearance config with override config
+      return { 
+        ...setupConfigOverride, 
+        toastHandler,
+        appearance,
+      }
     }
 
     const config = buildSetupConfig({ mode, walletClient: walletClient || undefined })
     
-    // Add toast handler to the config
-    const configWithToast = { ...config, toastHandler }
+    // Add toast handler and appearance config
+    const configWithToast = {
+      ...config,
+      toastHandler,
+      appearance: appearance
+        ? {
+            ...config.appearance,
+            ...appearance,
+          }
+        : config.appearance,
+    }
 
     logger.info("payment-widget:provider:config", {
       ...presetSummaryForMode(mode),
       hasWalletClient: Boolean(walletClient),
       walletAddress: address,
+      themeMode: effectiveThemeMode,
+      themeMounted,
     })
 
     return configWithToast
-  }, [setupConfigOverride, walletClient, address, mode])
+  }, [setupConfigOverride, walletClient, address, mode, effectiveThemeMode, themeMounted])
 
   return (
     <BasePaymentWidgetProvider setupConfig={setupConfig}>

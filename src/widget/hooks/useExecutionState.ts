@@ -3,7 +3,7 @@
  * Centralizes state management for transaction hashes and execution status.
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Hex } from 'viem';
 
 /**
@@ -20,14 +20,18 @@ export function useExecutionState() {
   const [swapTxHash, setSwapTxHash] = useState<Hex | null>(null);
   const [approvalTxHashes, setApprovalTxHashes] = useState<Hex[]>([]);
 
-  const resetExecutionState = () => {
+  /**
+   * Resets all execution state to initial values.
+   * Memoized with useCallback to ensure stable reference for useEffect dependencies.
+   */
+  const resetExecutionState = useCallback(() => {
     setIsExecuting(false);
     setExecutionError(null);
     setWrapTxHash(null);
     setTxHash(null);
     setSwapTxHash(null);
     setApprovalTxHashes([]);
-  };
+  }, []);
 
   return {
     isExecuting,

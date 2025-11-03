@@ -6,10 +6,10 @@
 import { defineChain, http, webSocket, createPublicClient } from 'viem';
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 export const ZERO_INTEGRATOR_ID = '0x0001';
-const defaultNative = (symbol) => ({
+export const defaultNative = (symbol, decimals = 18) => ({
     name: symbol,
     symbol,
-    decimals: 18,
+    decimals,
 });
 /**
  * Network configuration for supported chains.
@@ -22,7 +22,8 @@ export const NETWORK_CONFIG = {
             {
                 chainId: 11155111,
                 name: 'Ethereum Sepolia',
-                logoUrl: 'https://sepolia.etherscan.io/images/svg/brands/ethereum-original-light.svg',
+                logoUrl: 'https://sepolia.etherscan.io/images/svg/brands/ethereum-original.svg',
+                logoUrlDark: 'https://sepolia.etherscan.io/images/svg/brands/ethereum-original-light.svg',
                 rpcUrl: process.env.NEXT_PUBLIC_ETHEREUM_SEPOLIA_RPC_URL || 'https://ethereum-sepolia.core.chainstack.com/0e277d48f1a45d9bff67c1dab4f51560',
                 rpcWsUrl: process.env.NEXT_PUBLIC_ETHEREUM_SEPOLIA_WS_URL || 'wss://ethereum-sepolia.core.chainstack.com/0e277d48f1a45d9bff67c1dab4f51560',
                 blockExplorerUrl: 'https://sepolia.etherscan.io',
@@ -31,7 +32,8 @@ export const NETWORK_CONFIG = {
             {
                 chainId: 84532,
                 name: 'Base Sepolia',
-                logoUrl: 'https://sepolia.basescan.org/assets/basesepolia/images/svg/logos/chain-dark.svg?v=25.10.4.0',
+                logoUrl: 'https://sepolia.basescan.org/assets/basesepolia/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://sepolia.basescan.org/assets/basesepolia/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://base-sepolia.core.chainstack.com/aacc294142486b77a001918cb5e6426e',
                 rpcWsUrl: process.env.NEXT_PUBLIC_BASE_SEPOLIA_WS_URL || 'wss://base-sepolia.core.chainstack.com/aacc294142486b77a001918cb5e6426e',
                 blockExplorerUrl: 'https://sepolia.basescan.org',
@@ -41,6 +43,7 @@ export const NETWORK_CONFIG = {
                 chainId: 80002,
                 name: 'Polygon Amoy',
                 logoUrl: 'https://amoy.polygonscan.com/assets/poly/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://amoy.polygonscan.com/assets/poly/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_POLYGON_AMOY_RPC_URL || 'https://polygon-amoy.core.chainstack.com/07601c193a66582f09c585e948a01377',
                 rpcWsUrl: process.env.NEXT_PUBLIC_POLYGON_AMOY_WS_URL || 'wss://polygon-amoy.core.chainstack.com/07601c193a66582f09c585e948a01377',
                 blockExplorerUrl: 'https://amoy.polygonscan.com',
@@ -53,7 +56,8 @@ export const NETWORK_CONFIG = {
             {
                 chainId: 1,
                 name: 'Ethereum',
-                logoUrl: 'https://etherscan.io/images/svg/brands/ethereum-original-light.svg',
+                logoUrl: 'https://sepolia.etherscan.io/images/svg/brands/ethereum-original.svg',
+                logoUrlDark: 'https://sepolia.etherscan.io/images/svg/brands/ethereum-original-light.svg',
                 rpcUrl: process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL || 'https://ethereum-mainnet.core.chainstack.com/974ecc7fcd719f2ee35a8e8731a166a4',
                 rpcWsUrl: process.env.NEXT_PUBLIC_ETHEREUM_WS_URL || 'wss://ethereum-mainnet.core.chainstack.com/974ecc7fcd719f2ee35a8e8731a166a4',
                 blockExplorerUrl: 'https://etherscan.io',
@@ -62,7 +66,8 @@ export const NETWORK_CONFIG = {
             {
                 chainId: 8453,
                 name: 'Base',
-                logoUrl: 'https://sepolia.basescan.org/assets/basesepolia/images/svg/logos/chain-dark.svg?v=25.10.4.0',
+                logoUrl: 'https://basescan.org/assets/base/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://basescan.org/assets/base/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://base-mainnet.core.chainstack.com/d93c56071ff6e150acd85f444dcdf7f1',
                 rpcWsUrl: process.env.NEXT_PUBLIC_BASE_WS_URL || 'wss://base-mainnet.core.chainstack.com/d93c56071ff6e150acd85f444dcdf7f1',
                 blockExplorerUrl: 'https://basescan.org',
@@ -72,6 +77,7 @@ export const NETWORK_CONFIG = {
                 chainId: 42161,
                 name: 'Arbitrum',
                 logoUrl: 'https://arbiscan.io/assets/arbitrum/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://arbiscan.io/assets/arbitrum/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL || 'https://arbitrum-mainnet.core.chainstack.com/c24ac5289d91cc2e198c5ea1e9eb9b13',
                 rpcWsUrl: process.env.NEXT_PUBLIC_ARBITRUM_WS_URL || 'wss://arbitrum-mainnet.core.chainstack.com/c24ac5289d91cc2e198c5ea1e9eb9b13',
                 blockExplorerUrl: 'https://arbiscan.io',
@@ -81,19 +87,17 @@ export const NETWORK_CONFIG = {
                 chainId: 56,
                 name: 'BNB Smart Chain',
                 logoUrl: 'https://bscscan.com/assets/bsc/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://bscscan.com/assets/bsc/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_BNB_RPC_URL || 'https://bsc-mainnet.core.chainstack.com/9bf2bf94ce561d6c3869118f5717e1ee',
                 rpcWsUrl: process.env.NEXT_PUBLIC_BNB_WS_URL || 'wss://bsc-mainnet.core.chainstack.com/9bf2bf94ce561d6c3869118f5717e1ee',
                 blockExplorerUrl: 'https://bscscan.com',
-                nativeCurrency: {
-                    name: 'BNB',
-                    symbol: 'BNB',
-                    decimals: 18,
-                },
+                nativeCurrency: defaultNative('BNB', 18),
             },
             {
                 chainId: 10,
                 name: 'Optimism',
                 logoUrl: 'https://optimistic.etherscan.io/assets/optimism/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://optimistic.etherscan.io/assets/optimism/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL || 'https://optimism-mainnet.core.chainstack.com/fd142682867420a63f37e66331e56957',
                 rpcWsUrl: process.env.NEXT_PUBLIC_OPTIMISM_WS_URL || 'wss://optimism-mainnet.core.chainstack.com/fd142682867420a63f37e66331e56957',
                 blockExplorerUrl: 'https://optimistic.etherscan.io',
@@ -102,7 +106,8 @@ export const NETWORK_CONFIG = {
             {
                 chainId: 137,
                 name: 'Polygon',
-                logoUrl: 'https://amoy.polygonscan.com/assets/poly/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrl: 'https://polygonscan.com/assets/poly/images/svg/logos/chain-light.svg?v=25.10.4.0',
+                logoUrlDark: 'https://polygonscan.com/assets/poly/images/svg/logos/chain-dark.svg?v=25.10.4.0',
                 rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC_URL || 'https://polygon-mainnet.core.chainstack.com/a6819c270ce905b1760086252a751b43',
                 rpcWsUrl: process.env.NEXT_PUBLIC_POLYGON_WS_URL || 'wss://polygon-mainnet.core.chainstack.com/a6819c270ce905b1760086252a751b43',
                 blockExplorerUrl: 'https://polygonscan.com',

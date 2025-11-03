@@ -2,6 +2,11 @@ import type { Address, Chain, PublicClient } from 'viem';
 import type { ChainConfig, NetworkConfig, ResolvedSetupConfig, SetupConfig, TokenConfig } from './types';
 export declare const ZERO_ADDRESS: Address;
 export declare const ZERO_INTEGRATOR_ID: Address;
+export declare const defaultNative: (symbol: string, decimals?: number) => {
+    name: string;
+    symbol: string;
+    decimals: number;
+};
 /**
  * Network configuration for supported chains.
  * Note: The `logoUrl` property is optional but should be provided for better UX.

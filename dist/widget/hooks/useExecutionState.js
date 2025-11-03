@@ -2,7 +2,7 @@
  * @fileoverview Hook for managing execution state across all payment execution types.
  * Centralizes state management for transaction hashes and execution status.
  */
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 /**
  * Manages execution state including transaction hashes and execution status.
  * Provides state and setters for all execution-related state variables.
@@ -16,14 +16,18 @@ export function useExecutionState() {
     const [txHash, setTxHash] = useState(null);
     const [swapTxHash, setSwapTxHash] = useState(null);
     const [approvalTxHashes, setApprovalTxHashes] = useState([]);
-    const resetExecutionState = () => {
+    /**
+     * Resets all execution state to initial values.
+     * Memoized with useCallback to ensure stable reference for useEffect dependencies.
+     */
+    const resetExecutionState = useCallback(() => {
         setIsExecuting(false);
         setExecutionError(null);
         setWrapTxHash(null);
         setTxHash(null);
         setSwapTxHash(null);
         setApprovalTxHashes([]);
-    };
+    }, []);
     return {
         isExecuting,
         setIsExecuting,

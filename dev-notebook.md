@@ -1,5 +1,94 @@
 ## Developer Notebook
 
+Date: 2025-01-XX
+
+## Theme-Aware Chain Logos (2025-01-XX)
+
+**Motivation:** Support different chain logo URLs for light and dark themes. Chain logos should automatically switch based on the current theme mode to ensure optimal visibility and brand consistency.
+
+### What Changed
+
+- **Extended ChainConfig interface:**
+  - Added `logoUrlDark?: string` property to `ChainConfig` in `src/types.ts`
+  - Updated `logoUrl` documentation to clarify it's for light theme
+  - Supports providing both light and dark logos, with fallback behavior
+
+- **Added theme detection:**
+  - Created `useThemeMode` hook (`src/widget/hooks/useThemeMode.ts`) for reactive theme detection
+  - Supports explicit theme mode from `SetupConfig.appearance.mode` (highest priority)
+  - Auto-detects from DOM: checks for 'dark' class on html element (used by next-themes, tailwind) and prefers-color-scheme media query
+  - Listens for theme changes reactively via MutationObserver and media query listeners
+  - Defaults to 'light' if detection fails
+
+- **Updated chain logo selection:**
+  - Modified `useChainData` hook to accept full `ResolvedPaymentWidgetConfig` instead of just `supportedChains`
+  - Logo selection logic: uses `logoUrlDark` when theme is 'dark' and dark logo is available, otherwise uses `logoUrl`
+  - Falls back to `logoUrlDark` if `logoUrl` is not provided
+  - Logs theme-aware logo selection for debugging
+
+- **Added PaymentTheme interface:**
+  - Created `PaymentTheme` interface in `src/types.ts` with `mode?: 'light' | 'dark'` property
+  - Added `appearance?: PaymentTheme` to `SetupConfig` interface
+  - Allows integrated apps to explicitly pass theme mode for theme-aware assets
+
+- **Updated example app integration:**
+  - Modified `example/components/providers/payment-widget-provider.tsx` to use `useTheme` hook
+  - Passes theme mode to `SetupConfig.appearance.mode`
+  - Moved `PaymentWidgetProvider` inside `ThemeProvider` in layout to ensure theme is available
+  - Handles theme mounting state gracefully (falls back to auto-detection if theme not ready)
+
+### Usage
+
+Integrated applications can provide theme-aware chain logos in two ways:
+
+1. **Explicit theme mode (recommended):**
+```typescript
+<PaymentWidgetProvider 
+  setupConfig={{
+    ...otherConfig,
+    appearance: {
+      mode: 'dark', // or 'light'
+    },
+    supportedChains: [
+      {
+        chainId: 1,
+        name: 'Ethereum',
+        logoUrl: 'https://example.com/ethereum-light.png',
+        logoUrlDark: 'https://example.com/ethereum-dark.png',
+        // ... other config
+      },
+    ],
+  }}
+>
+  <PaymentWidget ... />
+</PaymentWidgetProvider>
+```
+
+2. **Auto-detection (fallback):**
+If `appearance.mode` is not provided, the widget automatically detects theme from:
+- `dark` class on `html` element (next-themes, tailwind pattern)
+- `prefers-color-scheme: dark` media query
+- Defaults to 'light' if neither indicates dark mode
+
+### Files Affected
+
+- `src/types.ts` - Added `logoUrlDark` to `ChainConfig`, added `PaymentTheme` interface, added `appearance` to `SetupConfig`
+- `src/widget/hooks/useThemeMode.ts` - New hook for theme detection
+- `src/widget/hooks/useChainData.ts` - Updated to select theme-appropriate logos
+- `src/widget/hooks/usePaymentWidgetController.ts` - Updated to pass full config to `useChainData`
+- `src/widget/hooks/index.ts` - Exported `useThemeMode`
+- `example/components/providers/payment-widget-provider.tsx` - Passes theme mode to SetupConfig
+- `example/app/layout.tsx` - Moved PaymentWidgetProvider inside ThemeProvider
+
+### Notes
+
+- Backward compatible: if only `logoUrl` is provided, it works for both themes
+- Theme detection is reactive: logos update automatically when theme changes
+- Aggressive logging added for theme detection and logo selection for debugging
+- Single source of truth: theme mode comes from SetupConfig or DOM, never duplicated
+
+---
+
 Date: 2025-11-03
 
 Context: Continued cleanup of `PaymentWidget` to reduce coupling and keep the presentation layer thin. Maintained single source of truth and aggressive logging.

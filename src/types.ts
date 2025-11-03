@@ -62,7 +62,17 @@ export interface ChainConfig {
   rpcUrl: string;
   rpcWsUrl?: string;
   blockExplorerUrl?: string;
+  /**
+   * Logo URL for light theme. If both logoUrl and logoUrlDark are provided,
+   * logoUrl will be used for light theme and logoUrlDark for dark theme.
+   * If only logoUrl is provided, it will be used for both themes.
+   */
   logoUrl?: string;
+  /**
+   * Logo URL for dark theme. If provided, this will be used when the theme mode is 'dark'.
+   * Falls back to logoUrl if not provided.
+   */
+  logoUrlDark?: string;
   nativeCurrency: {
     name: string;
     symbol: string;
@@ -76,6 +86,27 @@ export interface TokenConfig {
   decimals: number;
   chainId: number;
   logoUrl?: string;
+}
+
+/**
+ * Appearance configuration for payment widget theming.
+ */
+export interface PaymentTheme {
+  /**
+   * Theme mode. If not provided, the widget will attempt to detect it from the DOM
+   * (checking for 'dark' class on html element or prefers-color-scheme media query).
+   * Defaults to 'light' if detection fails.
+   */
+  mode?: 'light' | 'dark';
+  brandColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  fontFamily?: string;
+  card?: { backgroundColor?: string; textColor?: string; borderColor?: string };
+  button?: { primaryClassName?: string; secondaryClassName?: string };
+  className?: string;
 }
 
 export interface SetupConfig {
@@ -98,6 +129,12 @@ export interface SetupConfig {
    * If not provided, toast notifications will be silently ignored.
    */
   toastHandler?: ToastHandler;
+  /**
+   * Optional appearance configuration for theming the payment widget.
+   * The mode property can be used to explicitly set the theme mode,
+   * which will be used for selecting theme-aware assets like chain logos.
+   */
+  appearance?: PaymentTheme;
 }
 
 export interface ResolvedSetupConfig extends SetupConfig {

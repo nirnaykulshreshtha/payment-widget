@@ -26,19 +26,19 @@ export default function RootLayout({
         className={`${inter.variable} min-h-screen bg-background text-foreground antialiased transition-colors duration-300`}
       >
         <WagmiProvider>
-          <PaymentWidgetProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <PaymentWidgetProvider>
               <LazyMotionProvider>
                 {children}
                 <Toaster />
               </LazyMotionProvider>
-            </ThemeProvider>
-          </PaymentWidgetProvider>
+            </PaymentWidgetProvider>
+          </ThemeProvider>
         </WagmiProvider>
       </body>
     </html>

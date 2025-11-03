@@ -7,6 +7,7 @@ export { useExecutionState } from './useExecutionState';
 export { useHeaderConfig } from './useHeaderConfig';
 export { usePaymentExecution } from './usePaymentExecution';
 export { useQuoteRefinement } from './useQuoteRefinement';
+export { useThemeMode } from './useThemeMode';
 export { useTokenPrefetch } from './useTokenPrefetch';
 export { useViewStack } from './useViewStack';
 export { useWalletChain } from './useWalletChain';

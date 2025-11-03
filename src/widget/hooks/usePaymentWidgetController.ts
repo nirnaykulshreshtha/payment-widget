@@ -110,7 +110,7 @@ export function usePaymentWidgetController(
     resetExecutionState,
   } = executionState;
 
-  const { chainLookup, chainLogos } = useChainData(config.supportedChains);
+  const { chainLookup, chainLogos } = useChainData(config);
 
   const uniqueOptions = useMemo(() => {
     const seen = new Map<string, PaymentOption>();
