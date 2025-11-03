@@ -2216,43 +2216,51 @@
 
 .payment-widget .pw-tracking-timeline__summary {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
+  align-items: center;
+  gap: var(--pw-space-sm);
 }
 
-.payment-widget .pw-tracking-timeline__eyebrow {
-  font-size: 0.65rem;
-  letter-spacing: 0.24em;
+.payment-widget .pw-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--pw-color-muted);
+  transition:
+    background-color var(--pw-transition),
+    border-color var(--pw-transition),
+    box-shadow var(--pw-transition);
 }
 
-.payment-widget .pw-tracking-timeline__status-outer {
-  min-height: 22px;
+.payment-widget .pw-status-pill__icon {
+  width: 18px;
+  height: 18px;
 }
 
-.payment-widget .pw-tracking-timeline__status {
-  animation: pw-status-fade 220ms ease;
-  animation-fill-mode: both;
+.payment-widget .pw-status-pill__icon.is-spinning {
+  animation: payment-widget-spin 1s linear infinite;
 }
 
-.payment-widget .pw-tracking-timeline__status-display {
-  align-items: flex-start;
-  gap: 2px;
+.payment-widget .pw-status-pill__label {
+  line-height: 1;
 }
 
-.payment-widget .pw-tracking-timeline__status-text {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--pw-color-text);
-  text-align: left;
-  letter-spacing: normal;
-  text-transform: none;
+.payment-widget .pw-status-pill--success {
+  color: var(--pw-success-text);
 }
 
-.payment-widget .pw-tracking-timeline__timestamp {
-  font-size: 0.72rem;
+.payment-widget .pw-status-pill--failure {
+  color: var(--pw-danger-text);
+}
+
+.payment-widget .pw-status-pill--warning {
+  color: var(--pw-warning-text);
+}
+
+.payment-widget .pw-status-pill--info {
   color: var(--pw-color-muted-strong);
 }
 
@@ -2295,7 +2303,7 @@
 
 .payment-widget .pw-timeline {
   position: relative;
-  padding-left: 24px;
+  padding-left: 3px;
 }
 
 .payment-widget .pw-timeline__empty {
@@ -2313,9 +2321,9 @@
 .payment-widget .pw-timeline::before {
   content: '';
   position: absolute;
-  left: 12px;
-  top: 0;
-  bottom: 0;
+  left: 13px;
+  top: 10px;
+  bottom: 10px;
   border-left: 2px solid var(--pw-border-line);
 }
 
@@ -2326,11 +2334,12 @@
 }
 
 .payment-widget .pw-timeline__item {
-  display: flex;
-  gap: var(--pw-space-sm);
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: var(--pw-space-md);
   position: relative;
-  padding: 12px 0;
-  align-items: center;
+  padding: 4px 0;
+  align-items: start;
 }
 
 .payment-widget .pw-timeline__bullet {
@@ -2342,8 +2351,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4px var(--pw-card-bg);
-  flex-shrink: 0;
+  box-shadow: 0 0 0 6px var(--pw-card-bg);
+  margin-top: 2px;
 }
 
 .payment-widget .pw-timeline__bullet--completed {
@@ -2375,11 +2384,10 @@
 }
 
 .payment-widget .pw-timeline__content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-bottom: 4px;
+  gap: 8px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--pw-border-soft);
 }
 
@@ -2390,26 +2398,28 @@
 
 .payment-widget .pw-timeline__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--pw-space-md);
 }
 
 .payment-widget .pw-timeline__title {
-  font-size: 0.82rem;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: .08em;
+  font-size: .7rem;
+  font-weight: 400;
 }
 
 .payment-widget .pw-timeline__meta {
   display: inline-flex;
   align-items: center;
-  flex-direction: column-reverse;
-  gap: 2px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   font-size: 0.68rem;
   color: var(--pw-color-muted);
   margin-left: auto;
+  text-align: right;
 }
 
 .payment-widget .pw-timeline__time {
@@ -2422,10 +2432,8 @@
 }
 
 .payment-widget .pw-timeline__note {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--pw-color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
 }
 
 .payment-widget .pw-timeline__errors {

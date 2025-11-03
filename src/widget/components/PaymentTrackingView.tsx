@@ -1,13 +1,12 @@
 import { useMemo } from 'react';
-import { ClockIcon, Loader2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ClockIcon, Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
 
 import type { PaymentHistoryEntry, PaymentHistoryStatus } from '../../types';
 import { cn } from '../../lib';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
-import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
-import { TransactionGroup } from '../../components/TransactionGroup';
-import { StatusDisplay } from '../../components/StatusDisplay';
+import { HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS } from '../../history/constants';
 import { RelativeTime } from './RelativeTime';
 import { ExpandableSection } from './ExpandableSection';
 
@@ -39,7 +38,6 @@ export function PaymentTrackingView({ historyId }: PaymentTrackingViewProps) {
         </div>
       )}
       <TimelineSection entry={entry} />
-      <TransactionHashes entry={entry} />
       <UpdatedFooter updatedAt={entry.updatedAt} />
     </div>
   );
@@ -65,101 +63,42 @@ function TimelineSection({ entry }: { entry: PaymentHistoryEntry }) {
     };
   }, [entry.status, entry.timeline, entry.updatedAt]);
 
+  const statusAppearance = useMemo(
+    () => getStatusAppearance(latestStep.stage),
+    [latestStep.stage],
+  );
+
   return (
     <ExpandableSection
       key={entry.id}
       className="pw-tracking-timeline"
       summary={(expanded) => (
         <div className={cn('pw-tracking-timeline__summary', expanded && 'is-open')}>
-          <span className="pw-tracking-timeline__eyebrow">Latest status</span>
-          <AnimatedStatus status={latestStep.stage} />
-          <span className="pw-tracking-timeline__timestamp">
+          <span
+            className={cn('pw-status-pill', `pw-status-pill--${statusAppearance.tone}`)}
+          >
+            <statusAppearance.Icon
+              className={cn(
+                'pw-status-pill__icon',
+                statusAppearance.animate && 'is-spinning',
+              )}
+              aria-hidden
+            />
+            <span className="pw-status-pill__label">{statusAppearance.label}</span>
+          </span>
+          <span className="sr-only">
             Updated <RelativeTime timestamp={latestStep.timestamp} />
           </span>
         </div>
       )}
       collapsedAriaLabel="Show payment timeline"
       expandedAriaLabel="Hide payment timeline"
-      defaultExpanded
       toggleClassName="pw-tracking-timeline__toggle"
       chevronClassName="pw-tracking-timeline__chevron"
       contentClassName="pw-tracking-timeline__content"
     >
       <HistoryTimeline timeline={entry.timeline} entry={entry} />
     </ExpandableSection>
-  );
-}
-
-function AnimatedStatus({ status }: { status: PaymentHistoryStatus }) {
-  return (
-    <div className="pw-tracking-timeline__status-outer">
-      {[status].map((value) => (
-        <div className="pw-tracking-timeline__status" key={value}>
-          <StatusDisplay
-            status={value}
-            showSimplifiedStatus={false}
-            className="pw-tracking-timeline__status-display"
-            originalStatusClassName="pw-tracking-timeline__status-text"
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function TransactionHashes({ entry }: { entry: PaymentHistoryEntry }) {
-  if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
-    return null;
-  }
-
-  return (
-    <div className="pw-history-hashes">
-      {entry.approvalTxHashes?.length ? (
-        <TransactionGroup
-          title="Wallet approval"
-          indicatorColor="var(--pw-color-warning)"
-          hashes={entry.approvalTxHashes}
-          chainId={entry.originChainId}
-          variant="compact"
-        />
-      ) : null}
-      {entry.depositTxHash ? (
-        <TransactionGroup
-          title="Deposit sent"
-          indicatorColor="var(--pw-brand)"
-          hashes={[entry.depositTxHash]}
-          chainId={entry.originChainId}
-          variant="compact"
-        />
-      ) : null}
-      {entry.swapTxHash ? (
-        <TransactionGroup
-          title="Swap sent"
-          indicatorColor="var(--pw-color-success)"
-          hashes={[entry.swapTxHash]}
-          chainId={entry.originChainId}
-          variant="compact"
-        />
-      ) : null}
-      {entry.fillTxHash ? (
-        <TransactionGroup
-          title="Funds delivered"
-          indicatorColor="var(--pw-brand-strong)"
-          hashes={[entry.fillTxHash]}
-          chainId={entry.destinationChainId}
-          variant="compact"
-        />
-      ) : null}
-      {entry.wrapTxHash ? (
-        <TransactionGroup
-          title="Wrap step"
-          indicatorColor="var(--pw-accent-strong)"
-          hashes={[entry.wrapTxHash]}
-          chainId={entry.originChainId}
-          variant="compact"
-        />
-      ) : null}
-    </div>
   );
 }
 
@@ -182,4 +121,73 @@ function EmptyStateView({ title, description }: { title: string; description?: s
       {description && <p className="pw-empty-state__description">{description}</p>}
     </div>
   );
+}
+
+type StatusTone = 'success' | 'failure' | 'warning' | 'info';
+
+interface StatusAppearance {
+  label: string;
+  tone: StatusTone;
+  Icon: LucideIcon;
+  animate?: boolean;
+}
+
+const CONFIRMED_STATUSES = new Set<PaymentHistoryStatus>([
+  'approval_confirmed',
+  'wrap_confirmed',
+  'deposit_confirmed',
+  'swap_confirmed',
+  'relay_filled',
+  'filled',
+  'settled',
+  'direct_confirmed',
+  'slow_fill_ready',
+]);
+
+const PENDING_STATUS_MATCHERS = [
+  (status: PaymentHistoryStatus) => status.endsWith('_pending'),
+  (status: PaymentHistoryStatus) => status === 'direct_pending',
+  (status: PaymentHistoryStatus) => status === 'requested_slow_fill',
+];
+
+function formatStatus(status: PaymentHistoryStatus): string {
+  return (
+    HISTORY_STATUS_LABELS[status] ??
+    status.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+  );
+}
+
+function getStatusAppearance(status: PaymentHistoryStatus): StatusAppearance {
+  const label = formatStatus(status);
+
+  if (HISTORY_FAILURE_STAGES.has(status)) {
+    return {
+      label,
+      tone: 'failure',
+      Icon: XCircle,
+    };
+  }
+
+  if (HISTORY_RESOLVED_STATUSES.has(status) || CONFIRMED_STATUSES.has(status)) {
+    return {
+      label,
+      tone: 'success',
+      Icon: CheckCircle2,
+    };
+  }
+
+  if (PENDING_STATUS_MATCHERS.some((matcher) => matcher(status))) {
+    return {
+      label,
+      tone: 'warning',
+      Icon: Loader2,
+      animate: true,
+    };
+  }
+
+  return {
+    label,
+    tone: 'info',
+    Icon: Info,
+  };
 }

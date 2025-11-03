@@ -1,12 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo } from 'react';
-import { ClockIcon, Loader2 } from 'lucide-react';
+import { ClockIcon, Loader2, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { cn } from '../../lib';
 import { usePaymentHistoryStore } from '../../history/store';
 import { HistoryTimeline } from '../../history/HistoryTimeline';
-import { HISTORY_RESOLVED_STATUSES } from '../../history/constants';
-import { TransactionGroup } from '../../components/TransactionGroup';
-import { StatusDisplay } from '../../components/StatusDisplay';
+import { HISTORY_FAILURE_STAGES, HISTORY_RESOLVED_STATUSES, HISTORY_STATUS_LABELS } from '../../history/constants';
 import { RelativeTime } from './RelativeTime';
 import { ExpandableSection } from './ExpandableSection';
 export function PaymentTrackingView({ historyId }) {
@@ -16,7 +14,7 @@ export function PaymentTrackingView({ historyId }) {
         return (_jsx(EmptyStateView, { title: "Payment not found", description: "We couldn't find that payment in your history. Try refreshing your history view." }));
     }
     const isProcessing = !HISTORY_RESOLVED_STATUSES.has(entry.status);
-    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry }), _jsx(TransactionHashes, { entry: entry }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
+    return (_jsxs("div", { className: "pw-view pw-view--tracking", children: [isProcessing && (_jsxs("div", { className: "pw-tracking__notice", children: [_jsx(Loader2, { className: "pw-tracking__spinner" }), _jsx("span", { children: "Still delivering your payment. Sit tight while we update the timeline." })] })), _jsx(TimelineSection, { entry: entry }), _jsx(UpdatedFooter, { updatedAt: entry.updatedAt })] }));
 }
 function TimelineSection({ entry }) {
     const latestStep = useMemo(() => {
@@ -37,20 +35,62 @@ function TimelineSection({ entry }) {
             timestamp: mostRecent.timestamp ?? entry.updatedAt ?? Date.now(),
         };
     }, [entry.status, entry.timeline, entry.updatedAt]);
-    return (_jsx(ExpandableSection, { className: "pw-tracking-timeline", summary: (expanded) => (_jsxs("div", { className: cn('pw-tracking-timeline__summary', expanded && 'is-open'), children: [_jsx("span", { className: "pw-tracking-timeline__eyebrow", children: "Latest status" }), _jsx(AnimatedStatus, { status: latestStep.stage }), _jsxs("span", { className: "pw-tracking-timeline__timestamp", children: ["Updated ", _jsx(RelativeTime, { timestamp: latestStep.timestamp })] })] })), collapsedAriaLabel: "Show payment timeline", expandedAriaLabel: "Hide payment timeline", defaultExpanded: true, toggleClassName: "pw-tracking-timeline__toggle", chevronClassName: "pw-tracking-timeline__chevron", contentClassName: "pw-tracking-timeline__content", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }, entry.id));
-}
-function AnimatedStatus({ status }) {
-    return (_jsx("div", { className: "pw-tracking-timeline__status-outer", children: [status].map((value) => (_jsx("div", { className: "pw-tracking-timeline__status", children: _jsx(StatusDisplay, { status: value, showSimplifiedStatus: false, className: "pw-tracking-timeline__status-display", originalStatusClassName: "pw-tracking-timeline__status-text" }) }, value))) }));
-}
-function TransactionHashes({ entry }) {
-    if (!(entry.approvalTxHashes?.length || entry.depositTxHash || entry.swapTxHash || entry.fillTxHash || entry.wrapTxHash)) {
-        return null;
-    }
-    return (_jsxs("div", { className: "pw-history-hashes", children: [entry.approvalTxHashes?.length ? (_jsx(TransactionGroup, { title: "Wallet approval", indicatorColor: "var(--pw-color-warning)", hashes: entry.approvalTxHashes, chainId: entry.originChainId, variant: "compact" })) : null, entry.depositTxHash ? (_jsx(TransactionGroup, { title: "Deposit sent", indicatorColor: "var(--pw-brand)", hashes: [entry.depositTxHash], chainId: entry.originChainId, variant: "compact" })) : null, entry.swapTxHash ? (_jsx(TransactionGroup, { title: "Swap sent", indicatorColor: "var(--pw-color-success)", hashes: [entry.swapTxHash], chainId: entry.originChainId, variant: "compact" })) : null, entry.fillTxHash ? (_jsx(TransactionGroup, { title: "Funds delivered", indicatorColor: "var(--pw-brand-strong)", hashes: [entry.fillTxHash], chainId: entry.destinationChainId, variant: "compact" })) : null, entry.wrapTxHash ? (_jsx(TransactionGroup, { title: "Wrap step", indicatorColor: "var(--pw-accent-strong)", hashes: [entry.wrapTxHash], chainId: entry.originChainId, variant: "compact" })) : null] }));
+    const statusAppearance = useMemo(() => getStatusAppearance(latestStep.stage), [latestStep.stage]);
+    return (_jsx(ExpandableSection, { className: "pw-tracking-timeline", summary: (expanded) => (_jsxs("div", { className: cn('pw-tracking-timeline__summary', expanded && 'is-open'), children: [_jsxs("span", { className: cn('pw-status-pill', `pw-status-pill--${statusAppearance.tone}`), children: [_jsx(statusAppearance.Icon, { className: cn('pw-status-pill__icon', statusAppearance.animate && 'is-spinning'), "aria-hidden": true }), _jsx("span", { className: "pw-status-pill__label", children: statusAppearance.label })] }), _jsxs("span", { className: "sr-only", children: ["Updated ", _jsx(RelativeTime, { timestamp: latestStep.timestamp })] })] })), collapsedAriaLabel: "Show payment timeline", expandedAriaLabel: "Hide payment timeline", toggleClassName: "pw-tracking-timeline__toggle", chevronClassName: "pw-tracking-timeline__chevron", contentClassName: "pw-tracking-timeline__content", children: _jsx(HistoryTimeline, { timeline: entry.timeline, entry: entry }) }, entry.id));
 }
 function UpdatedFooter({ updatedAt }) {
     return (_jsxs("div", { className: "pw-history-updated", children: [_jsxs("div", { className: "pw-history-updated__meta", children: [_jsx(ClockIcon, { className: "pw-history-updated__icon" }), _jsx("span", { className: "pw-history-updated__label", children: "Last updated" })] }), _jsx(RelativeTime, { timestamp: updatedAt, className: "pw-history-updated__time" })] }));
 }
 function EmptyStateView({ title, description }) {
     return (_jsxs("div", { className: "pw-empty-state", children: [_jsx("h3", { className: "pw-empty-state__title", children: title }), description && _jsx("p", { className: "pw-empty-state__description", children: description })] }));
+}
+const CONFIRMED_STATUSES = new Set([
+    'approval_confirmed',
+    'wrap_confirmed',
+    'deposit_confirmed',
+    'swap_confirmed',
+    'relay_filled',
+    'filled',
+    'settled',
+    'direct_confirmed',
+    'slow_fill_ready',
+]);
+const PENDING_STATUS_MATCHERS = [
+    (status) => status.endsWith('_pending'),
+    (status) => status === 'direct_pending',
+    (status) => status === 'requested_slow_fill',
+];
+function formatStatus(status) {
+    return (HISTORY_STATUS_LABELS[status] ??
+        status.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()));
+}
+function getStatusAppearance(status) {
+    const label = formatStatus(status);
+    if (HISTORY_FAILURE_STAGES.has(status)) {
+        return {
+            label,
+            tone: 'failure',
+            Icon: XCircle,
+        };
+    }
+    if (HISTORY_RESOLVED_STATUSES.has(status) || CONFIRMED_STATUSES.has(status)) {
+        return {
+            label,
+            tone: 'success',
+            Icon: CheckCircle2,
+        };
+    }
+    if (PENDING_STATUS_MATCHERS.some((matcher) => matcher(status))) {
+        return {
+            label,
+            tone: 'warning',
+            Icon: Loader2,
+            animate: true,
+        };
+    }
+    return {
+        label,
+        tone: 'info',
+        Icon: Info,
+    };
 }
