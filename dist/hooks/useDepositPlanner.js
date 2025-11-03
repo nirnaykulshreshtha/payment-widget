@@ -91,6 +91,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         ...setupConfig,
         ...paymentConfig,
     }), [setupConfig, paymentConfig]);
+    const walletAddress = config.walletClient?.account?.address ?? null;
     const beginStage = useCallback((stage) => {
         setLoadingStage(stage);
     }, []);
@@ -104,6 +105,20 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
     const abortRef = useRef(null);
     const tokenBalanceRpcSupport = useRef(new Map());
     const balanceCache = useRef(new Map());
+    useEffect(() => {
+        if (walletAddress) {
+            return;
+        }
+        log('wallet disconnected, resetting planner state');
+        abortRef.current?.abort();
+        setIsLoading(false);
+        setOptions([]);
+        setTargetToken(null);
+        setCompletedStages([]);
+        setLoadingStage('ready');
+        setLastUpdated(null);
+        setError('Connect your wallet to see available payment options');
+    }, [walletAddress]);
     const wrappedTokenMap = useMemo(() => {
         const merged = {};
         const sources = [DEFAULT_WRAPPED_TOKEN_MAP, config.wrappedTokenMap].filter(Boolean);
@@ -1208,13 +1223,17 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
             log('skipping initial refresh, no Across client');
             return;
         }
-        log('trigger initial refresh');
+        if (!walletAddress) {
+            log('skipping refresh, wallet not connected');
+            return;
+        }
+        log('trigger refresh for account', walletAddress);
         refresh().catch((err) => logError('initial refresh failed', err));
         return () => {
             log('cleanup refresh abort');
             abortRef.current?.abort();
         };
-    }, [client, refresh]);
+    }, [client, refresh, walletAddress]);
     return {
         options,
         isLoading,

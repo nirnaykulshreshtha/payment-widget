@@ -67,6 +67,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
 
   const planner = useDepositPlanner({ client, setupConfig, paymentConfig });
   const targetToken = planner.targetToken;
+  const walletAddress = config.walletClient?.account?.address ?? null;
   const [prefetchedTargetToken, setPrefetchedTargetToken] = useState<TokenConfig | null>(null);
 
   const [viewStack, setViewStack] = useState<PaymentView[]>([{ name: 'loading' }]);
@@ -231,6 +232,24 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
     [planner.isLoading],
   );
 
+  useEffect(() => {
+    if (walletAddress) {
+      return;
+    }
+    log('wallet disconnected, resetting widget state');
+    setSelectedOption(null);
+    setActiveHistoryId(null);
+    setWrapTxHash(null);
+    setTxHash(null);
+    setSwapTxHash(null);
+    setApprovalTxHashes([]);
+    setIsExecuting(false);
+    setExecutionError(null);
+    setQuoteError(null);
+    setQuoteLoading(false);
+    resetToOptions();
+  }, [walletAddress, resetToOptions]);
+
   const openTrackingView = useCallback(
     (historyId: string) => {
       setActiveHistoryId(historyId);
@@ -316,15 +335,14 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
   }, [uniqueOptions]);
 
   useEffect(() => {
-    const accountAddress = config.walletClient?.account?.address;
-    if (!accountAddress) {
+    if (!walletAddress) {
       log('skipping history initialisation, wallet not connected');
       initializePaymentHistory(undefined, { config });
       return;
     }
-    log('initialising history with account', accountAddress);
-    initializePaymentHistory(accountAddress, { config });
-  }, [config]);
+    log('initialising history with account', walletAddress);
+    initializePaymentHistory(walletAddress, { config });
+  }, [config, walletAddress]);
 
   useEffect(() => {
     setViewStack((prev) => {
