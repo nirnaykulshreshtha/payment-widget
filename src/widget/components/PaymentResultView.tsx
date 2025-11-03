@@ -38,7 +38,16 @@ export function PaymentResultView({ type, reference, reason, summary, historyId,
             : 'pw-alert--failure',
         )}
       >
-        {isSuccess ? <CheckCircle2 className="pw-alert__icon" /> : <XCircle className="pw-alert__icon" />}
+        <div className="pw-alert__icon-wrapper">
+          {isSuccess && (
+            <>
+              <span className="pw-alert__ripple pw-alert__ripple--1" aria-hidden="true" />
+              <span className="pw-alert__ripple pw-alert__ripple--2" aria-hidden="true" />
+              <span className="pw-alert__ripple pw-alert__ripple--3" aria-hidden="true" />
+            </>
+          )}
+          {isSuccess ? <CheckCircle2 className="pw-alert__icon" /> : <XCircle className="pw-alert__icon" />}
+        </div>
         <div className="pw-alert__body">
           <p className="pw-alert__title">{headline}</p>
           <p className="pw-alert__subtitle">{subline}</p>

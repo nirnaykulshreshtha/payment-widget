@@ -188,26 +188,48 @@ export function HistoryTimeline({ timeline, entry }: HistoryTimelineProps) {
             depositSubStepIndex = depositSubSteps.findIndex((s) => s.label === step.label);
             
             // Determine which sub-step should be active based on entry state
+            // Use the same logic as expandDepositSubSteps to ensure consistency
             const hasApprovalArray = entry.approvalTxHashes !== undefined;
             const hasApprovalHashes = entry.approvalTxHashes && entry.approvalTxHashes.length > 0;
-            const needsApproval = hasApprovalArray || entry.mode === 'swap';
+            const hasApprovalInTimeline = timeline?.some(
+              (entry) => entry.stage === 'approval_pending' || entry.stage === 'approval_confirmed'
+            );
+            const isWaitingForDeposit = !entry.depositTxHash && entry.status === 'deposit_pending';
+            const mightNeedApprovals = isWaitingForDeposit;
+            const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline || mightNeedApprovals;
             const approvalsDone = hasApprovalHashes && 
               entry.approvalTxHashes!.every((hash) => hash !== undefined && hash !== null);
             const transactionSubmitted = !!entry.depositTxHash;
             const transactionConfirmed = entry.status === 'deposit_confirmed' || !!entry.depositId;
             
             // Determine active sub-step index
+            // Priority: confirmed > submitted > preparing (if approvals done) > approvals (if needed) > preparing (if no approvals)
             if (transactionConfirmed) {
-              activeDepositSubStepIndex = depositSubSteps.length - 1; // Last step (Transaction confirmed)
+              activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Transaction confirmed');
+              if (activeDepositSubStepIndex === -1) {
+                activeDepositSubStepIndex = depositSubSteps.length - 1; // Fallback to last step
+              }
             } else if (transactionSubmitted) {
               activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Waiting for confirmation');
-            } else if (approvalsDone && needsApproval) {
+            } else if (needsApproval && approvalsDone) {
+              // Approvals are done, now preparing transaction
               activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Preparing transaction');
-            } else if (needsApproval) {
+            } else if (needsApproval && !approvalsDone) {
+              // Still waiting for approvals
               activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Waiting for approval');
             } else {
+              // No approvals needed, go straight to preparing
               activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Preparing transaction');
             }
+            
+            console.log('[HistoryTimeline] Active sub-step determination:', {
+              needsApproval,
+              approvalsDone,
+              transactionSubmitted,
+              transactionConfirmed,
+              activeDepositSubStepIndex,
+              depositSubStepsLabels: depositSubSteps.map((s) => s.label),
+            });
           }
           
           // Check if this is an active deposit sub-step
@@ -381,12 +403,24 @@ function expandDepositSubSteps(
   // 1. If approvalTxHashes exists (even empty array), approvals are part of the flow
   // 2. If entry mode is 'swap', approvals are typically needed
   // 3. Check timeline for approval_pending/approval_confirmed stages
+  // 4. If deposit_pending is active but no depositTxHash yet, approvals might be happening
   const hasApprovalArray = entry.approvalTxHashes !== undefined;
   const hasApprovalHashes = entry.approvalTxHashes && entry.approvalTxHashes.length > 0;
   const hasApprovalInTimeline = timeline?.some(
     (entry) => entry.stage === 'approval_pending' || entry.stage === 'approval_confirmed'
   );
-  const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline;
+  const isWaitingForDeposit = !entry.depositTxHash && entry.status === 'deposit_pending';
+  // If we're in deposit_pending and no transaction submitted yet, approvals might be needed
+  // This handles cases where approvals happen during deposit phase (e.g., bridge mode)
+  // Also check if we're early in the deposit phase (no transaction yet) - approvals likely needed
+  const mightNeedApprovals = isWaitingForDeposit;
+  // For deposit_pending, approvals are almost always part of the flow before the transaction is submitted
+  // Show approval steps if:
+  // 1. We have approvalTxHashes array (explicit approvals)
+  // 2. Mode is swap (always needs approvals)
+  // 3. Timeline has approval stages
+  // 4. We're waiting for deposit transaction (approvals happen first)
+  const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline || mightNeedApprovals;
   
   // Determine approval status
   const approvalsSubmitted = hasApprovalHashes;
@@ -394,6 +428,19 @@ function expandDepositSubSteps(
     entry.approvalTxHashes!.every((hash) => hash !== undefined && hash !== null);
   const transactionSubmitted = !!entry.depositTxHash;
   const transactionConfirmed = entry.status === 'deposit_confirmed' || !!entry.depositId;
+  
+  console.log('[HistoryTimeline] Approval detection for deposit_pending:', {
+    hasApprovalArray,
+    hasApprovalHashes,
+    hasApprovalInTimeline,
+    isWaitingForDeposit,
+    mightNeedApprovals,
+    needsApproval,
+    mode: entry.mode,
+    status: entry.status,
+    depositTxHash: !!entry.depositTxHash,
+    approvalTxHashes: entry.approvalTxHashes,
+  });
 
   // Step 1: Waiting for approval (only if approvals are needed)
   if (needsApproval) {

@@ -130,6 +130,34 @@ export function HistoryTimeline({ timeline, entry }) {
         completedStages.add('initial');
     }
     return (_jsx("div", { className: "pw-timeline", children: _jsx("div", { className: "pw-timeline__entries", children: steps.map((step, index) => {
+                // Track previous step's completed state for connector styling
+                let prevStepCompleted = false;
+                let prevStepIsFailure = false;
+                if (index > 0) {
+                    const prevStep = steps[index - 1];
+                    prevStepIsFailure = HISTORY_FAILURE_STAGES.has(prevStep.stage);
+                    // For deposit sub-steps, check if previous sub-step was completed
+                    if (prevStep.stage === 'deposit_pending' && prevStep.synthetic && step.stage === 'deposit_pending' && step.synthetic) {
+                        const depositSubSteps = steps.filter((s) => s.stage === 'deposit_pending' && s.synthetic);
+                        const prevSubIndex = depositSubSteps.findIndex((s) => s.label === prevStep.label);
+                        const currentSubIndex = depositSubSteps.findIndex((s) => s.label === step.label);
+                        // Previous sub-step is completed if it comes before current in the sequence
+                        prevStepCompleted = prevSubIndex >= 0 && prevSubIndex < currentSubIndex;
+                    }
+                    else if (!prevStepIsFailure) {
+                        // Check if previous step should be considered completed (using same logic as isCompleted)
+                        if (resolved && index - 1 <= resolvedActiveIndex) {
+                            prevStepCompleted = true;
+                        }
+                        else if (!resolved && activeFlowIndex >= 0 && flow.length > 0) {
+                            const prevStepFlowIndex = flow.indexOf(prevStep.stage);
+                            prevStepCompleted = prevStepFlowIndex >= 0 && prevStepFlowIndex < activeFlowIndex;
+                        }
+                        else if (!resolved && activeDisplayIndex >= 0 && index - 1 < activeDisplayIndex) {
+                            prevStepCompleted = true;
+                        }
+                    }
+                }
                 const isFailure = HISTORY_FAILURE_STAGES.has(step.stage);
                 const isCompletedStage = completedStages.has(step.stage);
                 // Special handling for expanded deposit_pending sub-steps
@@ -142,29 +170,48 @@ export function HistoryTimeline({ timeline, entry }) {
                     const depositSubSteps = steps.filter((s) => s.stage === 'deposit_pending' && s.synthetic);
                     depositSubStepIndex = depositSubSteps.findIndex((s) => s.label === step.label);
                     // Determine which sub-step should be active based on entry state
+                    // Use the same logic as expandDepositSubSteps to ensure consistency
                     const hasApprovalArray = entry.approvalTxHashes !== undefined;
                     const hasApprovalHashes = entry.approvalTxHashes && entry.approvalTxHashes.length > 0;
-                    const needsApproval = hasApprovalArray || entry.mode === 'swap';
+                    const hasApprovalInTimeline = timeline?.some((entry) => entry.stage === 'approval_pending' || entry.stage === 'approval_confirmed');
+                    const isWaitingForDeposit = !entry.depositTxHash && entry.status === 'deposit_pending';
+                    const mightNeedApprovals = isWaitingForDeposit;
+                    const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline || mightNeedApprovals;
                     const approvalsDone = hasApprovalHashes &&
                         entry.approvalTxHashes.every((hash) => hash !== undefined && hash !== null);
                     const transactionSubmitted = !!entry.depositTxHash;
                     const transactionConfirmed = entry.status === 'deposit_confirmed' || !!entry.depositId;
                     // Determine active sub-step index
+                    // Priority: confirmed > submitted > preparing (if approvals done) > approvals (if needed) > preparing (if no approvals)
                     if (transactionConfirmed) {
-                        activeDepositSubStepIndex = depositSubSteps.length - 1; // Last step (Transaction confirmed)
+                        activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Transaction confirmed');
+                        if (activeDepositSubStepIndex === -1) {
+                            activeDepositSubStepIndex = depositSubSteps.length - 1; // Fallback to last step
+                        }
                     }
                     else if (transactionSubmitted) {
                         activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Waiting for confirmation');
                     }
-                    else if (approvalsDone && needsApproval) {
+                    else if (needsApproval && approvalsDone) {
+                        // Approvals are done, now preparing transaction
                         activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Preparing transaction');
                     }
-                    else if (needsApproval) {
+                    else if (needsApproval && !approvalsDone) {
+                        // Still waiting for approvals
                         activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Waiting for approval');
                     }
                     else {
+                        // No approvals needed, go straight to preparing
                         activeDepositSubStepIndex = depositSubSteps.findIndex((s) => s.label === 'Preparing transaction');
                     }
+                    console.log('[HistoryTimeline] Active sub-step determination:', {
+                        needsApproval,
+                        approvalsDone,
+                        transactionSubmitted,
+                        transactionConfirmed,
+                        activeDepositSubStepIndex,
+                        depositSubStepsLabels: depositSubSteps.map((s) => s.label),
+                    });
                 }
                 // Check if this is an active deposit sub-step
                 const isActiveDepositSubStep = isDepositSubStep && depositSubStepIndex === activeDepositSubStepIndex && activeDepositSubStepIndex >= 0;
@@ -248,7 +295,12 @@ export function HistoryTimeline({ timeline, entry }) {
                     // Use Dot for pending/incomplete stages
                     Icon = Dot;
                 }
-                return (_jsxs("div", { className: "pw-timeline__item", children: [_jsxs("div", { className: cn('pw-timeline__bullet', isCompleted && !isFailure && 'pw-timeline__bullet--completed', isFailure && 'pw-timeline__bullet--failure', isActive && 'pw-timeline__bullet--active'), children: [isActive && _jsx("span", { className: "pw-timeline__ripple", "aria-hidden": "true" }), _jsx(Icon, { className: cn('pw-timeline__icon', isActive && 'pw-timeline__icon--spinning', isActive && 'pw-timeline__icon--active') })] }), _jsxs("div", { className: "pw-timeline__content", children: [_jsxs("div", { className: "pw-timeline__header", children: [_jsxs("div", { className: "pw-timeline__header-left", children: [_jsx("div", { className: cn('pw-timeline__title', isActive && 'pw-timeline__title--active'), children: label }), step.txHash ? (_jsx("div", { className: "pw-timeline__hash", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })) : null] }), _jsx("div", { className: "pw-timeline__meta", children: _jsx("time", { className: "pw-timeline__time", children: formatTimestamp(step.timestamp) }) })] }), !isFailure && step.notes ? (_jsx("p", { className: "pw-timeline__note", children: step.notes })) : null, isFailure && entry?.errors && entry.errors.length > 0 ? (_jsx("div", { className: "pw-timeline__errors", children: entry.errors.map((error, errorIndex) => (_jsx("p", { children: formatErrorMessage(error) }, errorIndex))) })) : null, isActive && !isFailure ? (_jsx("p", { className: "pw-timeline__status", children: "In progress" })) : null] })] }, `${step.stage}-${step.timestamp}`));
+                // Determine connecting line color based on current and previous step status
+                // Show success color if both previous and current steps are completed (green between successes)
+                // Show failure color if previous was completed and current is failure (red from success to failure)
+                const shouldShowSuccessLine = index > 0 && prevStepCompleted && isCompleted && !isFailure;
+                const shouldShowFailureLine = index > 0 && isFailure && prevStepCompleted && !prevStepIsFailure;
+                return (_jsxs("div", { className: "pw-timeline__item", children: [index > 0 && (_jsx("div", { className: cn('pw-timeline__connector', shouldShowSuccessLine && 'pw-timeline__connector--success', shouldShowFailureLine && 'pw-timeline__connector--failure') })), _jsxs("div", { className: cn('pw-timeline__bullet', isCompleted && !isFailure && 'pw-timeline__bullet--completed', isFailure && 'pw-timeline__bullet--failure', isActive && 'pw-timeline__bullet--active'), children: [isActive && _jsx("span", { className: "pw-timeline__ripple", "aria-hidden": "true" }), _jsx(Icon, { className: cn('pw-timeline__icon', isActive && 'pw-timeline__icon--spinning', isActive && 'pw-timeline__icon--active') })] }), _jsxs("div", { className: "pw-timeline__content", children: [_jsxs("div", { className: "pw-timeline__header", children: [_jsxs("div", { className: "pw-timeline__header-left", children: [_jsx("div", { className: cn('pw-timeline__title', isActive && 'pw-timeline__title--active'), children: label }), step.txHash ? (_jsx("div", { className: "pw-timeline__hash", children: renderHashLink(step.txHash, resolveTimelineStageChainId(step.stage, entry)) })) : null] }), _jsx("div", { className: "pw-timeline__meta", children: _jsx("time", { className: "pw-timeline__time", children: formatTimestamp(step.timestamp) }) })] }), !isFailure && step.notes ? (_jsx("p", { className: "pw-timeline__note", children: step.notes })) : null, isFailure && entry?.errors && entry.errors.length > 0 ? (_jsx("div", { className: "pw-timeline__errors", children: entry.errors.map((error, errorIndex) => (_jsx("p", { children: formatErrorMessage(error) }, errorIndex))) })) : null, isActive && !isFailure ? (_jsx("p", { className: "pw-timeline__status", children: "In progress" })) : null] })] }, `${step.stage}-${step.timestamp}`));
             }) }) }));
 }
 /**
@@ -271,16 +323,40 @@ function expandDepositSubSteps(steps, entry, activeStage, timeline) {
     // 1. If approvalTxHashes exists (even empty array), approvals are part of the flow
     // 2. If entry mode is 'swap', approvals are typically needed
     // 3. Check timeline for approval_pending/approval_confirmed stages
+    // 4. If deposit_pending is active but no depositTxHash yet, approvals might be happening
     const hasApprovalArray = entry.approvalTxHashes !== undefined;
     const hasApprovalHashes = entry.approvalTxHashes && entry.approvalTxHashes.length > 0;
     const hasApprovalInTimeline = timeline?.some((entry) => entry.stage === 'approval_pending' || entry.stage === 'approval_confirmed');
-    const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline;
+    const isWaitingForDeposit = !entry.depositTxHash && entry.status === 'deposit_pending';
+    // If we're in deposit_pending and no transaction submitted yet, approvals might be needed
+    // This handles cases where approvals happen during deposit phase (e.g., bridge mode)
+    // Also check if we're early in the deposit phase (no transaction yet) - approvals likely needed
+    const mightNeedApprovals = isWaitingForDeposit;
+    // For deposit_pending, approvals are almost always part of the flow before the transaction is submitted
+    // Show approval steps if:
+    // 1. We have approvalTxHashes array (explicit approvals)
+    // 2. Mode is swap (always needs approvals)
+    // 3. Timeline has approval stages
+    // 4. We're waiting for deposit transaction (approvals happen first)
+    const needsApproval = hasApprovalArray || entry.mode === 'swap' || hasApprovalInTimeline || mightNeedApprovals;
     // Determine approval status
     const approvalsSubmitted = hasApprovalHashes;
     const approvalsDone = hasApprovalHashes &&
         entry.approvalTxHashes.every((hash) => hash !== undefined && hash !== null);
     const transactionSubmitted = !!entry.depositTxHash;
     const transactionConfirmed = entry.status === 'deposit_confirmed' || !!entry.depositId;
+    console.log('[HistoryTimeline] Approval detection for deposit_pending:', {
+        hasApprovalArray,
+        hasApprovalHashes,
+        hasApprovalInTimeline,
+        isWaitingForDeposit,
+        mightNeedApprovals,
+        needsApproval,
+        mode: entry.mode,
+        status: entry.status,
+        depositTxHash: !!entry.depositTxHash,
+        approvalTxHashes: entry.approvalTxHashes,
+    });
     // Step 1: Waiting for approval (only if approvals are needed)
     if (needsApproval) {
         subSteps.push({

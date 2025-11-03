@@ -1922,53 +1922,229 @@
   display: flex;
   align-items: flex-start;
   gap: var(--pw-space-md);
-  border-radius: calc(var(--pw-radius) * 0.9);
+  border-radius: calc(var(--pw-radius) * 1.1);
   border: 1px solid transparent;
-  padding: 10px 10px;
-  animation: pw-fade-in 0.4s ease;
+  padding: var(--pw-space-lg) var(--pw-space-lg);
+  padding-left: calc(var(--pw-space-lg) + 30px);
+  animation: pw-fade-in 0.4s ease, pw-scale-in 0.3s ease;
   animation-fill-mode: both;
+  position: relative;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform var(--pw-transition), box-shadow var(--pw-transition);
+}
+
+.payment-widget .pw-alert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.3;
+  border-radius: calc(var(--pw-radius) * 1.1) calc(var(--pw-radius) * 1.1) 0 0;
+}
+
+.payment-widget .pw-alert:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .payment-widget .pw-alert--success {
   border-color: var(--pw-success-border);
-  background-color: var(--pw-success-soft);
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, rgb(34, 197, 94) 12%, transparent) 0%,
+    color-mix(in srgb, rgb(34, 197, 94) 8%, transparent) 100%
+  );
   color: var(--pw-success-text);
 }
 
 /* Ensure success alert is visible with better contrast */
 @supports not (color-mix(in srgb, var(--pw-color-success) 18%, transparent)) {
   .payment-widget .pw-alert--success {
-    background-color: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.4);
+    background: linear-gradient(135deg, 
+      rgba(34, 197, 94, 0.14) 0%,
+      rgba(34, 197, 94, 0.10) 100%
+    );
+    border-color: rgba(34, 197, 94, 0.45);
     color: rgb(22, 163, 74);
   }
 }
 
 .payment-widget .pw-alert--failure {
   border-color: var(--pw-danger-border);
-  background-color: var(--pw-danger-soft);
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--pw-color-danger) 12%, transparent) 0%,
+    color-mix(in srgb, var(--pw-color-danger) 8%, transparent) 100%
+  );
   color: var(--pw-danger-text);
 }
 
-.payment-widget .pw-alert__icon {
-  width: 20px;
-  height: 20px;
+.payment-widget .pw-alert__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, rgb(34, 197, 94) 20%, transparent) 0%,
+    color-mix(in srgb, rgb(34, 197, 94) 15%, transparent) 100%
+  );
+  border: 1.5px solid color-mix(in srgb, rgb(34, 197, 94) 50%, transparent);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+  animation: pw-icon-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
   flex-shrink: 0;
+  position: relative;
+  overflow: visible;
+}
+
+@supports not (color-mix(in srgb, var(--pw-color-success) 18%, transparent)) {
+  .payment-widget .pw-alert__icon-wrapper {
+    background: linear-gradient(135deg, 
+      rgba(34, 197, 94, 0.22) 0%,
+      rgba(34, 197, 94, 0.16) 100%
+    );
+    border-color: rgba(34, 197, 94, 0.5);
+  }
+}
+
+.payment-widget .pw-alert--failure .pw-alert__icon-wrapper {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--pw-color-danger) 20%, transparent) 0%,
+    color-mix(in srgb, var(--pw-color-danger) 15%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, var(--pw-color-danger) 50%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--pw-color-danger) 15%, transparent);
+}
+
+.payment-widget .pw-alert__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  stroke-width: 2.5;
+  animation: pw-icon-fade-in 0.4s ease 0.3s both;
+  position: relative;
+  z-index: 1;
+}
+
+.payment-widget .pw-alert__ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgb(34, 197, 94);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.payment-widget .pw-alert__ripple--1 {
+  animation: pw-ripple 2s ease-out 0.6s infinite;
+  border-color: color-mix(in srgb, rgb(34, 197, 94) 60%, transparent);
+}
+
+.payment-widget .pw-alert__ripple--2 {
+  animation: pw-ripple 2s ease-out 0.9s infinite;
+  border-color: color-mix(in srgb, rgb(34, 197, 94) 50%, transparent);
+}
+
+.payment-widget .pw-alert__ripple--3 {
+  animation: pw-ripple 2s ease-out 1.2s infinite;
+  border-color: color-mix(in srgb, rgb(34, 197, 94) 40%, transparent);
+}
+
+@supports not (color-mix(in srgb, var(--pw-color-success) 18%, transparent)) {
+  .payment-widget .pw-alert__ripple {
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+  
+  .payment-widget .pw-alert__ripple--1 {
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+  
+  .payment-widget .pw-alert__ripple--2 {
+    border-color: rgba(34, 197, 94, 0.5);
+  }
+  
+  .payment-widget .pw-alert__ripple--3 {
+    border-color: rgba(34, 197, 94, 0.4);
+  }
 }
 
 .payment-widget .pw-alert__body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--pw-space-xs);
+  flex: 1;
+  padding-top: 2px;
 }
 
 .payment-widget .pw-alert__title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .payment-widget .pw-alert__subtitle {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+@keyframes pw-icon-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pw-icon-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pw-scale-in {
+  0% {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pw-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
 }
 
 .payment-widget .pw-reference {
@@ -2512,6 +2688,7 @@
   top: 10px;
   bottom: 10px;
   border-left: 2px solid var(--pw-border-line);
+  z-index: 0;
 }
 
 .payment-widget .pw-timeline__entries {
@@ -2527,6 +2704,82 @@
   position: relative;
   padding: 4px 0;
   align-items: start;
+}
+
+/* Connecting line between timeline items */
+.payment-widget .pw-timeline__connector {
+  position: absolute;
+  left: 13px;
+  top: -16px;
+  width: 2px;
+  height: calc(var(--pw-space-md) + 12px);
+  background-color: var(--pw-border-line);
+  z-index: 1;
+  transition: background-color 0.6s ease, box-shadow 0.6s ease;
+  pointer-events: none;
+  transform-origin: top;
+}
+
+.payment-widget .pw-timeline__connector--success {
+  background: var(--pw-success-border);
+  box-shadow: 
+    0 0 6px color-mix(in srgb, var(--pw-color-success) 40%, transparent),
+    0 0 2px color-mix(in srgb, var(--pw-color-success) 20%, transparent);
+  animation: pw-timeline-connector-success 1.5s ease-in-out;
+}
+
+.payment-widget .pw-timeline__connector--failure {
+  background: var(--pw-danger-border);
+  box-shadow: 
+    0 0 6px color-mix(in srgb, var(--pw-color-danger) 40%, transparent),
+    0 0 2px color-mix(in srgb, var(--pw-color-danger) 20%, transparent);
+  animation: pw-timeline-connector-failure 1.5s ease-in-out;
+}
+
+@keyframes pw-timeline-connector-success {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pw-timeline-connector-failure {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@supports not (color-mix(in srgb, var(--pw-success-border) 90%, transparent)) {
+  .payment-widget .pw-timeline__connector--success {
+    background: rgba(34, 197, 94, 0.6);
+    box-shadow: 
+      0 0 6px rgba(34, 197, 94, 0.3),
+      0 0 2px rgba(34, 197, 94, 0.15);
+  }
+  
+  .payment-widget .pw-timeline__connector--failure {
+    background: rgba(239, 68, 68, 0.6);
+    box-shadow: 
+      0 0 6px rgba(239, 68, 68, 0.3),
+      0 0 2px rgba(239, 68, 68, 0.15);
+  }
 }
 
 .payment-widget .pw-timeline__bullet {
@@ -2735,6 +2988,11 @@
   .payment-widget .pw-timeline__ripple {
     animation: none !important;
     opacity: 0.3;
+  }
+  
+  .payment-widget .pw-timeline__connector--success,
+  .payment-widget .pw-timeline__connector--failure {
+    animation: none !important;
   }
 }
 
