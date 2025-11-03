@@ -41,9 +41,9 @@
   --pw-warning-soft: var(--chart-4);
   --pw-warning-border: var(--chart-4);
   --pw-danger-focus-ring: var(--destructive);
-  --pw-success-soft: var(--chart-2);
-  --pw-success-border: var(--chart-2);
-  --pw-success-text: var(--chart-2);
+  --pw-success-soft: rgba(34, 197, 94, 0.1);
+  --pw-success-border: rgba(34, 197, 94, 0.3);
+  --pw-success-text: rgb(22, 163, 74);
   --pw-danger-text: var(--destructive);
   --pw-warning-text: var(--chart-4);
   --pw-border-strong: var(--border);
@@ -89,9 +89,9 @@
     --pw-warning-soft: color-mix(in srgb, var(--pw-color-warning) 18%, transparent);
     --pw-warning-border: color-mix(in srgb, var(--pw-color-warning) 45%, transparent);
     --pw-warning-text: color-mix(in srgb, var(--pw-color-warning) 70%, var(--pw-color-text) 30%);
-    --pw-success-soft: color-mix(in srgb, var(--pw-color-success) 18%, transparent);
-    --pw-success-border: color-mix(in srgb, var(--pw-color-success) 45%, transparent);
-    --pw-success-text: color-mix(in srgb, var(--pw-color-success) 75%, var(--pw-color-text) 25%);
+    --pw-success-soft: color-mix(in srgb, rgb(34, 197, 94) 12%, transparent);
+    --pw-success-border: color-mix(in srgb, rgb(34, 197, 94) 35%, transparent);
+    --pw-success-text: color-mix(in srgb, rgb(22, 163, 74) 85%, var(--pw-color-text) 15%);
     --pw-border-strong: color-mix(in srgb, var(--pw-card-border) 92%, transparent 8%);
     --pw-surface-strong: color-mix(in srgb, var(--pw-card-bg) 96%, transparent 4%);
     --pw-surface-muted: color-mix(in srgb, var(--pw-card-bg) 92%, transparent 8%);
@@ -1935,6 +1935,15 @@
   color: var(--pw-success-text);
 }
 
+/* Ensure success alert is visible with better contrast */
+@supports not (color-mix(in srgb, var(--pw-color-success) 18%, transparent)) {
+  .payment-widget .pw-alert--success {
+    background-color: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: rgb(22, 163, 74);
+  }
+}
+
 .payment-widget .pw-alert--failure {
   border-color: var(--pw-danger-border);
   background-color: var(--pw-danger-soft);
@@ -2543,6 +2552,8 @@
   border-color: transparent;
   background: var(--pw-brand-gradient);
   box-shadow: 0 0 0 6px var(--pw-brand-focus-ring);
+  position: relative;
+  overflow: visible;
 }
 
 .payment-widget .pw-timeline__bullet--failure {
@@ -2555,10 +2566,16 @@
   width: 14px;
   height: 14px;
   color: var(--pw-color-contrast);
+  position: relative;
+  z-index: 1;
 }
 
 .payment-widget .pw-timeline__icon--spinning {
   animation: payment-widget-spin 1s linear infinite;
+}
+
+.payment-widget .pw-timeline__icon--active {
+  filter: drop-shadow(0 0 4px var(--pw-brand-soft));
 }
 
 .payment-widget .pw-timeline__content {
@@ -2581,11 +2598,37 @@
   gap: var(--pw-space-md);
 }
 
+.payment-widget .pw-timeline__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
 .payment-widget .pw-timeline__title {
   text-transform: uppercase;
   letter-spacing: .08em;
   font-size: .7rem;
   font-weight: 400;
+  position: relative;
+}
+
+.payment-widget .pw-timeline__title--active {
+  background: linear-gradient(
+    90deg,
+    var(--pw-color-text) 0%,
+    var(--pw-color-text) 45%,
+    var(--pw-brand) 50%,
+    var(--pw-brand) 55%,
+    var(--pw-color-text) 60%,
+    var(--pw-color-text) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pw-timeline-shimmer 2.5s ease-in-out infinite;
+  font-weight: 500;
 }
 
 .payment-widget .pw-timeline__meta {
@@ -2606,7 +2649,7 @@
 
 .payment-widget .pw-timeline__hash {
   display: inline-flex;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .payment-widget .pw-timeline__note {
@@ -2629,6 +2672,46 @@
   color: var(--pw-warning-text);
 }
 
+/* Ripple effect for active timeline icon */
+.payment-widget .pw-timeline__ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--pw-brand-border);
+  animation: pw-timeline-ripple 2s ease-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Shimmer animation for active timeline title */
+@keyframes pw-timeline-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Ripple animation for active timeline icon */
+@keyframes pw-timeline-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .payment-widget,
   .payment-widget .payment-widget__layout,
@@ -2640,6 +2723,18 @@
   .payment-widget .pw-history-card {
     animation: none !important;
     transition: none !important;
+  }
+  
+  .payment-widget .pw-timeline__title--active {
+    animation: none !important;
+    background: var(--pw-brand);
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .payment-widget .pw-timeline__ripple {
+    animation: none !important;
+    opacity: 0.3;
   }
 }
 
