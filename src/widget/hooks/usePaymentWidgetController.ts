@@ -467,6 +467,7 @@ export function usePaymentWidgetController(
     isQuoteLoading : quoteLoading,
     isClearingHistory,
     onSelectOption: handleSelect,
+    refineBridgeQuote,
     onExecutePayment: handleExecute,
     onChangeAsset: popView,
     onResetToOptions: resetToOptions,

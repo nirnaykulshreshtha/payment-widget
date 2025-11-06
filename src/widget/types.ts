@@ -71,6 +71,7 @@ export interface RenderedPaymentView {
   content: ReactNode;
   headerConfig: {
     showRefresh: boolean;
+    onRefresh?: () => void;
     showHistory: boolean;
     showPrimary?: boolean;
     title?: string;
@@ -93,7 +94,6 @@ export interface PaymentDetailsViewProps {
   isQuoteLoading: boolean;
   onExecute: () => void;
   onChangeAsset: () => void;
-  onRefresh?: () => void;
   isRefreshing?: boolean;
 }
 
@@ -125,6 +125,7 @@ export interface WidgetViewRenderConfig {
   isClearingHistory: boolean;
   onSelectOption: (option: PaymentOption) => void;
   onExecutePayment: () => void;
+  refineBridgeQuote: (option: PaymentOption) => void;
   onChangeAsset: () => void;
   onResetToOptions: () => void;
   onViewHistory: () => void;

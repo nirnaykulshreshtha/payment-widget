@@ -25,6 +25,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     swapTxHash,
     approvalTxHashes,
     isExecuting,
+    refineBridgeQuote,
     isQuoteLoading,
     isClearingHistory,
     onSelectOption,
@@ -109,6 +110,10 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
         headerConfig: {
           showHistory: false,
           showRefresh: true,
+          onRefresh:() => {
+            refineBridgeQuote(selectedOption);
+            console.log("refining bridge quote")
+          }
         },
         content: (
           <PaymentDetailsView
@@ -126,7 +131,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
           isQuoteLoading={isQuoteLoading}
           onExecute={onExecutePayment}
           onChangeAsset={onChangeAsset}
-          onRefresh={onRefresh}
+
           isRefreshing={planner.isLoading}
         />
         ),
