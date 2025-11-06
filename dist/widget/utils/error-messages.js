@@ -9,8 +9,8 @@ export function categorizePlannerError(error) {
     if (!error) {
         return {
             type: 'unknown',
-            title: 'No payment options found',
-            description: "We couldn't find a way to send this amount. Try a smaller amount or pick another token.",
+            title: 'Insufficient balance',
+            description: "You don't have enough balance to send this amount",
             actions: ['Try a smaller amount', 'Choose a different token', 'Refresh to check for new availability']
         };
     }

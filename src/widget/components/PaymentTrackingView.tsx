@@ -75,6 +75,7 @@ function TimelineSection({ entry }: { entry: PaymentHistoryEntry }) {
     <ExpandableSection
       key={entry.id}
       className="pw-tracking-timeline"
+      defaultExpanded={true}
       summary={(expanded) => (
         <div className={cn('pw-tracking-timeline__summary', expanded && 'is-open')}>
           <span
