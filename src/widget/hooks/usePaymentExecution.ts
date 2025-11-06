@@ -372,6 +372,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           walletClient: walletClientWithChain as ConfiguredWalletClient,
           originClient,
           destinationClient,
+          forceOriginChain: true,
           onProgress: (progress) => {
             if (!historyIdRef) {
               return;
@@ -582,6 +583,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           originClient,
           destinationClient,
           destinationSpokePoolAddress,
+          forceOriginChain: true,
           onProgress: (progress) => {
             if (!historyIdRef) return;
 

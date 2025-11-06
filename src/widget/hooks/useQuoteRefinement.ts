@@ -212,10 +212,10 @@ export function useQuoteRefinement(
           inputAmount: bestQuote.deposit.inputAmount,
           outputAmount: bestQuote.deposit.outputAmount,
           feesTotal:
-            bestQuote.fees.totalRelayFee.total +
             bestQuote.fees.lpFee.total +
-            bestQuote.fees.relayerCapitalFee.total,
-          expiresAt: bestQuote.deposit.quoteTimestamp * 1000 + 300_000,
+            bestQuote.fees.totalRelayFee.total
+          ,
+          expiresAt: bestQuote.deposit.fillDeadline - bestQuote.estimatedFillTimeSec,
           limits,
         };
 

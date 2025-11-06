@@ -90,6 +90,7 @@ export interface PaymentDetailsViewProps {
   swapTxHash: Hex | null;
   approvalTxHashes: Hex[];
   isExecuting: boolean;
+  isQuoteLoading: boolean;
   onExecute: () => void;
   onChangeAsset: () => void;
   onRefresh?: () => void;
@@ -120,6 +121,7 @@ export interface WidgetViewRenderConfig {
   swapTxHash: Hex | null;
   approvalTxHashes: Hex[];
   isExecuting: boolean;
+  isQuoteLoading: boolean;
   isClearingHistory: boolean;
   onSelectOption: (option: PaymentOption) => void;
   onExecutePayment: () => void;

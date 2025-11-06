@@ -32,6 +32,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
     swapTxHash,
     approvalTxHashes,
     isExecuting,
+    isQuoteLoading,
     onExecute,
     onChangeAsset,
   } = props;
@@ -50,13 +51,15 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
     targetToken?.chainId ??
     originChainId;
 
-  const formattedPayingAmount = `${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol}`;
+  const originChainLabel = formatChainLabel(chainLookup, originChainId);
+  const destinationChainLabel = formatChainLabel(chainLookup, destinationChainId);
+
+  const formattedPayingAmount = `${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol} on ${originChainLabel}`;
   const formattedReceivingAmount = `${formatTokenAmount(receivingAmount, targetDecimals)} ${targetSymbol}`;
   const formattedMinimumAmount = `${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`;
   const hasMeaningfulMinimum = minExpectedAmount > 0n && minExpectedAmount < receivingAmount;
+  const formattedTargetAmount = `${formatTokenAmount(targetAmount, targetToken!.decimals)} ${targetToken!.symbol} on ${destinationChainLabel}`;
 
-  const originChainLabel = formatChainLabel(chainLookup, originChainId);
-  const destinationChainLabel = formatChainLabel(chainLookup, destinationChainId);
   const paymentRouteLabel =
     originChainId === destinationChainId ? originChainLabel : `${originChainLabel} to ${destinationChainLabel}`;
 
@@ -77,9 +80,9 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         defaultExpanded={true}
         onToggle={(expanded) => log('toggle breakdown', { optionId: option.id, expanded })}
       >
-        <DetailRow label="You pay" value={formattedPayingAmount} />
-        <DetailRow label="You'll receive" value={formattedReceivingAmount} />
-        {hasMeaningfulMinimum && <DetailRow label="Guaranteed minimum" value={formattedMinimumAmount} />}
+        <DetailRow label="You need to pay" value={formattedTargetAmount} />
+        {/*<DetailRow label="You'll receive" value={formattedReceivingAmount} />*/}
+        {/*{hasMeaningfulMinimum && <DetailRow label="Guaranteed minimum" value={formattedMinimumAmount} />}*/}
         <DetailRow label="Payment route" value={paymentRouteLabel} />
         {arrivalEstimate && <DetailRow label="Estimated arrival" value={arrivalEstimate} />}
         {slippageDisplay && <DetailRow label="Price protection" value={slippageDisplay} />}
@@ -89,6 +92,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
             value={`${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}`}
           />
         )}
+        <DetailRow label="You pay" value={formattedPayingAmount} />
         {showApprovalsRow && (
           <DetailRow
             label="Token approvals"
@@ -125,16 +129,18 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         onClick={onExecute}
         disabled={
           isExecuting ||
+          isQuoteLoading ||
           !option.canMeetTarget ||
           (option.mode === 'bridge' && !option.quote) ||
           (option.mode === 'swap' && !option.swapQuote)
         }
         aria-label={
-          isExecuting
-            ? 'Processing payment'
-            : option.canMeetTarget
-              ? 'Execute payment'
-              : 'Payment option unavailable'
+          isQuoteLoading ? 'Refining...' :
+            isExecuting
+              ? 'Processing payment'
+              : option.canMeetTarget
+                ? 'Execute payment'
+                : 'Payment option unavailable'
         }
       >
         {isExecuting ? (
@@ -142,9 +148,14 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
             <span className="pw-button__spinner" aria-hidden="true" />
             Processing...
           </span>
-        ) : (
-          'Pay Now'
-        )}
+        ) : isQuoteLoading ?
+          <span className="pw-button__content">
+          <span className="pw-button__spinner" aria-hidden="true"/>
+            Loading...
+          </span>
+            : (
+                'Pay Now'
+            )}
       </Button>
     </div>
   );
@@ -155,7 +166,7 @@ interface DetailRowProps {
   value: React.ReactNode;
 }
 
-function DetailRow({ label, value }: DetailRowProps) {
+function DetailRow({label, value}: DetailRowProps) {
   return (
     <div className="pw-detail-row">
       <span className="pw-detail-row__label">{label}</span>
@@ -215,7 +226,7 @@ function formatArrivalEta(seconds?: number | null) {
     return 'Instant';
   }
   if (seconds < 60) {
-    return '< 1 minute';
+    return `~${seconds} seconds`;
   }
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) {

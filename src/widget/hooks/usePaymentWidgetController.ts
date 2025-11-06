@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { clearPaymentHistory, initializePaymentHistory, refreshPendingHistory } from '../../history';
-import { usePaymentHistoryStore } from '../../history/store';
+import { usePaymentHistoryStore } from '../../history';
 import { useDepositPlanner } from '../../hooks/useDepositPlanner';
 import { usePaymentSetup } from '../../hooks/usePaymentSetup';
 import { summarizeError } from '../../lib';
@@ -464,6 +464,7 @@ export function usePaymentWidgetController(
     swapTxHash,
     approvalTxHashes,
     isExecuting,
+    isQuoteLoading : quoteLoading,
     isClearingHistory,
     onSelectOption: handleSelect,
     onExecutePayment: handleExecute,

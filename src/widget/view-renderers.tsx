@@ -1,10 +1,10 @@
 import type { RenderedPaymentView, WidgetViewRenderConfig } from './types';
-import { LoadingStagesView } from './components/LoadingStagesView';
-import { PayOptionsView } from './components/PayOptionsView';
-import { PaymentDetailsView } from './components/PaymentDetailsView';
-import { PaymentHistoryScreen } from './components/PaymentHistoryScreen';
-import { PaymentTrackingView } from './components/PaymentTrackingView';
-import { PaymentResultView } from './components/PaymentResultView';
+import { LoadingStagesView } from './components';
+import { PayOptionsView } from './components';
+import { PaymentDetailsView } from './components';
+import { PaymentHistoryScreen } from './components';
+import { PaymentTrackingView } from './components';
+import { PaymentResultView } from './components';
 import { Button } from '../ui/primitives';
 
 export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPaymentView {
@@ -25,6 +25,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
     swapTxHash,
     approvalTxHashes,
     isExecuting,
+    isQuoteLoading,
     isClearingHistory,
     onSelectOption,
     onExecutePayment,
@@ -122,6 +123,7 @@ export function renderPaymentView(config: WidgetViewRenderConfig): RenderedPayme
           swapTxHash={swapTxHash}
           approvalTxHashes={approvalTxHashes}
           isExecuting={isExecuting}
+          isQuoteLoading={isQuoteLoading}
           onExecute={onExecutePayment}
           onChangeAsset={onChangeAsset}
           onRefresh={onRefresh}
