@@ -46,9 +46,9 @@ interface UsePaymentExecutionParams {
   onSetSelectedOption: (option: PaymentOption | null) => void;
   onPaymentComplete?: (reference: string) => void;
   onPaymentFailed?: (reason: string) => void;
-  onOpenTrackingView: (historyId: string) => void;
-  onShowSuccessView: (params: { reference?: string; historyId?: string; summary?: PaymentResultSummary }) => void;
-  onShowFailureView: (params: { reason: string; historyId?: string }) => void;
+  openTrackingView: (historyId: string) => void;
+  showSuccessView: (params: { reference?: string; historyId?: string; summary?: PaymentResultSummary }) => void;
+  showFailureView: (params: { reason: string; historyId?: string }) => void;
 }
 
 /**
@@ -67,9 +67,9 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
     onSetSelectedOption,
     onPaymentComplete,
     onPaymentFailed,
-    onOpenTrackingView,
-    onShowSuccessView,
-    onShowFailureView,
+    openTrackingView,
+    showSuccessView,
+    showFailureView,
   } = params;
 
   const {
@@ -201,7 +201,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           originChainId: config.targetChainId,
           destinationChainId: config.targetChainId,
         };
-        onShowSuccessView({ reference: hash, historyId: historyIdRef ?? undefined, summary });
+        showSuccessView({ reference: hash, historyId: historyIdRef ?? undefined, summary });
         onSetSelectedOption(null);
         historyIdRef = null;
         onSetActiveHistoryId(null);
@@ -215,7 +215,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           failDirect(historyIdRef, message);
           historyIdRef = null;
         }
-        onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+        showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         onSetSelectedOption(null);
         if (!failureHistoryId) {
           onSetActiveHistoryId(null);
@@ -239,8 +239,8 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
       onSetSelectedOption,
       onPaymentComplete,
       onPaymentFailed,
-      onShowSuccessView,
-      onShowFailureView,
+      showSuccessView,
+      showFailureView,
     ],
   );
 
@@ -335,7 +335,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
         }
 
         if (historyIdRef) {
-          onOpenTrackingView(historyIdRef);
+          openTrackingView(historyIdRef);
         }
 
         let wrapHash: Hex | null = null;
@@ -446,7 +446,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           originChainId: route.originChainId,
           destinationChainId: route.destinationChainId,
         };
-        onShowSuccessView({
+        showSuccessView({
           reference: result.depositId ? result.depositId.toString() : undefined,
           historyId: successHistoryId ?? undefined,
           summary,
@@ -464,7 +464,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           failBridge(historyIdRef, message);
           historyIdRef = null;
         }
-        onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+        showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         onSetSelectedOption(null);
         if (!failureHistoryId) {
           onSetActiveHistoryId(null);
@@ -489,9 +489,9 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
       onSetSelectedOption,
       onPaymentComplete,
       onPaymentFailed,
-      onOpenTrackingView,
-      onShowSuccessView,
-      onShowFailureView,
+      openTrackingView,
+      showSuccessView,
+      showFailureView,
     ],
   );
 
@@ -571,7 +571,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
         }
 
         if (historyIdRef) {
-          onOpenTrackingView(historyIdRef);
+          openTrackingView(historyIdRef);
         }
 
         const collectedApprovalHashes: Hex[] = [];
@@ -651,7 +651,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
         });
 
         const successHistoryId = historyIdRef;
-        onShowSuccessView({
+        showSuccessView({
           reference: result.depositId ? result.depositId.toString() : undefined,
           historyId: successHistoryId ?? undefined,
           summary,
@@ -669,7 +669,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           failSwap(historyIdRef, message);
           historyIdRef = null;
         }
-        onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+        showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
         onSetSelectedOption(null);
         if (!failureHistoryId) {
           onSetActiveHistoryId(null);
@@ -694,9 +694,9 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
       onSetSelectedOption,
       onPaymentComplete,
       onPaymentFailed,
-      onOpenTrackingView,
-      onShowSuccessView,
-      onShowFailureView,
+      openTrackingView,
+      showSuccessView,
+      showFailureView,
     ],
   );
 

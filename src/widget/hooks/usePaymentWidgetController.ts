@@ -239,9 +239,9 @@ export function usePaymentWidgetController(
     onSetSelectedOption: setSelectedOption,
     onPaymentComplete,
     onPaymentFailed,
-    onOpenTrackingView: openTrackingView,
-    onShowSuccessView: showSuccessView,
-    onShowFailureView: showFailureView,
+    openTrackingView,
+    showSuccessView,
+    showFailureView,
   });
 
   const handleSelect = useCallback(
