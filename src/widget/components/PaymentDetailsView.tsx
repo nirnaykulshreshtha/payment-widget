@@ -59,6 +59,7 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
   const formattedMinimumAmount = `${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`;
   const hasMeaningfulMinimum = minExpectedAmount > 0n && minExpectedAmount < receivingAmount;
   const formattedTargetAmount = `${formatTokenAmount(targetAmount, targetToken!.decimals)} ${targetToken!.symbol} on ${destinationChainLabel}`;
+  const formattedExchangeRate = `${formatTokenAmount(targetAmount, option.displayToken.decimals)} ${option.displayToken.symbol} on ${originChainLabel} ≈ `
 
   const paymentRouteLabel =
     originChainId === destinationChainId ? originChainLabel : `${originChainLabel} to ${destinationChainLabel}`;
@@ -86,6 +87,8 @@ export function PaymentDetailsView(props: PaymentDetailsViewProps) {
         <DetailRow label="Payment route" value={paymentRouteLabel} />
         {arrivalEstimate && <DetailRow label="Estimated arrival" value={arrivalEstimate} />}
         {slippageDisplay && <DetailRow label="Price protection" value={slippageDisplay} />}
+        {/*// @todo: Need to add this exchange rate as well for more clarity, generally it would be, targetAmount = payingAmount - fees*/}
+        {/*<DetailRow label="Exchange Rate" value={formattedPayingAmount} />*/}
         {option.mode === 'bridge' && option.quote && (
           <DetailRow
             label="Transfer fees"

@@ -163,13 +163,13 @@ export function useQuoteRefinement(
           });
 
           const absBigInt = (n: bigint) => (n < 0n ? -n : n);
-          const changeDelta = (amount1: bigint, amount2: bigint) => absBigInt((amount1 - amount2) / amount2);
+          const changeDelta = (amount1: bigint, amount2: bigint) => absBigInt(amount1 - amount2);
 
           if (
             !bestQuote ||
             (changeDelta(currentQuote.deposit.outputAmount, config.targetAmount) <
               changeDelta(bestQuote.deposit.outputAmount, config.targetAmount) &&
-              currentQuote.deposit.outputAmount > config.targetAmount)
+              currentQuote.deposit.outputAmount >= config.targetAmount)
           ) {
             bestQuote = currentQuote;
           }
@@ -212,7 +212,7 @@ export function useQuoteRefinement(
           inputAmount: bestQuote.deposit.inputAmount,
           outputAmount: bestQuote.deposit.outputAmount,
           feesTotal:
-            bestQuote.fees.lpFee.total +
+            // bestQuote.fees.lpFee.total +
             bestQuote.fees.totalRelayFee.total
           ,
           expiresAt: bestQuote.deposit.fillDeadline - bestQuote.estimatedFillTimeSec,
