@@ -30,7 +30,7 @@ export function PaymentWidget({ paymentConfig, onPaymentComplete, onPaymentFaile
           targetChainLogoUrl={headerConfigValues.headerTargetChainLogoUrl}
           sourceChainLogoUrl={headerConfigValues.headerSourceChainLogoUrl}
           lastUpdated={headerConfigValues.headerLastUpdated}
-          onRefresh={plannerRefresh}
+          onRefresh={headerConfigValues.headerConfig.onRefresh ?? plannerRefresh}
           isRefreshing={headerConfigValues.headerConfig.showRefresh ? plannerIsLoading : false}
           onViewHistory={openHistoryView}
           showRefresh={headerConfigValues.headerConfig.showRefresh}
