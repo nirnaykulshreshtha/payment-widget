@@ -14,7 +14,7 @@ import { renderHashLink } from '../utils/hash-link';
 import { Button } from '../../ui/primitives';
 import { ExpandableSection } from './ExpandableSection';
 export function PaymentDetailsView(props) {
-    const { option, targetToken, targetAmount, maxSlippageBps, chainLookup, chainLogos, wrapTxHash, depositTxHash, swapTxHash, approvalTxHashes, isExecuting, onExecute, onChangeAsset, } = props;
+    const { option, targetToken, targetAmount, maxSlippageBps, chainLookup, chainLogos, wrapTxHash, depositTxHash, swapTxHash, approvalTxHashes, isExecuting, isQuoteLoading, onExecute, onChangeAsset, } = props;
     const originChainId = option.route?.originChainId ?? option.swapRoute?.originChainId ?? option.displayToken.chainId;
     const targetDecimals = targetToken?.decimals ?? option.displayToken.decimals;
     const targetSymbol = targetToken?.symbol ?? option.displayToken.symbol;
@@ -23,28 +23,34 @@ export function PaymentDetailsView(props) {
         option.swapRoute?.destinationChainId ??
         targetToken?.chainId ??
         originChainId;
-    const formattedPayingAmount = `${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol}`;
+    const originChainLabel = formatChainLabel(chainLookup, originChainId);
+    const destinationChainLabel = formatChainLabel(chainLookup, destinationChainId);
+    const formattedPayingAmount = `${formatTokenAmount(payingAmount, option.displayToken.decimals)} ${option.displayToken.symbol} on ${originChainLabel}`;
     const formattedReceivingAmount = `${formatTokenAmount(receivingAmount, targetDecimals)} ${targetSymbol}`;
     const formattedMinimumAmount = `${formatTokenAmount(minExpectedAmount, targetDecimals)} ${targetSymbol}`;
     const hasMeaningfulMinimum = minExpectedAmount > 0n && minExpectedAmount < receivingAmount;
-    const originChainLabel = formatChainLabel(chainLookup, originChainId);
-    const destinationChainLabel = formatChainLabel(chainLookup, destinationChainId);
+    const formattedTargetAmount = `${formatTokenAmount(targetAmount, targetToken.decimals)} ${targetToken.symbol} on ${destinationChainLabel}`;
+    const formattedExchangeRate = `${formatTokenAmount(targetAmount, option.displayToken.decimals)} ${option.displayToken.symbol} on ${originChainLabel} ≈ `;
     const paymentRouteLabel = originChainId === destinationChainId ? originChainLabel : `${originChainLabel} to ${destinationChainLabel}`;
     const arrivalEstimate = formatArrivalEta(option.estimatedFillTimeSec);
     const slippageDisplay = formatSlippageBps(maxSlippageBps);
     const hasTransactionHashes = Boolean(wrapTxHash || depositTxHash || swapTxHash);
     const approvalsRequiredDisplay = approvalsRequired > 0 ? `${approvalsRequired} approval${approvalsRequired === 1 ? '' : 's'}` : null;
     const showApprovalsRow = approvalsRequired > 0 || approvalTxHashes.length > 0;
-    return (_jsxs("div", { className: "pw-view pw-view--details", children: [_jsxs(ExpandableSection, { className: "pw-details-card", summary: _jsx("span", { className: "pw-breakdown-toggle__label", children: "Details" }), collapsedAriaLabel: "Show details", expandedAriaLabel: "Hide details", defaultExpanded: true, onToggle: (expanded) => log('toggle breakdown', { optionId: option.id, expanded }), children: [_jsx(DetailRow, { label: "You pay", value: formattedPayingAmount }), _jsx(DetailRow, { label: "You'll receive", value: formattedReceivingAmount }), hasMeaningfulMinimum && _jsx(DetailRow, { label: "Guaranteed minimum", value: formattedMinimumAmount }), _jsx(DetailRow, { label: "Payment route", value: paymentRouteLabel }), arrivalEstimate && _jsx(DetailRow, { label: "Estimated arrival", value: arrivalEstimate }), slippageDisplay && _jsx(DetailRow, { label: "Price protection", value: slippageDisplay }), option.mode === 'bridge' && option.quote && (_jsx(DetailRow, { label: "Transfer fees", value: `${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}` })), showApprovalsRow && (_jsx(DetailRow, { label: "Token approvals", value: approvalTxHashes.length > 0
+    return (_jsxs("div", { className: "pw-view pw-view--details", children: [_jsxs(ExpandableSection, { className: "pw-details-card", summary: _jsx("span", { className: "pw-breakdown-toggle__label", children: "Details" }), collapsedAriaLabel: "Show details", expandedAriaLabel: "Hide details", defaultExpanded: true, onToggle: (expanded) => log('toggle breakdown', { optionId: option.id, expanded }), children: [_jsx(DetailRow, { label: "You need to pay", value: formattedTargetAmount }), _jsx(DetailRow, { label: "Payment route", value: paymentRouteLabel }), arrivalEstimate && _jsx(DetailRow, { label: "Estimated arrival", value: arrivalEstimate }), slippageDisplay && _jsx(DetailRow, { label: "Price protection", value: slippageDisplay }), option.mode === 'bridge' && option.quote && (_jsx(DetailRow, { label: "Transfer fees", value: `${formatTokenAmount(option.quote.feesTotal, option.displayToken.decimals)} ${option.displayToken.symbol}` })), _jsx(DetailRow, { label: "You pay", value: formattedPayingAmount }), showApprovalsRow && (_jsx(DetailRow, { label: "Token approvals", value: approvalTxHashes.length > 0
                             ? renderMultipleHashes(approvalTxHashes.map((hash) => hash), originChainId)
                             : approvalsRequiredDisplay })), hasTransactionHashes && (_jsxs(_Fragment, { children: [wrapTxHash && _jsx(DetailRow, { label: "Wrap transaction", value: renderHashLink(wrapTxHash, originChainId) }), option.mode !== 'swap' && depositTxHash && (_jsx(DetailRow, { label: option.mode === 'bridge' ? 'Deposit transaction' : 'Payment transaction', value: renderHashLink(depositTxHash, originChainId) })), option.mode === 'swap' && swapTxHash && (_jsx(DetailRow, { label: "Swap transaction", value: renderHashLink(swapTxHash, option.swapRoute?.originChainId ?? originChainId) }))] }))] }, option.id), _jsx(Button, { variant: "primary", className: "pw-button--full pw-button--pay-now", onClick: onExecute, disabled: isExecuting ||
+                    isQuoteLoading ||
                     !option.canMeetTarget ||
                     (option.mode === 'bridge' && !option.quote) ||
-                    (option.mode === 'swap' && !option.swapQuote), "aria-label": isExecuting
-                    ? 'Processing payment'
-                    : option.canMeetTarget
-                        ? 'Execute payment'
-                        : 'Payment option unavailable', children: isExecuting ? (_jsxs("span", { className: "pw-button__content", children: [_jsx("span", { className: "pw-button__spinner", "aria-hidden": "true" }), "Processing..."] })) : ('Pay Now') })] }));
+                    (option.mode === 'swap' && !option.swapQuote), "aria-label": isQuoteLoading ? 'Refining...' :
+                    isExecuting
+                        ? 'Processing payment'
+                        : option.canMeetTarget
+                            ? 'Execute payment'
+                            : 'Payment option unavailable', children: isExecuting ? (_jsxs("span", { className: "pw-button__content", children: [_jsx("span", { className: "pw-button__spinner", "aria-hidden": "true" }), "Processing..."] })) : isQuoteLoading ?
+                    _jsxs("span", { className: "pw-button__content", children: [_jsx("span", { className: "pw-button__spinner", "aria-hidden": "true" }), "Loading..."] })
+                    : ('Pay Now') })] }));
 }
 function DetailRow({ label, value }) {
     return (_jsxs("div", { className: "pw-detail-row", children: [_jsx("span", { className: "pw-detail-row__label", children: label }), _jsx("span", { className: "pw-detail-row__value", children: value })] }));
@@ -89,7 +95,7 @@ function formatArrivalEta(seconds) {
         return 'Instant';
     }
     if (seconds < 60) {
-        return '< 1 minute';
+        return `~${seconds} seconds`;
     }
     const minutes = Math.round(seconds / 60);
     if (minutes < 60) {

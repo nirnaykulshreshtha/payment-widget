@@ -1,13 +1,13 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { LoadingStagesView } from './components/LoadingStagesView';
-import { PayOptionsView } from './components/PayOptionsView';
-import { PaymentDetailsView } from './components/PaymentDetailsView';
-import { PaymentHistoryScreen } from './components/PaymentHistoryScreen';
-import { PaymentTrackingView } from './components/PaymentTrackingView';
-import { PaymentResultView } from './components/PaymentResultView';
+import { LoadingStagesView } from './components';
+import { PayOptionsView } from './components';
+import { PaymentDetailsView } from './components';
+import { PaymentHistoryScreen } from './components';
+import { PaymentTrackingView } from './components';
+import { PaymentResultView } from './components';
 import { Button } from '../ui/primitives';
 export function renderPaymentView(config) {
-    const { view, planner, options, selectedOption, targetAmount, targetSymbol, targetChainLabel, targetToken, chainLookup, chainLogos, formattedTargetAmount, wrapTxHash, txHash, swapTxHash, approvalTxHashes, isExecuting, isClearingHistory, onSelectOption, onExecutePayment, onChangeAsset, onResetToOptions, onViewHistory, accountConnected, onOpenTracking, onClearHistory, onCloseResult, onRetry, onRefresh, maxSlippageBps, } = config;
+    const { view, planner, options, selectedOption, targetAmount, targetSymbol, targetChainLabel, targetToken, chainLookup, chainLogos, formattedTargetAmount, wrapTxHash, txHash, swapTxHash, approvalTxHashes, isExecuting, refineBridgeQuote, isQuoteLoading, isClearingHistory, onSelectOption, onExecutePayment, onChangeAsset, onResetToOptions, onViewHistory, accountConnected, onOpenTracking, onClearHistory, onCloseResult, onRetry, onRefresh, maxSlippageBps, } = config;
     switch (view.name) {
         case 'loading':
             return {
@@ -39,8 +39,12 @@ export function renderPaymentView(config) {
                 headerConfig: {
                     showHistory: false,
                     showRefresh: true,
+                    onRefresh: () => {
+                        refineBridgeQuote(selectedOption);
+                        console.log("refining bridge quote");
+                    }
                 },
-                content: (_jsx(PaymentDetailsView, { option: selectedOption, targetToken: targetToken, targetAmount: targetAmount, maxSlippageBps: maxSlippageBps, chainLookup: chainLookup, chainLogos: chainLogos, wrapTxHash: wrapTxHash, depositTxHash: txHash, swapTxHash: swapTxHash, approvalTxHashes: approvalTxHashes, isExecuting: isExecuting, onExecute: onExecutePayment, onChangeAsset: onChangeAsset, onRefresh: onRefresh, isRefreshing: planner.isLoading })),
+                content: (_jsx(PaymentDetailsView, { option: selectedOption, targetToken: targetToken, targetAmount: targetAmount, maxSlippageBps: maxSlippageBps, chainLookup: chainLookup, chainLogos: chainLogos, wrapTxHash: wrapTxHash, depositTxHash: txHash, swapTxHash: swapTxHash, approvalTxHashes: approvalTxHashes, isExecuting: isExecuting, isQuoteLoading: isQuoteLoading, onExecute: onExecutePayment, onChangeAsset: onChangeAsset, isRefreshing: planner.isLoading })),
             };
         case 'history':
             return {

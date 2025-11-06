@@ -37,6 +37,7 @@ export declare function useHeaderConfig(params: UseHeaderConfigParams): {
     primaryEyebrowLabel: string | undefined;
     headerConfig: {
         showRefresh: boolean;
+        onRefresh?: () => void;
         showHistory: boolean;
         showPrimary?: boolean;
         title?: string;

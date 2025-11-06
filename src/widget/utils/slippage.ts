@@ -6,7 +6,7 @@
  */
 
 export function computeTargetWithSlippage(amount: bigint, slippageBps?: number) {
-  const bps = BigInt(slippageBps ?? 0);
+  const bps = BigInt(slippageBps ?? 0n);
   return amount + ((amount * bps + 9999n) / 10000n);
 }
 

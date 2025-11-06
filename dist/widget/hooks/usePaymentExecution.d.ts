@@ -16,13 +16,13 @@ interface UsePaymentExecutionParams {
     onSetSelectedOption: (option: PaymentOption | null) => void;
     onPaymentComplete?: (reference: string) => void;
     onPaymentFailed?: (reason: string) => void;
-    onOpenTrackingView: (historyId: string) => void;
-    onShowSuccessView: (params: {
+    openTrackingView: (historyId: string) => void;
+    showSuccessView: (params: {
         reference?: string;
         historyId?: string;
         summary?: PaymentResultSummary;
     }) => void;
-    onShowFailureView: (params: {
+    showFailureView: (params: {
         reason: string;
         historyId?: string;
     }) => void;

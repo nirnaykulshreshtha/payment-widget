@@ -76,6 +76,7 @@ export interface RenderedPaymentView {
     content: ReactNode;
     headerConfig: {
         showRefresh: boolean;
+        onRefresh?: () => void;
         showHistory: boolean;
         showPrimary?: boolean;
         title?: string;
@@ -94,9 +95,9 @@ export interface PaymentDetailsViewProps {
     swapTxHash: Hex | null;
     approvalTxHashes: Hex[];
     isExecuting: boolean;
+    isQuoteLoading: boolean;
     onExecute: () => void;
     onChangeAsset: () => void;
-    onRefresh?: () => void;
     isRefreshing?: boolean;
 }
 export interface WidgetViewRenderConfig {
@@ -126,9 +127,11 @@ export interface WidgetViewRenderConfig {
     swapTxHash: Hex | null;
     approvalTxHashes: Hex[];
     isExecuting: boolean;
+    isQuoteLoading: boolean;
     isClearingHistory: boolean;
     onSelectOption: (option: PaymentOption) => void;
     onExecutePayment: () => void;
+    refineBridgeQuote: (option: PaymentOption) => void;
     onChangeAsset: () => void;
     onResetToOptions: () => void;
     onViewHistory: () => void;

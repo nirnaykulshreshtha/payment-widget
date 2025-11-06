@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clearPaymentHistory, initializePaymentHistory, refreshPendingHistory } from '../../history';
-import { usePaymentHistoryStore } from '../../history/store';
+import { usePaymentHistoryStore } from '../../history';
 import { useDepositPlanner } from '../../hooks/useDepositPlanner';
 import { usePaymentSetup } from '../../hooks/usePaymentSetup';
 import { summarizeError } from '../../lib';
@@ -170,9 +170,9 @@ export function usePaymentWidgetController(options) {
         onSetSelectedOption: setSelectedOption,
         onPaymentComplete,
         onPaymentFailed,
-        onOpenTrackingView: openTrackingView,
-        onShowSuccessView: showSuccessView,
-        onShowFailureView: showFailureView,
+        openTrackingView,
+        showSuccessView,
+        showFailureView,
     });
     const handleSelect = useCallback((option) => {
         const clonedOption = clonePaymentOption(option);
@@ -355,8 +355,10 @@ export function usePaymentWidgetController(options) {
         swapTxHash,
         approvalTxHashes,
         isExecuting,
+        isQuoteLoading: quoteLoading,
         isClearingHistory,
         onSelectOption: handleSelect,
+        refineBridgeQuote,
         onExecutePayment: handleExecute,
         onChangeAsset: popView,
         onResetToOptions: resetToOptions,

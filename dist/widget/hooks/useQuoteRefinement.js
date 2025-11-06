@@ -33,23 +33,22 @@ export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) 
         setQuoteLoading(true);
         setQuoteError(null);
         try {
-            const targetWithBuffer = computeTargetWithSlippage(config.targetAmount, config.maxSlippageBps);
-            const fallbackRecipient = config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
+            const targetAmount = config.appFeeRecipient && config.appFee ? computeTargetWithSlippage(config.targetAmount, config.appFee * 10000) : config.targetAmount; // @devnote: Simulated appfee as bridge API doesn't support app fee yet
+            const targetWithBuffer = computeTargetWithSlippage(targetAmount, config.maxSlippageBps);
+            const fallbackRecipient = config.appFeeRecipient ?? // @devnote: Simulated appfee as bridge API doesn't support app fee yet
+                config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
             const depositRecipient = config?.targetRecipient ?? fallbackRecipient;
             if (!config.walletClient?.account?.address) {
                 log('refine quote running without wallet connection', { optionId: option.id });
             }
-            let limits = option.quote?.limits;
-            if (!limits) {
-                limits = await client.getLimits({
-                    originChainId: option.route.originChainId,
-                    destinationChainId: option.route.destinationChainId,
-                    inputToken: option.route.inputToken,
-                    outputToken: option.route.outputToken,
-                    apiUrl: config.apiUrl,
-                    allowUnmatchedDecimals: true,
-                });
-            }
+            let limits = await client.getLimits({
+                originChainId: option.route.originChainId,
+                destinationChainId: option.route.destinationChainId,
+                inputToken: option.route.inputToken,
+                outputToken: option.route.outputToken,
+                apiUrl: config.apiUrl,
+                allowUnmatchedDecimals: true,
+            });
             const maxAllowed = option.balance < limits.maxDeposit ? option.balance : limits.maxDeposit;
             if (maxAllowed < limits.minDeposit) {
                 const message = 'Balance below the minimum required for this option';
@@ -106,14 +105,14 @@ export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) 
                     fees: currentQuote.fees,
                 });
                 const absBigInt = (n) => (n < 0n ? -n : n);
-                const changeDelta = (amount1, amount2) => absBigInt((amount1 - amount2) / amount2);
+                const changeDelta = (amount1, amount2) => absBigInt(amount1 - amount2);
                 if (!bestQuote ||
-                    (changeDelta(currentQuote.deposit.outputAmount, config.targetAmount) <
-                        changeDelta(bestQuote.deposit.outputAmount, config.targetAmount) &&
-                        currentQuote.deposit.outputAmount > config.targetAmount)) {
+                    (changeDelta(currentQuote.deposit.outputAmount, targetAmount) <
+                        changeDelta(bestQuote.deposit.outputAmount, targetAmount) &&
+                        currentQuote.deposit.outputAmount >= config.targetAmount)) {
                     bestQuote = currentQuote;
                 }
-                if (currentQuote.deposit.outputAmount >= config.targetAmount &&
+                if (currentQuote.deposit.outputAmount >= targetAmount &&
                     currentQuote.deposit.outputAmount <= targetWithBuffer) {
                     log('refine hit target output with buffer', { attempt: attempts });
                     break;
@@ -136,14 +135,19 @@ export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) 
             if (!bestQuote) {
                 throw new Error('Unable to compute refined quote');
             }
+            const feesTotal = // bestQuote.fees.lpFee.total +
+             bestQuote.fees.totalRelayFee.total;
+            const precisionMagnifier = 10n ** 36n;
+            const exchangeRate = (bestQuote.deposit.inputAmount * precisionMagnifier - feesTotal * precisionMagnifier) / targetAmount;
+            console.log("RefinedFees", targetAmount - config.targetAmount, targetAmount, config.targetAmount, bestQuote.fees.totalRelayFee.total, exchangeRate);
             const refinedSummary = {
                 raw: bestQuote,
                 inputAmount: bestQuote.deposit.inputAmount,
-                outputAmount: bestQuote.deposit.outputAmount,
-                feesTotal: bestQuote.fees.totalRelayFee.total +
-                    bestQuote.fees.lpFee.total +
-                    bestQuote.fees.relayerCapitalFee.total,
-                expiresAt: bestQuote.deposit.quoteTimestamp * 1000 + 300_000,
+                outputAmount: config.targetAmount,
+                feesTotal: feesTotal
+                    + ((targetAmount - config.targetAmount) * exchangeRate) / precisionMagnifier, // @devnote: Simulated appfee as bridge API doesn't support app fee yet
+                expiresAt: bestQuote.deposit.fillDeadline - bestQuote.estimatedFillTimeSec,
+                exchangeRate,
                 limits,
             };
             onOptionUpdate((prev) => {

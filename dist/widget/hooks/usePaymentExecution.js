@@ -15,7 +15,7 @@ const logError = (...args) => console.error(LOG_PREFIX, ...args);
  * Manages all execution state, history tracking, and callbacks.
  */
 export function usePaymentExecution(params) {
-    const { client, config, targetToken, activeHistoryId, ensureWalletChain, executionState, onSetActiveHistoryId, onSetSelectedOption, onPaymentComplete, onPaymentFailed, onOpenTrackingView, onShowSuccessView, onShowFailureView, } = params;
+    const { client, config, targetToken, activeHistoryId, ensureWalletChain, executionState, onSetActiveHistoryId, onSetSelectedOption, onPaymentComplete, onPaymentFailed, openTrackingView, showSuccessView, showFailureView, } = params;
     const { setIsExecuting, setExecutionError, setWrapTxHash, setTxHash, setSwapTxHash, setApprovalTxHashes, } = executionState;
     const executeDirect = useCallback(async (option) => {
         let historyIdRef = activeHistoryId;
@@ -130,7 +130,7 @@ export function usePaymentExecution(params) {
                 originChainId: config.targetChainId,
                 destinationChainId: config.targetChainId,
             };
-            onShowSuccessView({ reference: hash, historyId: historyIdRef ?? undefined, summary });
+            showSuccessView({ reference: hash, historyId: historyIdRef ?? undefined, summary });
             onSetSelectedOption(null);
             historyIdRef = null;
             onSetActiveHistoryId(null);
@@ -145,7 +145,7 @@ export function usePaymentExecution(params) {
                 failDirect(historyIdRef, message);
                 historyIdRef = null;
             }
-            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
             onSetSelectedOption(null);
             if (!failureHistoryId) {
                 onSetActiveHistoryId(null);
@@ -169,8 +169,8 @@ export function usePaymentExecution(params) {
         onSetSelectedOption,
         onPaymentComplete,
         onPaymentFailed,
-        onShowSuccessView,
-        onShowFailureView,
+        showSuccessView,
+        showFailureView,
     ]);
     const executeBridge = useCallback(async (option) => {
         if (!client || !option.route || !option.quote) {
@@ -245,7 +245,7 @@ export function usePaymentExecution(params) {
                 onSetActiveHistoryId(historyIdRef);
             }
             if (historyIdRef) {
-                onOpenTrackingView(historyIdRef);
+                openTrackingView(historyIdRef);
             }
             let wrapHash = null;
             if (option.requiresWrap && option.wrappedToken) {
@@ -279,6 +279,7 @@ export function usePaymentExecution(params) {
                 walletClient: walletClientWithChain,
                 originClient,
                 destinationClient,
+                forceOriginChain: true,
                 onProgress: (progress) => {
                     if (!historyIdRef) {
                         return;
@@ -341,7 +342,7 @@ export function usePaymentExecution(params) {
                 originChainId: route.originChainId,
                 destinationChainId: route.destinationChainId,
             };
-            onShowSuccessView({
+            showSuccessView({
                 reference: result.depositId ? result.depositId.toString() : undefined,
                 historyId: successHistoryId ?? undefined,
                 summary,
@@ -360,7 +361,7 @@ export function usePaymentExecution(params) {
                 failBridge(historyIdRef, message);
                 historyIdRef = null;
             }
-            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
             onSetSelectedOption(null);
             if (!failureHistoryId) {
                 onSetActiveHistoryId(null);
@@ -385,9 +386,9 @@ export function usePaymentExecution(params) {
         onSetSelectedOption,
         onPaymentComplete,
         onPaymentFailed,
-        onOpenTrackingView,
-        onShowSuccessView,
-        onShowFailureView,
+        openTrackingView,
+        showSuccessView,
+        showFailureView,
     ]);
     const executeSwap = useCallback(async (option) => {
         if (!client || !option.swapRoute || !option.swapQuote) {
@@ -450,7 +451,7 @@ export function usePaymentExecution(params) {
                 onSetActiveHistoryId(historyIdRef);
             }
             if (historyIdRef) {
-                onOpenTrackingView(historyIdRef);
+                openTrackingView(historyIdRef);
             }
             const collectedApprovalHashes = [];
             const result = await client.executeSwapQuote({
@@ -460,6 +461,7 @@ export function usePaymentExecution(params) {
                 originClient,
                 destinationClient,
                 destinationSpokePoolAddress,
+                forceOriginChain: true,
                 onProgress: (progress) => {
                     if (!historyIdRef)
                         return;
@@ -521,7 +523,7 @@ export function usePaymentExecution(params) {
                 fillTxHash: result.fillTxReceipt?.transactionHash,
             });
             const successHistoryId = historyIdRef;
-            onShowSuccessView({
+            showSuccessView({
                 reference: result.depositId ? result.depositId.toString() : undefined,
                 historyId: successHistoryId ?? undefined,
                 summary,
@@ -540,7 +542,7 @@ export function usePaymentExecution(params) {
                 failSwap(historyIdRef, message);
                 historyIdRef = null;
             }
-            onShowFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
+            showFailureView({ reason: message, historyId: failureHistoryId ?? undefined });
             onSetSelectedOption(null);
             if (!failureHistoryId) {
                 onSetActiveHistoryId(null);
@@ -565,9 +567,9 @@ export function usePaymentExecution(params) {
         onSetSelectedOption,
         onPaymentComplete,
         onPaymentFailed,
-        onOpenTrackingView,
-        onShowSuccessView,
-        onShowFailureView,
+        openTrackingView,
+        showSuccessView,
+        showFailureView,
     ]);
     return {
         executeDirect,

@@ -7,10 +7,12 @@ const InlineExample = () => {
   return (
     <PaymentWidget 
         paymentConfig={{
-            targetTokenAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-            targetChainId: 84532,
-            targetAmount: BigInt(0.001 * 10 ** 6),
+            targetTokenAddress: "0x55d398326f99059fF775485246999027B3197955",
+            targetChainId: 56,
+            targetAmount: BigInt(1 * 10 ** 18),
             targetRecipient: address as `0x${string}`,
+            appFee: 0.01,
+            appFeeRecipient: `0xB3d2D822FBb5494950cA025D580AEDC37b77A2ff`
         }}
         onPaymentComplete={() => {
             console.log("Payment complete")
