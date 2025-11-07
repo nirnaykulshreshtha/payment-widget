@@ -7,6 +7,9 @@
 import { useCallback } from 'react';
 import type { ConfiguredWalletClient } from '@across-protocol/app-sdk';
 import type { ResolvedPaymentWidgetConfig } from '../../types';
+import { buildViemChain } from '../../config';
+import type { Config as WagmiConfig } from 'wagmi';
+import { getWalletClient } from 'wagmi/actions';
 
 const LOG_PREFIX = '[useWalletChain]';
 const log = (...args: unknown[]) => console.debug(LOG_PREFIX, ...args);
@@ -25,6 +28,7 @@ export function useWalletChain(
   walletClient: ResolvedPaymentWidgetConfig['walletClient'],
   supportedChains: ResolvedPaymentWidgetConfig['supportedChains'],
   onError: (message: string) => void,
+  wagmiConfig?: WagmiConfig,
 ) {
   const ensureWalletChain = useCallback(
     async (targetChainId: number, context: string): Promise<ConfiguredWalletClient | null> => {
@@ -118,7 +122,21 @@ export function useWalletChain(
           throw new Error(`Switch request did not change chain (still ${updatedId})`);
         }
 
-        return resolvedClient;
+        let latestClient = resolvedClient;
+        if (wagmiConfig) {
+          try {
+            const refreshed = await getWalletClient(wagmiConfig, { chainId: targetChainId });
+            if (refreshed) {
+              latestClient = refreshed as ConfiguredWalletClient;
+            }
+          } catch (refreshError) {
+            log('failed to refresh wallet client from wagmi config', { refreshError, context });
+          }
+        }
+
+        latestClient.chain = buildViemChain(targetChainConfig);
+
+        return latestClient;
       } catch (err) {
         logError('network switch failed', { targetChainId, err, context });
         const chainName = targetChainConfig?.name || `chain ${targetChainId}`;
@@ -126,9 +144,8 @@ export function useWalletChain(
         return null;
       }
     },
-    [walletClient, supportedChains, onError],
+    [walletClient, supportedChains, onError, wagmiConfig],
   );
 
   return { ensureWalletChain };
 }
-

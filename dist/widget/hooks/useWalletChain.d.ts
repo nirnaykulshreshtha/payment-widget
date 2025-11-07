@@ -5,6 +5,7 @@
  */
 import type { ConfiguredWalletClient } from '@across-protocol/app-sdk';
 import type { ResolvedPaymentWidgetConfig } from '../../types';
+import type { Config as WagmiConfig } from 'wagmi';
 /**
  * Provides a function to ensure the wallet is on the correct chain.
  * Handles chain switching and adding chains to the wallet if needed.
@@ -14,6 +15,6 @@ import type { ResolvedPaymentWidgetConfig } from '../../types';
  * @param onError - Callback to handle errors (sets execution error state)
  * @returns Function to ensure wallet is on target chain
  */
-export declare function useWalletChain(walletClient: ResolvedPaymentWidgetConfig['walletClient'], supportedChains: ResolvedPaymentWidgetConfig['supportedChains'], onError: (message: string) => void): {
+export declare function useWalletChain(walletClient: ResolvedPaymentWidgetConfig['walletClient'], supportedChains: ResolvedPaymentWidgetConfig['supportedChains'], onError: (message: string) => void, wagmiConfig?: WagmiConfig): {
     ensureWalletChain: (targetChainId: number, context: string) => Promise<ConfiguredWalletClient | null>;
 };

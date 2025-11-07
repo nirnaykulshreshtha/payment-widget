@@ -115,6 +115,7 @@ export const resolveDemoMode = (isTestnet: boolean): DemoMode =>
 interface BuildSetupConfigOptions {
   mode: DemoMode
   walletClient?: SetupConfig["walletClient"]
+  wagmiConfig?: SetupConfig["wagmiConfig"]
   overrides?: Partial<
     Pick<PaymentPreset, "supportedChains" | "quoteRefreshMs" | "showUnavailableOptions" | "tokenPricesUsd">
   >
@@ -123,6 +124,7 @@ interface BuildSetupConfigOptions {
 export const buildSetupConfig = ({
   mode,
   walletClient,
+  wagmiConfig,
   overrides,
 }: BuildSetupConfigOptions) => {
   const preset = PRESETS[mode]
@@ -138,6 +140,7 @@ export const buildSetupConfig = ({
   return createSetupConfig({
     supportedChains,
     walletClient,
+    wagmiConfig,
     integratorId,
     useTestnet: mode === "testnet",
     quoteRefreshMs,

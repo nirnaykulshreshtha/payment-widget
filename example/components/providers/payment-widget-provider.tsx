@@ -30,6 +30,7 @@ import {
   resolveDemoMode,
   type DemoMode,
 } from "@/configs/payment-widget"
+import { config as wagmiConfig } from "@/configs/wagmi"
 
 /**
  * Payment Widget Provider component that configures the payment widget infrastructure
@@ -48,7 +49,7 @@ export function PaymentWidgetProvider({
 }: PaymentWidgetProviderProps) {
   logger.info("payment-widget:provider:render")
 
-  const { data: walletClient } = useWalletClient()
+  const { data: walletClient } = useWalletClient({ config: wagmiConfig })
   const { address } = useAccount()
   const { mode: themeMode, mounted: themeMounted } = useTheme()
   const DEFAULT_THEME_MODE: ThemeMode = "dark"
@@ -100,7 +101,11 @@ export function PaymentWidgetProvider({
       }
     }
 
-    const config = buildSetupConfig({ mode, walletClient: walletClient || undefined })
+    const config = buildSetupConfig({
+      mode,
+      walletClient: walletClient || undefined,
+      wagmiConfig,
+    })
     
     // Add toast handler and appearance config
     const configWithToast = {

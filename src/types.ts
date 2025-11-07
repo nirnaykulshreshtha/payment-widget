@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Address, Hex } from 'viem';
 import type { Chain, PublicClient, WalletClient } from 'viem';
+import type { Config as WagmiConfig } from 'wagmi';
 import type {
   AcrossClient, Amount,
   ConfiguredPublicClient,
@@ -112,6 +113,7 @@ export interface PaymentTheme {
 export interface SetupConfig {
   supportedChains: ChainConfig[];
   walletClient?: ConfiguredWalletClient | WalletClient;
+  wagmiConfig?: WagmiConfig;
   publicClients?: Record<number, ConfiguredPublicClient | PublicClient>;
   webSocketClients?: Record<number, ConfiguredPublicClient | PublicClient>;
   integratorId?: Address;
@@ -328,4 +330,3 @@ export interface PaymentHistoryEntry {
   depositMessage?: Hex;
   timeline?: PaymentTimelineEntry[];
 }
-

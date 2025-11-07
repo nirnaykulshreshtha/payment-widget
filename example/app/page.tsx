@@ -44,7 +44,7 @@ export default function Home() {
               <CardTitle>Inline widget</CardTitle>
             </CardHeader>
             <CardContent>
-              <InlineExample />
+              <InlineExample isTestnet={isTestnet} />
             </CardContent>
           </Card>
 

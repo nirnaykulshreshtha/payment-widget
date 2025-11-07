@@ -32,10 +32,6 @@ export function usePaymentExecution(params) {
                 recipient: config.targetRecipient,
                 hasContractCall: Boolean(config.targetContractCalls),
             });
-            const account = config.walletClient.account.address;
-            if (!account) {
-                throw new Error('Connect your wallet to continue');
-            }
             const activeWalletClient = await ensureWalletChain(config.targetChainId, 'direct');
             if (!activeWalletClient) {
                 setIsExecuting(false);
@@ -47,6 +43,10 @@ export function usePaymentExecution(params) {
                 return;
             }
             const walletClient = activeWalletClient;
+            const account = walletClient.account?.address;
+            if (!account) {
+                throw new Error('Connect your wallet to continue');
+            }
             const destinationClient = config.publicClients[config.targetChainId];
             if (!destinationClient) {
                 throw new Error('Missing public client for target chain');
@@ -203,7 +203,8 @@ export function usePaymentExecution(params) {
                 }
                 return;
             }
-            const account = config.walletClient?.account?.address;
+            const bridgerClient = walletClientWithChain;
+            const account = bridgerClient.account?.address;
             const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Connect your wallet to continue');
@@ -249,7 +250,7 @@ export function usePaymentExecution(params) {
             }
             let wrapHash = null;
             if (option.requiresWrap && option.wrappedToken) {
-                const hash = (await walletClientWithChain.writeContract({
+                const hash = (await bridgerClient.writeContract({
                     address: option.wrappedToken.address,
                     abi: [
                         {
@@ -276,7 +277,7 @@ export function usePaymentExecution(params) {
             const result = await client.executeQuote({
                 integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
                 deposit: quote.raw.deposit,
-                walletClient: walletClientWithChain,
+                walletClient: bridgerClient,
                 originClient,
                 destinationClient,
                 forceOriginChain: true,
@@ -422,7 +423,8 @@ export function usePaymentExecution(params) {
                 }
                 return;
             }
-            const account = config.walletClient?.account?.address;
+            const swapClient = walletClientWithChain;
+            const account = swapClient.account?.address;
             const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Connect your wallet to continue');
@@ -457,7 +459,7 @@ export function usePaymentExecution(params) {
             const result = await client.executeSwapQuote({
                 integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
                 swapQuote: swapQuote.raw,
-                walletClient: walletClientWithChain,
+                walletClient: swapClient,
                 originClient,
                 destinationClient,
                 destinationSpokePoolAddress,

@@ -4,6 +4,8 @@
  * the chain if it's not already in the wallet.
  */
 import { useCallback } from 'react';
+import { buildViemChain } from '../../config';
+import { getWalletClient } from 'wagmi/actions';
 const LOG_PREFIX = '[useWalletChain]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
@@ -16,7 +18,7 @@ const logError = (...args) => console.error(LOG_PREFIX, ...args);
  * @param onError - Callback to handle errors (sets execution error state)
  * @returns Function to ensure wallet is on target chain
  */
-export function useWalletChain(walletClient, supportedChains, onError) {
+export function useWalletChain(walletClient, supportedChains, onError, wagmiConfig) {
     const ensureWalletChain = useCallback(async (targetChainId, context) => {
         if (!walletClient || !walletClient.account?.address) {
             logError('wallet client missing when switching chain', { targetChainId, context });
@@ -106,7 +108,20 @@ export function useWalletChain(walletClient, supportedChains, onError) {
             if (updatedId !== targetChainId) {
                 throw new Error(`Switch request did not change chain (still ${updatedId})`);
             }
-            return resolvedClient;
+            let latestClient = resolvedClient;
+            if (wagmiConfig) {
+                try {
+                    const refreshed = await getWalletClient(wagmiConfig, { chainId: targetChainId });
+                    if (refreshed) {
+                        latestClient = refreshed;
+                    }
+                }
+                catch (refreshError) {
+                    log('failed to refresh wallet client from wagmi config', { refreshError, context });
+                }
+            }
+            latestClient.chain = buildViemChain(targetChainConfig);
+            return latestClient;
         }
         catch (err) {
             logError('network switch failed', { targetChainId, err, context });
@@ -114,6 +129,6 @@ export function useWalletChain(walletClient, supportedChains, onError) {
             onError(`Please switch your wallet to ${chainName} (ID ${targetChainId}) to continue`);
             return null;
         }
-    }, [walletClient, supportedChains, onError]);
+    }, [walletClient, supportedChains, onError, wagmiConfig]);
     return { ensureWalletChain };
 }

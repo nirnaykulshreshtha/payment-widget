@@ -136,7 +136,7 @@ export function usePaymentWidgetController(options) {
             logError('Across client error', clientError);
         }
     }, [clientError]);
-    const { ensureWalletChain } = useWalletChain(config.walletClient, config.supportedChains, setExecutionError);
+    const { ensureWalletChain } = useWalletChain(config.walletClient, config.supportedChains, setExecutionError, config.wagmiConfig);
     const { refineBridgeQuote, quoteLoading, quoteError } = useQuoteRefinement(client, config, targetToken ?? prefetchedTargetToken, setSelectedOption);
     const openTrackingView = useCallback((historyId) => {
         setActiveHistoryId(historyId);

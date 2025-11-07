@@ -187,7 +187,12 @@ export function usePaymentWidgetController(
     }
   }, [clientError]);
 
-  const { ensureWalletChain } = useWalletChain(config.walletClient, config.supportedChains, setExecutionError);
+  const { ensureWalletChain } = useWalletChain(
+    config.walletClient,
+    config.supportedChains,
+    setExecutionError,
+    config.wagmiConfig,
+  );
 
   const { refineBridgeQuote, quoteLoading, quoteError } = useQuoteRefinement(
     client,
@@ -508,5 +513,4 @@ export function usePaymentWidgetController(
     openHistoryView,
   };
 }
-
 
