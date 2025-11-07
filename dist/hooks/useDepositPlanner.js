@@ -763,7 +763,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
             skipped: skippedCandidates.size,
         });
         return { quotes: map, unavailability };
-    }, [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient]);
+    }, [client, config.walletClient, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient]);
     const refresh = useCallback(async () => {
         if (!client) {
             const message = 'Payment service is still starting up';

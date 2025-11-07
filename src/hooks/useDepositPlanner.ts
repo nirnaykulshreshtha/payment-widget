@@ -947,7 +947,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }: UseDep
       });
       return { quotes: map, unavailability };
     },
-    [client, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient],
+    [client, config.walletClient, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient],
   );
 
   const refresh = useCallback(async () => {
