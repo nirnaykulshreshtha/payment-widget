@@ -1113,7 +1113,6 @@
   animation: pw-fade-in 0.35s ease;
   animation-fill-mode: both;
   position: relative;
-  overflow: hidden;
 }
 
 .payment-widget .pw-option-card--checkout {
