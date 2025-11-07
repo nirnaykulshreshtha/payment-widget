@@ -16,7 +16,7 @@
 
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useWalletClient, useAccount } from "wagmi"
 import { PaymentWidgetProvider as BasePaymentWidgetProvider } from "@matching-platform/payment-widget"
 import type { SetupConfig } from "@matching-platform/payment-widget"
@@ -49,8 +49,10 @@ export function PaymentWidgetProvider({
 }: PaymentWidgetProviderProps) {
   logger.info("payment-widget:provider:render")
 
-  const { data: walletClient } = useWalletClient({ config: wagmiConfig })
-  const { address } = useAccount()
+  const { data: rawWalletClient } = useWalletClient({ config: wagmiConfig })
+  const { address, status } = useAccount({ config: wagmiConfig })
+  const stableWalletRef = useRef<SetupConfig["walletClient"]>(null)
+  const [walletEpoch, setWalletEpoch] = useState(0)
   const { mode: themeMode, mounted: themeMounted } = useTheme()
   const DEFAULT_THEME_MODE: ThemeMode = "dark"
 
@@ -63,6 +65,28 @@ export function PaymentWidgetProvider({
     (typeof setupConfigOverride?.useTestnet === "boolean"
       ? resolveDemoMode(!!setupConfigOverride.useTestnet)
       : resolveDemoMode(process.env.NEXT_PUBLIC_IS_TESTNET === "true"))
+
+  useEffect(() => {
+    const nextAddress = rawWalletClient?.account?.address
+    const currentAddress = stableWalletRef.current?.account?.address
+
+    if (!nextAddress) {
+      if (status === "disconnected" && currentAddress) {
+        stableWalletRef.current = null
+        setWalletEpoch((epoch) => epoch + 1)
+      }
+      return
+    }
+
+    if (!currentAddress || currentAddress !== nextAddress) {
+      stableWalletRef.current = rawWalletClient ?? null
+      setWalletEpoch((epoch) => epoch + 1)
+      return
+    }
+
+    // Same account (likely chain switch) – keep the previous stable reference.
+    stableWalletRef.current = stableWalletRef.current ?? rawWalletClient ?? null
+  }, [rawWalletClient, status])
 
   const setupConfig = useMemo(() => {
     const toastHandler = createSonnerToastHandler()
@@ -89,7 +113,10 @@ export function PaymentWidgetProvider({
       logger.info("payment-widget:provider:config:override", {
         ...presetSummaryForMode(mode),
         hasWalletClient: Boolean(setupConfigOverride.walletClient),
-        walletAddress: setupConfigOverride.walletClient?.account?.address ?? address,
+        walletAddress:
+          setupConfigOverride.walletClient?.account?.address ??
+          stableWalletRef.current?.account?.address ??
+          address,
         themeMode: effectiveThemeMode,
         themeMounted,
       })
@@ -101,9 +128,11 @@ export function PaymentWidgetProvider({
       }
     }
 
+    const effectiveWalletClient = stableWalletRef.current ?? undefined
+
     const config = buildSetupConfig({
       mode,
-      walletClient: walletClient || undefined,
+      walletClient: effectiveWalletClient,
       wagmiConfig,
     })
     
@@ -121,14 +150,14 @@ export function PaymentWidgetProvider({
 
     logger.info("payment-widget:provider:config", {
       ...presetSummaryForMode(mode),
-      hasWalletClient: Boolean(walletClient),
-      walletAddress: address,
+      hasWalletClient: Boolean(effectiveWalletClient),
+      walletAddress: effectiveWalletClient?.account?.address ?? address,
       themeMode: effectiveThemeMode,
       themeMounted,
     })
 
     return configWithToast
-  }, [setupConfigOverride, walletClient, address, mode, effectiveThemeMode, themeMounted])
+  }, [setupConfigOverride, walletEpoch, address, mode, effectiveThemeMode, themeMounted])
 
   return (
     <BasePaymentWidgetProvider setupConfig={setupConfig}>
