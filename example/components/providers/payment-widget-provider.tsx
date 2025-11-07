@@ -18,7 +18,7 @@
 
 import { useMemo } from "react"
 import { useWalletClient, useAccount } from "wagmi"
-import { PaymentWidgetProvider as BasePaymentWidgetProvider } from "@matching-platform/payment-widget"
+import { PaymentWidgetProvider as BasePaymentWidgetProvider, createWalletAdapter } from "@matching-platform/payment-widget"
 import type { SetupConfig } from "@matching-platform/payment-widget"
 
 import { logger } from "@/lib/logger"
@@ -63,7 +63,7 @@ export function PaymentWidgetProvider({
       ? resolveDemoMode(!!setupConfigOverride.useTestnet)
       : resolveDemoMode(process.env.NEXT_PUBLIC_IS_TESTNET === "true"))
 
-  const setupConfig = useMemo(() => {
+  const { config: setupConfig, adapter: walletAdapterForProvider } = useMemo(() => {
     const toastHandler = createSonnerToastHandler()
     
     // Prepare appearance config with theme mode for theme-aware assets (e.g., chain logos)
@@ -85,48 +85,52 @@ export function PaymentWidgetProvider({
     })()
     
     if (setupConfigOverride) {
+      const { walletAdapter: overrideAdapter, ...restOverrides } = setupConfigOverride
       logger.info("payment-widget:provider:config:override", {
         ...presetSummaryForMode(mode),
-        hasWalletClient: Boolean(setupConfigOverride.walletClient),
-        walletAddress: setupConfigOverride.walletClient?.account?.address ?? address,
+        hasWalletAdapter: Boolean(overrideAdapter),
+        walletAddress: overrideAdapter?.getAddress() ?? address,
         themeMode: effectiveThemeMode,
         themeMounted,
       })
       // Merge toast handler and appearance config with override config
-      return { 
-        ...setupConfigOverride, 
-        toastHandler,
-        appearance,
+      return {
+        config: {
+          ...restOverrides,
+          toastHandler,
+          appearance,
+        },
+        adapter: overrideAdapter ?? null,
       }
     }
 
-    const config = buildSetupConfig({ mode, walletClient: walletClient || undefined })
-    
+    const baseConfig = buildSetupConfig({ mode })
+    const derivedAdapter = createWalletAdapter(walletClient ?? null, baseConfig.supportedChains)
     // Add toast handler and appearance config
-    const configWithToast = {
-      ...config,
+    const configWithToast: SetupConfig = {
+      ...baseConfig,
       toastHandler,
       appearance: appearance
         ? {
-            ...config.appearance,
+            ...baseConfig.appearance,
             ...appearance,
           }
-        : config.appearance,
+        : baseConfig.appearance,
     }
 
     logger.info("payment-widget:provider:config", {
       ...presetSummaryForMode(mode),
-      hasWalletClient: Boolean(walletClient),
-      walletAddress: address,
+      hasWalletAdapter: Boolean(derivedAdapter),
+      walletAddress: derivedAdapter?.getAddress() ?? address,
       themeMode: effectiveThemeMode,
       themeMounted,
     })
 
-    return configWithToast
+    return { config: configWithToast, adapter: derivedAdapter }
   }, [setupConfigOverride, walletClient, address, mode, effectiveThemeMode, themeMounted])
 
   return (
-    <BasePaymentWidgetProvider setupConfig={setupConfig}>
+    <BasePaymentWidgetProvider setupConfig={setupConfig} walletAdapter={walletAdapterForProvider}>
       {children}
     </BasePaymentWidgetProvider>
   )

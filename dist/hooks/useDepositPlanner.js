@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcRequestError, erc20Abi, formatUnits } from 'viem';
 import { DEFAULT_WRAPPED_TOKEN_MAP, ZERO_ADDRESS, deriveNativeToken } from '../config';
+import { useWalletAdapterState } from './useWalletAdapterState';
 const PLANNER_STAGE_DEFINITIONS = [
     { id: 'initializing', label: 'Getting things ready' },
     { id: 'discoveringRoutes', label: 'Finding ways to send your payment' },
@@ -91,7 +92,8 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         ...setupConfig,
         ...paymentConfig,
     }), [setupConfig, paymentConfig]);
-    const walletAddress = config.walletClient?.account?.address ?? null;
+    const walletState = useWalletAdapterState(config.walletAdapter);
+    const walletAddress = walletState.address;
     const beginStage = useCallback((stage) => {
         setLoadingStage(stage);
     }, []);
@@ -202,7 +204,6 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
     }, [config.supportedChains, getPublicClient]);
     const fetchBalances = useCallback(async (candidates) => {
         const balances = new Map();
-        const walletAddress = config.walletClient?.account?.address;
         if (!walletAddress) {
             log('skip balance fetch, account not connected');
             return balances;
@@ -454,7 +455,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         await Promise.all(chainTasks);
         log('balances fetched', Array.from(balances.entries()).map(([id, balance]) => ({ id, balance: balance.toString() })));
         return balances;
-    }, [config.walletClient?.account?.address, getPublicClient]);
+    }, [walletAddress, getPublicClient]);
     const fetchBridgeQuotes = useCallback(async (candidates, quoteEligibility) => {
         if (!client) {
             log('skip quote fetch, no Across client');
@@ -538,10 +539,8 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
                         boundedAmount: describeAmount(boundedAmount, candidate.displayToken.decimals, candidate.displayToken.symbol),
                     });
                 }
-                const recipientAddress = config.targetRecipient ?? config.walletClient?.account?.address;
-                const fallbackRecipient = config.targetContractCalls
-                    ? config.fallbackRecipient ?? config.walletClient?.account?.address
-                    : undefined;
+                const recipientAddress = config.targetRecipient ?? walletAddress;
+                const fallbackRecipient = config.targetContractCalls ? config.fallbackRecipient ?? walletAddress : undefined;
                 if (config.targetContractCalls && !fallbackRecipient) {
                     const message = 'Missing fallback recipient for cross-chain contract call execution';
                     logError(message, {
@@ -673,8 +672,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         const maxSwapQuoteOptions = config.maxSwapQuoteOptions ?? 20;
         const limitedCandidates = viableForQuotes.slice(0, maxSwapQuoteOptions);
         const skippedCandidates = new Set(swapCandidates.map((candidate) => candidate.id));
-        const walletAddress = config.walletClient?.account?.address;
-        const depositor = walletAddress?.toLowerCase();
+        const depositor = walletAddress ? walletAddress.toLowerCase() : undefined;
         if (!depositor) {
             logError('swap quote requires connected wallet');
             setError('Connect your wallet to get swap prices');
@@ -690,13 +688,13 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         }
         const quoteTasks = limitedCandidates.map(async (candidate) => {
             try {
-                const recipient = config.targetRecipient ?? config.walletClient?.account?.address;
+                const recipient = config.targetRecipient ?? walletAddress ?? undefined;
                 const quote = await client.getSwapQuote({
                     logger: console,
                     route: candidate.swapRoute,
                     amount: config.targetAmount.toString(),
                     tradeType: 'exactOutput',
-                    depositor: (walletAddress ?? ''),
+                    depositor,
                     recipient,
                     integratorId: config.integratorId,
                     apiUrl: config.apiUrl,
@@ -763,7 +761,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
             skipped: skippedCandidates.size,
         });
         return { quotes: map, unavailability };
-    }, [client, config.walletClient, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient]);
+    }, [client, walletAddress, config.apiUrl, config.integratorId, config.targetAmount, config.targetContractCalls, config.targetRecipient]);
     const refresh = useCallback(async () => {
         if (!client) {
             const message = 'Payment service is still starting up';
@@ -773,7 +771,7 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
             setCompletedStages([]);
             return;
         }
-        if (!config.walletClient?.account?.address) {
+        if (!walletAddress) {
             const message = 'Connect your wallet to see available payment options';
             logError(message);
             setError(message);
@@ -788,12 +786,12 @@ export function useDepositPlanner({ client, setupConfig, paymentConfig }) {
         resetStages();
         beginStage('initializing');
         try {
-            const walletAddress = config.walletClient.account.address;
+            const connectedAddress = walletAddress;
             const targetChainId = config.targetChainId;
             const targetTokenAddress = config.targetTokenAddress;
             const targetTokenAddressLower = targetTokenAddress.toLowerCase();
             log('refresh start', {
-                account: walletAddress,
+                account: connectedAddress,
                 targetToken: targetTokenAddress,
                 targetChainId,
             });

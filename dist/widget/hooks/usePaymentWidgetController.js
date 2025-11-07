@@ -11,6 +11,7 @@ import { clearPaymentHistory, initializePaymentHistory, refreshPendingHistory } 
 import { usePaymentHistoryStore } from '../../history';
 import { useDepositPlanner } from '../../hooks/useDepositPlanner';
 import { usePaymentSetup } from '../../hooks/usePaymentSetup';
+import { useWalletAdapterState } from '../../hooks/useWalletAdapterState';
 import { summarizeError } from '../../lib';
 import { formatTokenAmount } from '../../utils/amount-format';
 import { createToastAPI } from '../../ui/toast-handler';
@@ -45,7 +46,8 @@ export function usePaymentWidgetController(options) {
     const clientError = acrossClientError;
     const planner = useDepositPlanner({ client, setupConfig, paymentConfig });
     const targetToken = planner.targetToken;
-    const walletAddress = config.walletClient?.account?.address ?? null;
+    const walletState = useWalletAdapterState(config.walletAdapter);
+    const walletAddress = walletState.address;
     const prefetchedTargetToken = useTokenPrefetch({
         targetTokenAddress: config.targetTokenAddress,
         targetChainId: config.targetChainId,
@@ -136,8 +138,8 @@ export function usePaymentWidgetController(options) {
             logError('Across client error', clientError);
         }
     }, [clientError]);
-    const { ensureWalletChain } = useWalletChain(config.walletClient, config.supportedChains, setExecutionError);
-    const { refineBridgeQuote, quoteLoading, quoteError } = useQuoteRefinement(client, config, targetToken ?? prefetchedTargetToken, setSelectedOption);
+    const { ensureWalletChain } = useWalletChain(config.walletAdapter, config.supportedChains, setExecutionError);
+    const { refineBridgeQuote, quoteLoading, quoteError } = useQuoteRefinement(client, config, targetToken ?? prefetchedTargetToken, walletAddress, setSelectedOption);
     const openTrackingView = useCallback((historyId) => {
         setActiveHistoryId(historyId);
         setViewStack((prev) => {
@@ -162,6 +164,8 @@ export function usePaymentWidgetController(options) {
     const { executeDirect, executeBridge, executeSwap } = usePaymentExecution({
         client,
         config,
+        walletAddress,
+        walletAdapter: config.walletAdapter ?? null,
         targetToken: targetToken ?? prefetchedTargetToken,
         activeHistoryId,
         ensureWalletChain,
@@ -198,13 +202,13 @@ export function usePaymentWidgetController(options) {
     const handleExecute = useCallback(async () => {
         if (!selectedOption)
             return;
-        if (!config.walletClient) {
+        if (!config.walletAdapter) {
             const message = 'Wallet connection not available';
             logError(message);
             setExecutionError(message);
             return;
         }
-        if (!config.walletClient.account?.address) {
+        if (!walletAddress) {
             const message = 'Connect your wallet to continue';
             logError(message);
             setExecutionError(message);
@@ -253,7 +257,16 @@ export function usePaymentWidgetController(options) {
             return;
         }
         await executeBridge(selectedOption);
-    }, [selectedOption, config.walletClient, quoteLoading, executeDirect, executeSwap, executeBridge, setExecutionError]);
+    }, [
+        selectedOption,
+        config.walletAdapter,
+        walletAddress,
+        quoteLoading,
+        executeDirect,
+        executeSwap,
+        executeBridge,
+        setExecutionError,
+    ]);
     const targetChainLabel = chainLookup.get(config.targetChainId) ?? config.targetChainId;
     const targetChainLogoUrl = useMemo(() => chainLogos.get(config.targetChainId), [chainLogos, config.targetChainId]);
     const { sourceChainLabel: defaultSourceChainLabel, sourceChainLogoUrl: defaultSourceChainLogoUrl } = useMemo(() => {
@@ -363,7 +376,7 @@ export function usePaymentWidgetController(options) {
         onChangeAsset: popView,
         onResetToOptions: resetToOptions,
         onViewHistory: openHistoryView,
-        accountConnected: Boolean(config.walletClient?.account?.address),
+        accountConnected: walletState.isConnected,
         onOpenTracking: openTrackingView,
         onClearHistory: handleClearHistory,
         onCloseResult: resetToOptions,

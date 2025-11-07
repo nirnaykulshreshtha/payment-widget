@@ -2,12 +2,15 @@
  * @fileoverview Comprehensive hook for managing all payment execution types (direct, bridge, swap).
  * Handles transaction execution, history tracking, error management, and success/failure callbacks.
  */
+import type { Address } from 'viem';
 import type { AcrossClient, ConfiguredWalletClient } from '@across-protocol/app-sdk';
-import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig } from '../../types';
+import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig, WalletAdapter } from '../../types';
 import type { PaymentResultSummary } from '../types';
 interface UsePaymentExecutionParams {
     client: AcrossClient | null;
     config: ResolvedPaymentWidgetConfig;
+    walletAddress: Address | null;
+    walletAdapter: WalletAdapter | null;
     targetToken: TokenConfig | null;
     activeHistoryId: string | null;
     ensureWalletChain: (chainId: number, context: string) => Promise<ConfiguredWalletClient | null>;

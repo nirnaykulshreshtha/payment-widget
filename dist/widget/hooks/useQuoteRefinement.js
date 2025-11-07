@@ -19,7 +19,7 @@ const logError = (...args) => console.error(LOG_PREFIX, ...args);
  * @param onOptionUpdate - Callback to update selected option with refined quote
  * @returns Quote refinement state and refine function
  */
-export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) {
+export function useQuoteRefinement(client, config, targetToken, walletAddress, onOptionUpdate) {
     const [quoteLoading, setQuoteLoading] = useState(false);
     const [quoteError, setQuoteError] = useState(null);
     const refineBridgeQuote = useCallback(async (option) => {
@@ -35,10 +35,12 @@ export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) 
         try {
             const targetAmount = config.appFeeRecipient && config.appFee ? computeTargetWithSlippage(config.targetAmount, config.appFee * 10000) : config.targetAmount; // @devnote: Simulated appfee as bridge API doesn't support app fee yet
             const targetWithBuffer = computeTargetWithSlippage(targetAmount, config.maxSlippageBps);
-            const fallbackRecipient = config.appFeeRecipient ?? // @devnote: Simulated appfee as bridge API doesn't support app fee yet
-                config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
+            const fallbackRecipient = config.appFeeRecipient ??
+                config?.fallbackRecipient ??
+                walletAddress ??
+                ZERO_ADDRESS;
             const depositRecipient = config?.targetRecipient ?? fallbackRecipient;
-            if (!config.walletClient?.account?.address) {
+            if (!walletAddress) {
                 log('refine quote running without wallet connection', { optionId: option.id });
             }
             let limits = await client.getLimits({
@@ -169,14 +171,16 @@ export function useQuoteRefinement(client, config, targetToken, onOptionUpdate) 
         }
     }, [
         client,
-        config.walletClient,
         config.apiUrl,
         config.maxSlippageBps,
         config.targetAmount,
         config.targetContractCalls,
         config.targetRecipient,
         config.fallbackRecipient,
+        config.appFeeRecipient,
+        config.appFee,
         targetToken,
+        walletAddress,
         onOptionUpdate,
     ]);
     return {

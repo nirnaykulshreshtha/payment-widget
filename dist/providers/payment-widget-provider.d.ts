@@ -4,4 +4,4 @@ export declare const PaymentWidgetContext: import("react").Context<PaymentWidget
  * Wrap UI regions that render one or more PaymentWidget instances.
  * The provider initialises shared clients once and exposes them via context.
  */
-export declare function PaymentWidgetProvider({ setupConfig, children }: PaymentWidgetProviderProps): import("react/jsx-runtime").JSX.Element;
+export declare function PaymentWidgetProvider({ setupConfig, walletAdapter, children }: PaymentWidgetProviderProps): import("react/jsx-runtime").JSX.Element;

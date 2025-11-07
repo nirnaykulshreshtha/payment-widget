@@ -2,6 +2,7 @@ export { default as PaymentWidget, PaymentWidget as CrossChainDeposit } from './
 export { default } from './widget.js';
 export type * from './types.js';
 export { getNetworkConfig, buildViemChain, ZERO_ADDRESS, ZERO_INTEGRATOR_ID, createDefaultPublicClients, createPublicClientFor, createSetupConfig, findChainConfig, deriveNativeToken, DEFAULT_WRAPPED_TOKEN_MAP, } from './config.js';
+export { createWalletAdapter } from './utils/wallet-adapter.js';
 export * from './history/index.js';
 export { useAcrossClient } from './hooks/useAcrossClient.js';
 export { useDepositPlanner } from './hooks/useDepositPlanner.js';

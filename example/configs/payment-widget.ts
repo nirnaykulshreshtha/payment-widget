@@ -114,7 +114,7 @@ export const resolveDemoMode = (isTestnet: boolean): DemoMode =>
 
 interface BuildSetupConfigOptions {
   mode: DemoMode
-  walletClient?: SetupConfig["walletClient"]
+  walletAdapter?: SetupConfig["walletAdapter"]
   overrides?: Partial<
     Pick<PaymentPreset, "supportedChains" | "quoteRefreshMs" | "showUnavailableOptions" | "tokenPricesUsd">
   >
@@ -122,7 +122,7 @@ interface BuildSetupConfigOptions {
 
 export const buildSetupConfig = ({
   mode,
-  walletClient,
+  walletAdapter,
   overrides,
 }: BuildSetupConfigOptions) => {
   const preset = PRESETS[mode]
@@ -137,7 +137,7 @@ export const buildSetupConfig = ({
 
   return createSetupConfig({
     supportedChains,
-    walletClient,
+    walletAdapter,
     integratorId,
     useTestnet: mode === "testnet",
     quoteRefreshMs,
@@ -149,7 +149,7 @@ export const buildSetupConfig = ({
 
 interface BuildPaymentConfigOptions {
   mode: DemoMode
-  walletClient?: SetupConfig["walletClient"]
+  walletAdapter?: SetupConfig["walletAdapter"]
   overrides?: Partial<
     Pick<
       PaymentPreset,
@@ -166,7 +166,7 @@ interface BuildPaymentConfigOptions {
 
 export const buildPaymentConfig = ({
   mode,
-  walletClient,
+  walletAdapter,
   overrides,
 }: BuildPaymentConfigOptions): PaymentConfig => {
   const preset = PRESETS[mode]
@@ -176,7 +176,7 @@ export const buildPaymentConfig = ({
 
   const targetAmount = overrides?.targetAmount ?? readEnvBigInt("NEXT_PUBLIC_TARGET_AMOUNT", preset.targetAmount)
 
-  const walletRecipient = walletClient?.account?.address as Address | undefined
+  const walletRecipient = walletAdapter?.getAddress() as Address | undefined
   const fallbackRecipient =
     overrides?.fallbackRecipient ?? readEnvAddress("NEXT_PUBLIC_FALLBACK_RECIPIENT", preset.fallbackRecipient)
   const targetRecipient = walletRecipient ?? fallbackRecipient
@@ -201,17 +201,17 @@ export const buildPaymentConfig = ({
 
 export const buildWidgetConfigs = ({
   mode,
-  walletClient,
+  walletAdapter,
   setupOverrides,
   paymentOverrides,
 }: {
   mode: DemoMode
-  walletClient?: SetupConfig["walletClient"]
+  walletAdapter?: SetupConfig["walletAdapter"]
   setupOverrides?: BuildSetupConfigOptions["overrides"]
   paymentOverrides?: BuildPaymentConfigOptions["overrides"]
 }) => {
-  const setupConfig = buildSetupConfig({ mode, walletClient, overrides: setupOverrides })
-  const paymentConfig = buildPaymentConfig({ mode, walletClient, overrides: paymentOverrides })
+  const setupConfig = buildSetupConfig({ mode, walletAdapter, overrides: setupOverrides })
+  const paymentConfig = buildPaymentConfig({ mode, walletAdapter, overrides: paymentOverrides })
   return { setupConfig, paymentConfig }
 }
 

@@ -2,6 +2,7 @@
  * @fileoverview Hook for refining bridge quotes to optimize input amounts.
  * Iteratively adjusts quote input amounts to find the best match for the target output.
  */
+import type { Address } from 'viem';
 import type { AcrossClient } from '@across-protocol/app-sdk';
 import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig } from '../../types';
 /**
@@ -14,7 +15,7 @@ import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig } from '..
  * @param onOptionUpdate - Callback to update selected option with refined quote
  * @returns Quote refinement state and refine function
  */
-export declare function useQuoteRefinement(client: AcrossClient | null, config: ResolvedPaymentWidgetConfig, targetToken: TokenConfig | null, onOptionUpdate: (updater: (prev: PaymentOption | null) => PaymentOption | null) => void): {
+export declare function useQuoteRefinement(client: AcrossClient | null, config: ResolvedPaymentWidgetConfig, targetToken: TokenConfig | null, walletAddress: Address | null, onOptionUpdate: (updater: (prev: PaymentOption | null) => PaymentOption | null) => void): {
     refineBridgeQuote: (option: PaymentOption) => Promise<void>;
     quoteLoading: boolean;
     quoteError: string | null;

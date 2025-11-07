@@ -1,119 +1,67 @@
+'use client';
 /**
- * @fileoverview Hook for managing wallet chain switching operations.
- * Handles switching the connected wallet to a target chain, including adding
- * the chain if it's not already in the wallet.
+ * @fileoverview Hook for managing wallet chain switching operations using the wallet adapter abstraction.
+ * Provides a simple interface for ensuring the connected wallet is on the expected network.
  */
 import { useCallback } from 'react';
 const LOG_PREFIX = '[useWalletChain]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
-/**
- * Provides a function to ensure the wallet is on the correct chain.
- * Handles chain switching and adding chains to the wallet if needed.
- *
- * @param walletClient - The configured wallet client
- * @param supportedChains - Array of supported chain configurations
- * @param onError - Callback to handle errors (sets execution error state)
- * @returns Function to ensure wallet is on target chain
- */
-export function useWalletChain(walletClient, supportedChains, onError) {
+export function useWalletChain(walletAdapter, supportedChains, onError) {
     const ensureWalletChain = useCallback(async (targetChainId, context) => {
-        if (!walletClient || !walletClient.account?.address) {
-            logError('wallet client missing when switching chain', { targetChainId, context });
+        if (!walletAdapter) {
+            logError('wallet adapter missing when switching chain', { targetChainId, context });
             onError('Wallet connection not available');
             return null;
         }
-        // Check current chain
-        let currentId = walletClient.chain?.id;
-        if (typeof walletClient.getChainId === 'function') {
-            try {
-                currentId = await walletClient.getChainId();
-            }
-            catch (error) {
-                log('failed to read wallet chain id via getChainId', { error, context });
-            }
+        const address = walletAdapter.getAddress();
+        if (!address) {
+            logError('wallet adapter has no connected address during chain switch', { targetChainId, context });
+            onError('Connect your wallet to continue');
+            return null;
         }
-        if (currentId === targetChainId) {
-            log('wallet already on correct chain', { chainId: currentId, context });
-            return walletClient;
-        }
-        // Find the target chain configuration
         const targetChainConfig = supportedChains.find((chain) => chain.chainId === targetChainId);
         if (!targetChainConfig) {
             logError('target chain not found in configuration', { targetChainId, context });
             onError(`That network is not supported here (ID ${targetChainId}).`);
             return null;
         }
-        const chainHex = `0x${targetChainId.toString(16)}`;
-        log('attempting network switch', { from: currentId, to: targetChainId, hex: chainHex, context });
         try {
-            let resolvedClient;
-            if ('switchChain' in walletClient && typeof walletClient.switchChain === 'function') {
-                const switched = await walletClient.switchChain({ id: targetChainId });
-                resolvedClient = (switched ?? walletClient);
+            const currentChainId = await walletAdapter.getChainId().catch(() => null);
+            if (currentChainId === targetChainId) {
+                log('wallet already on correct chain', { chainId: currentChainId, context });
+                return walletAdapter.getWalletClient();
             }
-            else {
-                // First try to switch to the chain
-                try {
-                    await walletClient.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: chainHex }],
-                    });
-                    resolvedClient = walletClient;
-                }
-                catch (switchError) {
-                    // If switch fails with 4902, the chain is not added to the wallet
-                    if (switchError?.code === 4902) {
-                        log('chain not added to wallet, attempting to add it', { targetChainId, context });
-                        // Add the chain to the wallet
-                        await walletClient.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [
-                                {
-                                    chainId: chainHex,
-                                    chainName: targetChainConfig.name,
-                                    nativeCurrency: targetChainConfig.nativeCurrency,
-                                    rpcUrls: [targetChainConfig.rpcUrl],
-                                    blockExplorerUrls: targetChainConfig.blockExplorerUrl
-                                        ? [targetChainConfig.blockExplorerUrl]
-                                        : undefined,
-                                },
-                            ],
-                        });
-                        // Now try to switch again
-                        await walletClient.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: chainHex }],
-                        });
-                        resolvedClient = walletClient;
-                    }
-                    else {
-                        throw switchError;
-                    }
-                }
+            log('attempting network switch via adapter', { from: currentChainId, to: targetChainId, context });
+            const resolvedClient = await walletAdapter.ensureChain(targetChainId, targetChainConfig);
+            if (!resolvedClient) {
+                throw new Error('Wallet adapter did not return a client after ensureChain');
             }
-            // Verify the switch was successful
-            let updatedId = resolvedClient.chain?.id;
+            let finalChainId = null;
             if (typeof resolvedClient.getChainId === 'function') {
                 try {
-                    updatedId = await resolvedClient.getChainId();
+                    finalChainId = await resolvedClient.getChainId();
                 }
-                catch (error) {
-                    log('failed to read chain id after switch', { error, context });
+                catch (chainError) {
+                    log('failed to read chain id after adapter ensure', { context, chainError });
+                    finalChainId = resolvedClient.chain?.id ?? null;
                 }
             }
-            log('wallet switch result', { updatedId, expected: targetChainId });
-            if (updatedId !== targetChainId) {
-                throw new Error(`Switch request did not change chain (still ${updatedId})`);
+            else {
+                finalChainId = resolvedClient.chain?.id ?? null;
+            }
+            log('wallet switch result', { targetChainId, finalChainId, context });
+            if (finalChainId !== null && finalChainId !== targetChainId) {
+                throw new Error(`Switch request did not change chain (still ${finalChainId})`);
             }
             return resolvedClient;
         }
-        catch (err) {
-            logError('network switch failed', { targetChainId, err, context });
+        catch (error) {
+            logError('network switch failed', { targetChainId, context, error });
             const chainName = targetChainConfig?.name || `chain ${targetChainId}`;
             onError(`Please switch your wallet to ${chainName} (ID ${targetChainId}) to continue`);
             return null;
         }
-    }, [walletClient, supportedChains, onError]);
+    }, [walletAdapter, supportedChains, onError]);
     return { ensureWalletChain };
 }

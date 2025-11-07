@@ -13,6 +13,7 @@ export {
   deriveNativeToken,
   DEFAULT_WRAPPED_TOKEN_MAP,
 } from './config.js';
+export { createWalletAdapter } from './utils/wallet-adapter.js';
 export * from './history/index.js';
 export { useAcrossClient } from './hooks/useAcrossClient.js';
 export { useDepositPlanner } from './hooks/useDepositPlanner.js';

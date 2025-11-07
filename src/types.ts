@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import type { Address, Hex } from 'viem';
-import type { Chain, PublicClient, WalletClient } from 'viem';
+import type { Chain, PublicClient } from 'viem';
 import type {
-  AcrossClient, Amount,
+  AcrossClient,
+  Amount,
   ConfiguredPublicClient,
-  ConfiguredWalletClient,
   Quote as AcrossQuote,
   Route,
 } from '@across-protocol/app-sdk';
+import type { ConfiguredWalletClient } from '@across-protocol/app-sdk';
 
 /**
  * Core type definitions for the payment widget provider pattern.
@@ -88,6 +89,34 @@ export interface TokenConfig {
   logoUrl?: string;
 }
 
+export interface WalletAdapterState {
+  address: Address | null;
+  chainId: number | null;
+  isConnected: boolean;
+}
+
+export interface WalletAdapterSubscriber {
+  (state: WalletAdapterState): void;
+}
+
+export interface WalletAdapter {
+  getAddress(): Address | null;
+  isConnected(): boolean;
+  getChainId(): Promise<number | null>;
+  ensureChain(chainId: number, chainConfig: ChainConfig): Promise<ConfiguredWalletClient | null>;
+  sendTransaction(params: { to: Address; value?: bigint; data?: Hex; chain: Chain }): Promise<Hex>;
+  writeContract(params: {
+    address: Address;
+    abi: readonly unknown[];
+    functionName: string;
+    args?: readonly unknown[];
+    value?: bigint;
+    chain: Chain;
+  }): Promise<Hex>;
+  getWalletClient(): ConfiguredWalletClient | null;
+  subscribe?(listener: WalletAdapterSubscriber): () => void;
+}
+
 /**
  * Appearance configuration for payment widget theming.
  */
@@ -111,7 +140,7 @@ export interface PaymentTheme {
 
 export interface SetupConfig {
   supportedChains: ChainConfig[];
-  walletClient?: ConfiguredWalletClient | WalletClient;
+  walletAdapter?: WalletAdapter | null;
   publicClients?: Record<number, ConfiguredPublicClient | PublicClient>;
   webSocketClients?: Record<number, ConfiguredPublicClient | PublicClient>;
   integratorId?: Address;
@@ -262,6 +291,7 @@ export interface PaymentWidgetProps {
 
 export interface PaymentWidgetProviderProps {
   setupConfig: SetupConfig;
+  walletAdapter?: WalletAdapter | null;
   children: ReactNode;
 }
 
@@ -328,4 +358,3 @@ export interface PaymentHistoryEntry {
   depositMessage?: Hex;
   timeline?: PaymentTimelineEntry[];
 }
-

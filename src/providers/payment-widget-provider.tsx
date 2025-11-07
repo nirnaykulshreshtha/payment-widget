@@ -21,7 +21,7 @@ export const PaymentWidgetContext = createContext<PaymentWidgetContextValue | nu
  * Wrap UI regions that render one or more PaymentWidget instances.
  * The provider initialises shared clients once and exposes them via context.
  */
-export function PaymentWidgetProvider({ setupConfig, children }: PaymentWidgetProviderProps) {
+export function PaymentWidgetProvider({ setupConfig, walletAdapter, children }: PaymentWidgetProviderProps) {
   const viemChains = useMemo(() => {
     const chains = setupConfig.viemChains ?? setupConfig.supportedChains.map(buildViemChain);
     logDebug('resolved viem chains', chains.map((chain) => chain.id));
@@ -53,6 +53,8 @@ export function PaymentWidgetProvider({ setupConfig, children }: PaymentWidgetPr
     }
   }, [setupConfig]);
 
+  const activeWalletAdapter = walletAdapter ?? setupConfig.walletAdapter ?? null;
+
   const resolvedSetupConfig = useMemo<ResolvedSetupConfig>(() => {
     const resolved: ResolvedSetupConfig = {
       ...setupConfig,
@@ -62,8 +64,13 @@ export function PaymentWidgetProvider({ setupConfig, children }: PaymentWidgetPr
     if (webSocketClients) {
       resolved.webSocketClients = webSocketClients;
     }
+    if (activeWalletAdapter) {
+      resolved.walletAdapter = activeWalletAdapter;
+    } else {
+      delete resolved.walletAdapter;
+    }
     return resolved;
-  }, [setupConfig, viemChains, publicClients, webSocketClients]);
+  }, [setupConfig, viemChains, publicClients, webSocketClients, activeWalletAdapter]);
 
   const { client, error } = useAcrossClient({
     integratorId: resolvedSetupConfig.integratorId,
@@ -78,13 +85,13 @@ export function PaymentWidgetProvider({ setupConfig, children }: PaymentWidgetPr
     log('initialising provider', {
       supportedChains: resolvedSetupConfig.supportedChains.map((c) => c.chainId),
       useTestnet: resolvedSetupConfig.useTestnet ?? false,
-      hasWallet: Boolean(resolvedSetupConfig.walletClient),
+      hasWalletAdapter: Boolean(activeWalletAdapter),
       hasWebSockets: Boolean(resolvedSetupConfig.webSocketClients),
     });
   }, [
     resolvedSetupConfig.supportedChains,
     resolvedSetupConfig.useTestnet,
-    resolvedSetupConfig.walletClient,
+    activeWalletAdapter,
     resolvedSetupConfig.webSocketClients,
   ]);
 

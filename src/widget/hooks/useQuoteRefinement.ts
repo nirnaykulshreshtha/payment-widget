@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useState } from 'react';
+import type { Address } from 'viem';
 import type { AcrossClient } from '@across-protocol/app-sdk';
 import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig } from '../../types';
 import { computeTargetWithSlippage } from '../utils/slippage';
@@ -28,6 +29,7 @@ export function useQuoteRefinement(
   client: AcrossClient | null,
   config: ResolvedPaymentWidgetConfig,
   targetToken: TokenConfig | null,
+  walletAddress: Address | null,
   onOptionUpdate: (updater: (prev: PaymentOption | null) => PaymentOption | null) => void,
 ) {
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -50,10 +52,12 @@ export function useQuoteRefinement(
         const targetAmount = config.appFeeRecipient && config.appFee ? computeTargetWithSlippage(config.targetAmount, config.appFee * 10000) : config.targetAmount; // @devnote: Simulated appfee as bridge API doesn't support app fee yet
         const targetWithBuffer = computeTargetWithSlippage(targetAmount, config.maxSlippageBps);
         const fallbackRecipient =
-            config.appFeeRecipient ?? // @devnote: Simulated appfee as bridge API doesn't support app fee yet
-            config?.fallbackRecipient ?? config.walletClient?.account?.address ?? ZERO_ADDRESS;
+          config.appFeeRecipient ??
+          config?.fallbackRecipient ??
+          walletAddress ??
+          ZERO_ADDRESS;
         const depositRecipient = config?.targetRecipient ?? fallbackRecipient;
-        if (!config.walletClient?.account?.address) {
+        if (!walletAddress) {
           log('refine quote running without wallet connection', { optionId: option.id });
         }
 
@@ -245,14 +249,16 @@ export function useQuoteRefinement(
     },
     [
       client,
-      config.walletClient,
       config.apiUrl,
       config.maxSlippageBps,
       config.targetAmount,
       config.targetContractCalls,
       config.targetRecipient,
       config.fallbackRecipient,
+      config.appFeeRecipient,
+      config.appFee,
       targetToken,
+      walletAddress,
       onOptionUpdate,
     ],
   );
@@ -263,4 +269,3 @@ export function useQuoteRefinement(
     quoteError,
   };
 }
-

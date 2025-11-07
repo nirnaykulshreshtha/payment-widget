@@ -15,7 +15,7 @@ const logError = (...args) => console.error(LOG_PREFIX, ...args);
  * Manages all execution state, history tracking, and callbacks.
  */
 export function usePaymentExecution(params) {
-    const { client, config, targetToken, activeHistoryId, ensureWalletChain, executionState, onSetActiveHistoryId, onSetSelectedOption, onPaymentComplete, onPaymentFailed, openTrackingView, showSuccessView, showFailureView, } = params;
+    const { client, config, walletAddress, walletAdapter, targetToken, activeHistoryId, ensureWalletChain, executionState, onSetActiveHistoryId, onSetSelectedOption, onPaymentComplete, onPaymentFailed, openTrackingView, showSuccessView, showFailureView, } = params;
     const { setIsExecuting, setExecutionError, setWrapTxHash, setTxHash, setSwapTxHash, setApprovalTxHashes, } = executionState;
     const executeDirect = useCallback(async (option) => {
         let historyIdRef = activeHistoryId;
@@ -32,7 +32,10 @@ export function usePaymentExecution(params) {
                 recipient: config.targetRecipient,
                 hasContractCall: Boolean(config.targetContractCalls),
             });
-            const account = config.walletClient.account.address;
+            if (!walletAdapter) {
+                throw new Error('Wallet adapter not available');
+            }
+            const account = walletAddress;
             if (!account) {
                 throw new Error('Connect your wallet to continue');
             }
@@ -157,6 +160,8 @@ export function usePaymentExecution(params) {
     }, [
         activeHistoryId,
         config,
+        walletAddress,
+        walletAdapter,
         ensureWalletChain,
         targetToken,
         setIsExecuting,
@@ -203,7 +208,7 @@ export function usePaymentExecution(params) {
                 }
                 return;
             }
-            const account = config.walletClient?.account?.address;
+            const account = walletAddress;
             const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Connect your wallet to continue');
@@ -374,6 +379,7 @@ export function usePaymentExecution(params) {
         activeHistoryId,
         client,
         config,
+        walletAddress,
         ensureWalletChain,
         targetToken,
         setIsExecuting,
@@ -422,7 +428,7 @@ export function usePaymentExecution(params) {
                 }
                 return;
             }
-            const account = config.walletClient?.account?.address;
+            const account = walletAddress;
             const recipient = (config.targetRecipient || account);
             if (!account) {
                 throw new Error('Connect your wallet to continue');
@@ -555,6 +561,7 @@ export function usePaymentExecution(params) {
         activeHistoryId,
         client,
         config,
+        walletAddress,
         ensureWalletChain,
         targetToken,
         setIsExecuting,

@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import type { Address, Hex } from 'viem';
 import { erc20Abi } from 'viem';
 import type { AcrossClient, ConfiguredPublicClient, ConfiguredWalletClient } from '@across-protocol/app-sdk';
-import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig } from '../../types';
+import type { PaymentOption, ResolvedPaymentWidgetConfig, TokenConfig, WalletAdapter } from '../../types';
 import type { PaymentResultSummary } from '../types';
 import { ZERO_ADDRESS, ZERO_INTEGRATOR_ID } from '../../config';
 import {
@@ -38,6 +38,8 @@ const logError = (...args: unknown[]) => console.error(LOG_PREFIX, ...args);
 interface UsePaymentExecutionParams {
   client: AcrossClient | null;
   config: ResolvedPaymentWidgetConfig;
+  walletAddress: Address | null;
+  walletAdapter: WalletAdapter | null;
   targetToken: TokenConfig | null;
   activeHistoryId: string | null;
   ensureWalletChain: (chainId: number, context: string) => Promise<ConfiguredWalletClient | null>;
@@ -59,6 +61,8 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
   const {
     client,
     config,
+    walletAddress,
+    walletAdapter,
     targetToken,
     activeHistoryId,
     ensureWalletChain,
@@ -99,7 +103,11 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           hasContractCall: Boolean(config.targetContractCalls),
         });
 
-        const account = config.walletClient!.account!.address;
+        if (!walletAdapter) {
+          throw new Error('Wallet adapter not available');
+        }
+
+        const account = walletAddress;
         if (!account) {
           throw new Error('Connect your wallet to continue');
         }
@@ -227,6 +235,8 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
     [
       activeHistoryId,
       config,
+      walletAddress,
+      walletAdapter,
       ensureWalletChain,
       targetToken,
       setIsExecuting,
@@ -285,7 +295,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           return;
         }
 
-        const account = config.walletClient?.account?.address as Address | undefined;
+        const account = walletAddress as Address | undefined;
         const recipient = (config.targetRecipient || account) as Address | undefined;
         if (!account) {
           throw new Error('Connect your wallet to continue');
@@ -340,7 +350,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
 
         let wrapHash: Hex | null = null;
         if (option.requiresWrap && option.wrappedToken) {
-          const hash = (await (walletClientWithChain as ConfiguredWalletClient).writeContract({
+          const hash = (await walletClientWithChain.writeContract({
             address: option.wrappedToken.address as Address,
             abi: [
               {
@@ -369,7 +379,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
         const result = await client.executeQuote({
           integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
           deposit: quote.raw.deposit,
-          walletClient: walletClientWithChain as ConfiguredWalletClient,
+          walletClient: walletClientWithChain,
           originClient,
           destinationClient,
           forceOriginChain: true,
@@ -477,6 +487,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
       activeHistoryId,
       client,
       config,
+      walletAddress,
       ensureWalletChain,
       targetToken,
       setIsExecuting,
@@ -538,7 +549,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
           return;
         }
 
-        const account = config.walletClient?.account?.address as Address | undefined;
+        const account = walletAddress as Address | undefined;
         const recipient = (config.targetRecipient || account) as Address | undefined;
         if (!account) {
           throw new Error('Connect your wallet to continue');
@@ -579,7 +590,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
         const result = await client.executeSwapQuote({
           integratorId: config.integratorId ?? ZERO_INTEGRATOR_ID,
           swapQuote: swapQuote.raw,
-          walletClient: walletClientWithChain as ConfiguredWalletClient,
+          walletClient: walletClientWithChain,
           originClient,
           destinationClient,
           destinationSpokePoolAddress,
@@ -682,6 +693,7 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
       activeHistoryId,
       client,
       config,
+      walletAddress,
       ensureWalletChain,
       targetToken,
       setIsExecuting,
@@ -706,4 +718,3 @@ export function usePaymentExecution(params: UsePaymentExecutionParams) {
     executeSwap,
   };
 }
-
