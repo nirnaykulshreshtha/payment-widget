@@ -5,7 +5,7 @@
  * Provides a simple interface for ensuring the connected wallet is on the expected network.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { ConfiguredWalletClient } from '@across-protocol/app-sdk';
 import type { ResolvedPaymentWidgetConfig, WalletAdapter } from '../../types';
 
@@ -18,6 +18,9 @@ export function useWalletChain(
   supportedChains: ResolvedPaymentWidgetConfig['supportedChains'],
   onError: (message: string) => void,
 ) {
+  useEffect(() => {
+    walletAdapter?.getChainId().then(chainId => console.log('chainId looggg', chainId))
+  }, [walletAdapter?.getChainId()]);
   const ensureWalletChain = useCallback(
     async (targetChainId: number, context: string): Promise<ConfiguredWalletClient | null> => {
       if (!walletAdapter) {

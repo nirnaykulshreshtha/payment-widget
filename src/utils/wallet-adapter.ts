@@ -45,7 +45,7 @@ export function createWalletAdapter(
 
   const snapshot = (): WalletAdapterState => ({
     address: walletClient.account?.address ?? currentState.address ?? null,
-    chainId: walletClient.chain?.id ?? currentState.chainId ?? null,
+    chainId: currentState.chainId ?? null,
     isConnected: Boolean(walletClient.account?.address ?? currentState.address),
   });
 
@@ -89,9 +89,8 @@ export function createWalletAdapter(
       return;
     }
     pollTimer = setInterval(() => {
-      const base = snapshot();
-      updateState(base);
       void ensureChainSnapshot();
+      updateState();
     }, POLL_INTERVAL_MS);
   };
 
@@ -282,7 +281,20 @@ export function createWalletAdapter(
 
         log('wallet switch successful', { chainId });
         updateState({ chainId });
-        return resolvedClient;
+
+        const prototype = Object.getPrototypeOf(resolvedClient);
+        const updatedChain = {
+          ...(resolvedClient.chain ?? {}),
+          id: chainId,
+          name: resolvedClient.chain?.name ?? chainConfig.name,
+          nativeCurrency: resolvedClient.chain?.nativeCurrency ?? chainConfig.nativeCurrency,
+        } as Chain;
+
+        const hydratedClient = Object.assign(Object.create(prototype), resolvedClient, {
+          chain: updatedChain,
+        });
+
+        return hydratedClient as ConfiguredWalletClient;
       } catch (err) {
         logError('network switch failed', { chainId, err });
         throw err;

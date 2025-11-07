@@ -26,7 +26,7 @@ export function createWalletAdapter(walletClient, supportedChains) {
     const statesEqual = (a, b) => a.address === b.address && a.chainId === b.chainId && a.isConnected === b.isConnected;
     const snapshot = () => ({
         address: walletClient.account?.address ?? currentState.address ?? null,
-        chainId: walletClient.chain?.id ?? currentState.chainId ?? null,
+        chainId: currentState.chainId ?? null,
         isConnected: Boolean(walletClient.account?.address ?? currentState.address),
     });
     const updateState = (overrides) => {
@@ -63,9 +63,8 @@ export function createWalletAdapter(walletClient, supportedChains) {
             return;
         }
         pollTimer = setInterval(() => {
-            const base = snapshot();
-            updateState(base);
             void ensureChainSnapshot();
+            updateState();
         }, POLL_INTERVAL_MS);
     };
     let stopPolling = () => {
@@ -234,7 +233,17 @@ export function createWalletAdapter(walletClient, supportedChains) {
                 }
                 log('wallet switch successful', { chainId });
                 updateState({ chainId });
-                return resolvedClient;
+                const prototype = Object.getPrototypeOf(resolvedClient);
+                const updatedChain = {
+                    ...(resolvedClient.chain ?? {}),
+                    id: chainId,
+                    name: resolvedClient.chain?.name ?? chainConfig.name,
+                    nativeCurrency: resolvedClient.chain?.nativeCurrency ?? chainConfig.nativeCurrency,
+                };
+                const hydratedClient = Object.assign(Object.create(prototype), resolvedClient, {
+                    chain: updatedChain,
+                });
+                return hydratedClient;
             }
             catch (err) {
                 logError('network switch failed', { chainId, err });

@@ -3,11 +3,14 @@
  * @fileoverview Hook for managing wallet chain switching operations using the wallet adapter abstraction.
  * Provides a simple interface for ensuring the connected wallet is on the expected network.
  */
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 const LOG_PREFIX = '[useWalletChain]';
 const log = (...args) => console.debug(LOG_PREFIX, ...args);
 const logError = (...args) => console.error(LOG_PREFIX, ...args);
 export function useWalletChain(walletAdapter, supportedChains, onError) {
+    useEffect(() => {
+        walletAdapter?.getChainId().then(chainId => console.log('chainId looggg', chainId));
+    }, [walletAdapter?.getChainId()]);
     const ensureWalletChain = useCallback(async (targetChainId, context) => {
         if (!walletAdapter) {
             logError('wallet adapter missing when switching chain', { targetChainId, context });
